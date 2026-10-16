@@ -541,6 +541,9 @@
     <div class="sidebar-contacts">
         <div>📞 {{ company_phone }}</div>
         <div>📍 {{ company_address }}</div>
+        {% if working_hours %}
+        <div>🕐 {{ working_hours }}</div>
+        {% endif %}
     </div>
 </aside>
 {% endif %}
@@ -558,6 +561,9 @@
         <div class="hero-contacts">
             <div>📞 {{ company_phone }}</div>
             <div>📍 {{ company_address }}</div>
+            {% if working_hours %}
+            <div>🕐 {{ working_hours }}</div>
+            {% endif %}
         </div>
         <div class="hero-buttons">
             <button class="hero-btn" onclick="openModal('booking')">
@@ -757,11 +763,17 @@
                 <div class="label">Телефон</div>
                 <div class="value">{{ company_phone }}</div>
             </div>
+            {% if working_hours %}
+            <div class="contact-item">
+                <div class="label">Часы работы</div>
+                <div class="value">{{ working_hours }}</div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-{% if services %}
+<!-- МОДАЛКА БРОНИРОВАНИЯ (всегда есть) -->
 <div class="modal" id="modal-booking" onclick="modalOutsideClick(event, 'booking')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -815,7 +827,6 @@
         </div>
     </div>
 </div>
-{% endif %}
 
 <div class="success-modal" id="successModal">
     <div class="modal-content">
@@ -854,7 +865,10 @@
     // ============ МОДАЛКИ ============
     function openModal(name) {
         const modal = document.getElementById('modal-' + name);
-        if (!modal) return;
+        if (!modal) {
+            console.warn('Модалка не найдена: modal-' + name);
+            return;
+        }
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
         closeSidebar();
@@ -873,7 +887,6 @@
             closeModal(name);
         }
     }
-    // Закрытие по Esc
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal.open').forEach(m => {
@@ -984,7 +997,6 @@
         renderCalendar();
     }
 
-    // Стартовая отрисовка календаря
     renderCalendar();
 </script>
 </body>
