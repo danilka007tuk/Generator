@@ -35,22 +35,18 @@ DEFAULT_SIDEBAR_ITEMS = [
 def get_sidebar_items(content: SiteContent) -> list[dict]:
     """Возвращает пункты сайдбара. Если пусто — подставляет стандартные."""
     items = content.sidebar_items or []
-    # Преобразуем в список словарей
     result = []
     for item in items:
         d = item.model_dump() if hasattr(item, "model_dump") else dict(item)
         label = d.get("label", "").strip()
         anchor = d.get("anchor", "").strip()
         icon = d.get("icon", "").strip()
-        # Пропускаем пустые пункты
         if not label or not anchor:
             continue
-        # Нормализуем якорь
         if not anchor.startswith("#"):
             anchor = "#" + anchor
         result.append({"label": label, "anchor": anchor, "icon": icon})
 
-    # Если пусто — подставляем стандартные
     if not result:
         result = [dict(x) for x in DEFAULT_SIDEBAR_ITEMS]
 
@@ -110,8 +106,10 @@ def clean_anchor(anchor: str) -> str:
 
 # ============ Рендер ============
 
-def render_site(content: SiteContent) -> str:
+def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -> str:
     data = content.model_dump()
+    data["server_url"] = server_url or "http://127.0.0.1:8001"
+    data["site_id"] = site_id or "site"
 
     # --- Текстовые поля ---
     for key in [

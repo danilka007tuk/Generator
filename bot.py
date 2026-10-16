@@ -348,7 +348,7 @@ async def handle_repo(message: Message, state: FSMContext):
         # Принудительно сохраняем выбранный шаблон
         content.template_name = data.get('template_name', 'template-modern.html')
         content.palette_name = data.get('palette_name', 'auto')
-        html = render_site(content)
+        html = render_site(content, server_url=SERVER_URL, site_id=repo_name)
         path = save_site(html)
     except Exception as error:
         logger.exception("Ошибка генерации")
