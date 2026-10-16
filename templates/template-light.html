@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>{{ site_title }}</title>
     <meta name="description" content="{{ meta_description }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,7 +16,7 @@
             --sidebar-width: 260px;
         }
         * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; scroll-padding-top: 20px; }
         body {
             font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
             margin: 0; padding: 0;
@@ -26,7 +27,21 @@
         }
         h1, h2, h3 { font-weight: 200; letter-spacing: -0.01em; }
 
-        /* ============ САЙДБАР ============ */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 16px; left: 16px;
+            z-index: 300;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            width: 48px; height: 48px;
+            border-radius: 8px;
+            font-size: 1.4em;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
         .sidebar {
             position: fixed;
             left: 0; top: 0;
@@ -34,51 +49,50 @@
             height: 100vh;
             background: #ffffff;
             border-right: 1px solid #f0f0f0;
-            padding: 40px 28px;
+            padding: 32px 24px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            z-index: 100;
+            z-index: 200;
+            transition: transform 0.3s;
         }
         .sidebar-logo {
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: 500;
             color: var(--text);
             letter-spacing: 0.05em;
             text-transform: uppercase;
-            margin-bottom: 56px;
-            padding-bottom: 24px;
+            margin-bottom: 36px;
+            padding-bottom: 20px;
             border-bottom: 2px solid var(--primary);
         }
         .sidebar-nav {
             display: flex;
             flex-direction: column;
             gap: 2px;
-            margin-bottom: 40px;
+            margin-bottom: 24px;
             flex-grow: 1;
         }
         .sidebar-nav a {
             color: #888;
             text-decoration: none;
-            padding: 12px 0;
-            font-size: 0.9em;
+            padding: 10px 0;
+            font-size: 0.85em;
             font-weight: 400;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             border-bottom: 1px solid #f8f8f8;
             transition: color 0.3s;
         }
-        .sidebar-nav a:hover {
-            color: var(--primary);
-        }
+        .sidebar-nav a:hover { color: var(--primary); }
         .sidebar-cta {
             display: block;
             background: var(--primary);
             color: #fff;
             text-align: center;
-            padding: 16px;
+            padding: 14px;
             text-decoration: none;
-            font-size: 0.85em;
+            font-size: 0.8em;
             font-weight: 500;
             letter-spacing: 0.2em;
             text-transform: uppercase;
@@ -86,30 +100,26 @@
         }
         .sidebar-cta:hover { background: var(--text); }
         .sidebar-contacts {
-            font-size: 0.8em;
+            font-size: 0.78em;
             color: #999;
-            line-height: 1.9;
+            line-height: 1.8;
             border-top: 1px solid #f0f0f0;
-            padding-top: 24px;
-            margin-top: 24px;
-            letter-spacing: 0.02em;
+            padding-top: 16px;
+            margin-top: 16px;
         }
-        .sidebar-contacts div { margin-bottom: 6px; }
+        .sidebar-contacts div { margin-bottom: 4px; }
 
-        /* ============ ОСНОВНОЙ КОНТЕНТ ============ */
         .main-content {
             margin-left: var(--sidebar-width);
             min-height: 100vh;
         }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
 
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
-
-        /* ============ HERO ============ */
         .hero {
             position: relative;
             background: #ffffff;
             color: var(--text);
-            padding: 160px 48px 120px;
+            padding: 80px 40px 60px;
             text-align: center;
             border-bottom: 1px solid #f0f0f0;
             overflow: hidden;
@@ -117,7 +127,7 @@
         {% if hero_image_url %}
         .hero {
             background-image:
-                linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.92)),
+                linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.95)),
                 url('{{ hero_image_url }}');
             background-size: cover;
             background-position: center;
@@ -125,110 +135,101 @@
         {% endif %}
         .hero h1 {
             position: relative;
-            font-size: 3.8em;
-            margin: 0 0 24px;
+            font-size: 2.8em;
+            margin: 0 0 16px;
             font-weight: 200;
             letter-spacing: -0.02em;
         }
         .hero p {
             position: relative;
-            font-size: 1.15em;
+            font-size: 1.05em;
             color: #888;
-            max-width: 640px;
+            max-width: 600px;
             margin: 0 auto;
             font-weight: 300;
         }
         .hero-about {
             position: relative;
-            max-width: 600px;
-            margin: 32px auto 0;
+            max-width: 560px;
+            margin: 20px auto 0;
             color: #999;
-            font-size: 0.95em;
+            font-size: 0.92em;
             line-height: 1.8;
         }
 
-        /* ============ СЕКЦИИ ============ */
-        section { padding: 100px 0; }
+        section { padding: 48px 0; }
         section h2 {
-            font-size: 2.4em;
-            margin: 0 0 16px;
+            font-size: 1.9em;
+            margin: 0 0 12px;
             text-align: center;
             font-weight: 200;
         }
         .section-subtitle {
             text-align: center;
             color: #aaa;
-            margin: 0 0 72px;
-            font-size: 0.9em;
+            margin: 0 0 36px;
+            font-size: 0.8em;
             letter-spacing: 0.15em;
             text-transform: uppercase;
             font-weight: 400;
         }
 
-        /* ============ FEATURES ============ */
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 1px;
             background: #f0f0f0;
         }
         .feature {
             background: #ffffff;
-            padding: 48px 32px;
+            padding: 32px 24px;
             text-align: left;
         }
         .feature h3 {
             color: var(--primary);
-            margin: 0 0 16px;
-            font-size: 0.9em;
+            margin: 0 0 12px;
+            font-size: 0.85em;
             font-weight: 600;
             letter-spacing: 0.15em;
             text-transform: uppercase;
         }
-        .feature p { margin: 0; color: #666; font-size: 0.95em; line-height: 1.7; }
+        .feature p { margin: 0; color: #666; font-size: 0.92em; line-height: 1.7; }
 
-        /* ============ ABOUT ============ */
         .about {
             max-width: 800px;
             margin: 0 auto;
             text-align: center;
-            padding: 0 48px;
+            padding: 0 40px;
         }
         .about p {
-            font-size: 1.15em;
+            font-size: 1.05em;
             line-height: 1.9;
             color: #555;
             font-weight: 300;
         }
 
-        /* ============ SERVICES ============ */
         .services-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 32px;
         }
         .service-card {
-            padding: 40px 0 0;
+            padding: 28px 0 0;
             border-top: 1px solid var(--text);
         }
-        .service-card h3 {
-            margin: 0 0 16px;
-            font-size: 1.3em;
-            font-weight: 400;
-        }
-        .service-card p { margin: 0 0 20px; color: #666; font-size: 0.95em; }
+        .service-card h3 { margin: 0 0 12px; font-size: 1.15em; font-weight: 400; }
+        .service-card p { margin: 0 0 14px; color: #666; font-size: 0.92em; }
         .service-card .price {
-            font-size: 1.1em;
+            font-size: 1em;
             color: var(--primary);
             font-weight: 500;
             letter-spacing: 0.05em;
         }
 
-        /* ============ GALLERY ============ */
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
         }
         .gallery-item {
             background: #fafafa;
@@ -236,130 +237,114 @@
         }
         .gallery-item img {
             width: 100%;
-            height: 240px;
+            height: 200px;
             object-fit: cover;
             display: block;
             transition: transform 0.5s;
         }
         .gallery-item:hover img { transform: scale(1.05); }
-        .gallery-item .caption {
-            padding: 24px;
-        }
-        .gallery-item h3 {
-            margin: 0 0 8px;
-            font-size: 1.05em;
-            font-weight: 400;
-        }
+        .gallery-item .caption { padding: 20px; }
+        .gallery-item h3 { margin: 0 0 6px; font-size: 1em; font-weight: 400; }
         .gallery-item p { margin: 0; color: #888; font-size: 0.85em; }
 
-        /* ============ PRICING ============ */
         .pricing-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 28px;
         }
         .pricing-card {
             border: 1px solid #e8e8e8;
-            padding: 56px 32px;
+            padding: 40px 28px;
             text-align: center;
             transition: border-color 0.3s;
         }
         .pricing-card:hover { border-color: var(--primary); }
         .pricing-card h3 {
-            margin: 0 0 16px;
-            font-size: 1.1em;
+            margin: 0 0 12px;
+            font-size: 1.05em;
             font-weight: 400;
             letter-spacing: 0.05em;
         }
         .pricing-card .price {
-            font-size: 2.2em;
+            font-size: 1.9em;
             font-weight: 200;
             color: var(--primary);
-            margin: 24px 0;
+            margin: 20px 0;
         }
-        .pricing-card p { color: #777; font-size: 0.9em; margin: 0; }
+        .pricing-card p { color: #777; font-size: 0.88em; margin: 0; }
 
-        /* ============ TESTIMONIALS ============ */
         .testimonials-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 28px;
         }
         .testimonial {
-            padding: 40px 0;
+            padding: 28px 0;
             border-top: 1px solid #e8e8e8;
         }
         .testimonial .stars {
             color: var(--accent);
-            font-size: 1em;
+            font-size: 0.95em;
             letter-spacing: 0.2em;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .testimonial .text {
             color: #444;
-            margin-bottom: 20px;
-            line-height: 1.8;
-            font-size: 1.05em;
+            margin-bottom: 16px;
+            line-height: 1.7;
+            font-size: 1em;
             font-style: italic;
         }
         .testimonial .author {
-            font-size: 0.85em;
+            font-size: 0.8em;
             color: #999;
             letter-spacing: 0.1em;
             text-transform: uppercase;
             font-weight: 400;
         }
 
-        /* ============ TEAM ============ */
         .team-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 32px;
         }
-        .team-member {
-            text-align: center;
-        }
+        .team-member { text-align: center; }
         .team-member .avatar {
-            width: 100px; height: 100px;
+            width: 80px; height: 80px;
             border-radius: 50%;
             background: var(--primary);
             color: #fff;
-            margin: 0 auto 24px;
+            margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.4em;
+            font-size: 2em;
             font-weight: 200;
         }
-        .team-member h3 { margin: 0 0 8px; font-size: 1.15em; font-weight: 400; }
+        .team-member h3 { margin: 0 0 6px; font-size: 1.05em; font-weight: 400; }
         .team-member .role {
             color: var(--primary);
-            font-size: 0.8em;
+            font-size: 0.75em;
             letter-spacing: 0.15em;
             text-transform: uppercase;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             font-weight: 500;
         }
-        .team-member p { color: #777; font-size: 0.9em; margin: 0; }
+        .team-member p { color: #777; font-size: 0.88em; margin: 0; }
 
-        /* ============ FAQ ============ */
         .faq-list { max-width: 800px; margin: 0 auto; }
-        .faq-item {
-            padding: 32px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
+        .faq-item { padding: 24px 0; border-bottom: 1px solid #f0f0f0; }
         .faq-item h3 {
-            margin: 0 0 16px;
-            font-size: 1.1em;
+            margin: 0 0 12px;
+            font-size: 1.05em;
             font-weight: 400;
             color: var(--primary);
         }
-        .faq-item p { margin: 0; color: #666; line-height: 1.8; font-size: 0.95em; }
+        .faq-item p { margin: 0; color: #666; line-height: 1.7; font-size: 0.92em; }
 
-        /* ============ BOOKING ============ */
         .booking {
             background: #fafafa;
-            padding: 80px 48px;
+            padding: 40px 32px;
             max-width: 900px;
             margin: 0 auto;
         }
@@ -367,14 +352,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
+            margin-bottom: 24px;
         }
         .calendar-header button {
             background: transparent;
             border: 1px solid #ddd;
-            width: 52px; height: 52px;
+            width: 44px; height: 44px;
             border-radius: 50%;
-            font-size: 1.2em;
+            font-size: 1.1em;
             cursor: pointer;
             color: var(--text);
             transition: all 0.3s;
@@ -385,7 +370,7 @@
             border-color: var(--primary);
         }
         .month-year {
-            font-size: 1.1em;
+            font-size: 1em;
             font-weight: 400;
             letter-spacing: 0.2em;
             text-transform: uppercase;
@@ -393,23 +378,19 @@
         .weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: 6px;
+            margin-bottom: 8px;
         }
         .weekdays div {
             text-align: center;
-            font-size: 0.75em;
+            font-size: 0.7em;
             color: #aaa;
-            padding: 12px 0;
+            padding: 8px 0;
             letter-spacing: 0.2em;
             text-transform: uppercase;
             font-weight: 500;
         }
-        .days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-        }
+        .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .day {
             aspect-ratio: 1/1;
             display: flex;
@@ -420,6 +401,7 @@
             background: transparent;
             border: 1px solid transparent;
             font-weight: 300;
+            font-size: 0.92em;
         }
         .day:hover:not(.disabled):not(.busy):not(.selected) {
             background: var(--primary);
@@ -433,23 +415,23 @@
 
         .booking-form {
             display: none;
-            margin-top: 56px;
-            padding-top: 56px;
+            margin-top: 32px;
+            padding-top: 32px;
             border-top: 1px solid #e0e0e0;
         }
         .booking-form.active { display: block; }
         .booking-form h3 {
             text-align: center;
             color: var(--text);
-            margin: 0 0 40px;
+            margin: 0 0 28px;
             font-weight: 300;
-            font-size: 1.3em;
+            font-size: 1.15em;
         }
-        .form-group { margin-bottom: 28px; }
+        .form-group { margin-bottom: 20px; }
         .form-group label {
             display: block;
-            margin-bottom: 12px;
-            font-size: 0.75em;
+            margin-bottom: 8px;
+            font-size: 0.7em;
             color: #999;
             font-weight: 500;
             letter-spacing: 0.2em;
@@ -457,10 +439,10 @@
         }
         .form-group input, .form-group textarea, .form-group select {
             width: 100%;
-            padding: 16px 0;
+            padding: 12px 0;
             border: none;
             border-bottom: 1px solid #ddd;
-            font-size: 1em;
+            font-size: 0.95em;
             font-family: inherit;
             font-weight: 300;
             background: transparent;
@@ -472,11 +454,11 @@
         }
         .submit-btn {
             width: 100%;
-            padding: 20px;
+            padding: 16px;
             background: var(--primary);
             color: #fff;
             border: none;
-            font-size: 0.85em;
+            font-size: 0.8em;
             font-weight: 500;
             letter-spacing: 0.25em;
             text-transform: uppercase;
@@ -485,50 +467,46 @@
         }
         .submit-btn:hover { background: var(--text); }
 
-        /* ============ CONTACTS ============ */
         .contacts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 48px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 32px;
             text-align: center;
         }
         .contact-item .label {
-            font-size: 0.75em;
+            font-size: 0.7em;
             color: #aaa;
             letter-spacing: 0.25em;
             text-transform: uppercase;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             font-weight: 500;
         }
-        .contact-item .value { font-size: 1.05em; font-weight: 300; }
+        .contact-item .value { font-size: 1em; font-weight: 300; }
 
-        /* ============ CTA ============ */
         .cta {
             background: var(--text);
             color: #fff;
-            padding: 120px 48px;
+            padding: 60px 32px;
             text-align: center;
         }
         .cta h2 {
             margin: 0;
             color: #fff;
-            font-size: 2.6em;
+            font-size: 2em;
             font-weight: 200;
             letter-spacing: -0.02em;
         }
 
-        /* ============ FOOTER ============ */
         footer {
             background: #fff;
             color: #aaa;
-            padding: 56px 48px;
+            padding: 32px;
             text-align: center;
-            font-size: 0.85em;
+            font-size: 0.82em;
             border-top: 1px solid #f0f0f0;
             letter-spacing: 0.05em;
         }
 
-        /* ============ MODAL ============ */
         .success-modal {
             display: none; position: fixed; inset: 0;
             background: rgba(255,255,255,0.97); z-index: 1000;
@@ -538,73 +516,62 @@
         .success-modal .modal-content {
             background: #fff;
             border: 1px solid #e8e8e8;
-            padding: 72px 48px;
-            max-width: 480px;
+            padding: 48px 32px;
+            max-width: 440px;
             text-align: center;
         }
         .success-modal h3 {
             color: var(--primary);
-            margin: 0 0 24px;
+            margin: 0 0 20px;
             font-weight: 300;
-            font-size: 1.6em;
+            font-size: 1.4em;
         }
-        .success-modal p { color: #666; margin: 0 0 32px; }
+        .success-modal p { color: #666; margin: 0 0 24px; }
         .success-modal button {
             background: transparent;
             color: var(--primary);
             border: 1px solid var(--primary);
-            padding: 16px 48px;
+            padding: 12px 36px;
             cursor: pointer;
-            font-size: 0.8em;
+            font-size: 0.75em;
             letter-spacing: 0.25em;
             text-transform: uppercase;
             transition: all 0.3s;
         }
         .success-modal button:hover { background: var(--primary); color: #fff; }
 
-        /* ============ АДАПТИВ ============ */
         @media (max-width: 900px) {
-            .sidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
-                border-right: none;
-                border-bottom: 1px solid #f0f0f0;
-                padding: 24px 20px;
-            }
-            .sidebar-nav {
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 4px;
-            }
-            .sidebar-nav a { padding: 8px 12px; border: none; font-size: 0.8em; }
-            .sidebar-contacts { display: none; }
+            .sidebar-toggle { display: block; }
+            .sidebar { transform: translateX(-100%); width: 280px; }
+            .sidebar.open { transform: translateX(0); }
             .main-content { margin-left: 0; }
-            .hero h1 { font-size: 2.4em; }
-            .hero { padding: 80px 24px 60px; }
-            .container { padding: 0 24px; }
-            .booking { padding: 40px 24px; }
-            section { padding: 60px 0; }
+            .hero { padding: 80px 24px 48px; }
+            .hero h1 { font-size: 2em; }
+            .container { padding: 0 20px; }
+            section { padding: 32px 0; }
+            section h2 { font-size: 1.5em; }
+            .booking { padding: 28px 20px; }
         }
     </style>
 </head>
 <body>
 
-<!-- САЙДБАР -->
+<button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
 {% if sidebar_enabled %}
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">{{ company_name }}</div>
 
     {% if sidebar_items %}
     <nav class="sidebar-nav">
         {% for item in sidebar_items %}
-        <a href="{{ item.anchor }}">{{ item.icon }} {{ item.label }}</a>
+        <a href="{{ item.anchor }}" onclick="closeSidebar()">{{ item.icon }} {{ item.label }}</a>
         {% endfor %}
     </nav>
     {% endif %}
 
     {% if sidebar_cta_text %}
-    <a href="#booking" class="sidebar-cta">{{ sidebar_cta_text }}</a>
+    <a href="#booking" class="sidebar-cta" onclick="closeSidebar()">{{ sidebar_cta_text }}</a>
     {% endif %}
 
     <div class="sidebar-contacts">
@@ -619,7 +586,7 @@
 {% for block in blocks %}
 
     {% if block == "hero" %}
-    <section class="hero">
+    <section class="hero" id="hero">
         <h1>{{ hero_heading }}</h1>
         <p>{{ hero_subheading }}</p>
         {% if about_short %}
@@ -628,7 +595,7 @@
     </section>
 
     {% elif block == "features" and features %}
-    <section class="container">
+    <section class="container" id="features">
         <h2>Преимущества</h2>
         <p class="section-subtitle">Почему выбирают нас</p>
         <div class="features-grid">
@@ -642,15 +609,15 @@
     </section>
 
     {% elif block == "about" and about_full %}
-    <section class="container">
+    <section class="container" id="about">
+        <h2>О нас</h2>
         <div class="about">
-            <h2>О нас</h2>
             <p>{{ about_full }}</p>
         </div>
     </section>
 
     {% elif block == "services" and services %}
-    <section class="container">
+    <section class="container" id="services">
         <h2>Услуги</h2>
         <p class="section-subtitle">Что мы предлагаем</p>
         <div class="services-grid">
@@ -665,7 +632,7 @@
     </section>
 
     {% elif block == "gallery" and gallery %}
-    <section class="container">
+    <section class="container" id="gallery">
         <h2>Галерея</h2>
         <p class="section-subtitle">Наши работы</p>
         <div class="gallery-grid">
@@ -684,7 +651,7 @@
     </section>
 
     {% elif block == "pricing" and pricing %}
-    <section class="container">
+    <section class="container" id="pricing">
         <h2>Цены</h2>
         <p class="section-subtitle">Прозрачное ценообразование</p>
         <div class="pricing-grid">
@@ -699,7 +666,7 @@
     </section>
 
     {% elif block == "testimonials" and testimonials %}
-    <section class="container">
+    <section class="container" id="testimonials">
         <h2>Отзывы</h2>
         <p class="section-subtitle">Что говорят клиенты</p>
         <div class="testimonials-grid">
@@ -717,7 +684,7 @@
     </section>
 
     {% elif block == "team" and team %}
-    <section class="container">
+    <section class="container" id="team">
         <h2>Команда</h2>
         <p class="section-subtitle">Специалисты, которым можно доверять</p>
         <div class="team-grid">
@@ -733,7 +700,7 @@
     </section>
 
     {% elif block == "faq" and faq %}
-    <section class="container">
+    <section class="container" id="faq">
         <h2>Частые вопросы</h2>
         <p class="section-subtitle">Отвечаем на главное</p>
         <div class="faq-list">
@@ -747,11 +714,10 @@
     </section>
 
     {% elif block == "booking" %}
-    <section class="container">
+    <section class="container" id="booking">
+        <h2>Онлайн-запись</h2>
+        <p class="section-subtitle">Выберите удобную дату</p>
         <div class="booking">
-            <h2>Онлайн-запись</h2>
-            <p class="section-subtitle">Выберите удобную дату</p>
-
             <div class="calendar-header">
                 <button id="prevMonth" type="button">‹</button>
                 <div class="month-year" id="monthYear">—</div>
@@ -799,7 +765,7 @@
     </section>
 
     {% elif block == "contacts" %}
-    <section class="container">
+    <section class="container" id="contacts">
         <h2>Контакты</h2>
         <p class="section-subtitle">Мы всегда на связи</p>
         <div class="contacts-grid">
@@ -819,8 +785,10 @@
     </section>
 
     {% elif block == "cta" %}
-    <section class="cta">
-        <h2>{{ cta_text }}</h2>
+    <section class="container" id="cta">
+        <div class="cta">
+            <h2>{{ cta_text }}</h2>
+        </div>
     </section>
 
     {% endif %}
@@ -850,6 +818,15 @@
     const formEl = document.getElementById('bookingForm');
     const selectedDateEl = document.getElementById('selectedDate');
     const successModal = document.getElementById('successModal');
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.toggle('open');
+    }
+    function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.remove('open');
+    }
 
     function renderCalendar() {
         if (!daysEl) return;
