@@ -22,6 +22,41 @@ ALLOWED_TEMPLATES = [
     "template-bold.html",
 ]
 
+# ============ Стандартные пункты сайдбара ============
+
+DEFAULT_SIDEBAR_ITEMS = [
+    {"label": "Услуги", "anchor": "#services", "icon": "💼"},
+    {"label": "Галерея", "anchor": "#gallery", "icon": "🖼"},
+    {"label": "Отзывы", "anchor": "#testimonials", "icon": "⭐"},
+    {"label": "Контакты", "anchor": "#contacts", "icon": "📞"},
+]
+
+
+def get_sidebar_items(content: SiteContent) -> list[dict]:
+    """Возвращает пункты сайдбара. Если пусто — подставляет стандартные."""
+    items = content.sidebar_items or []
+    # Преобразуем в список словарей
+    result = []
+    for item in items:
+        d = item.model_dump() if hasattr(item, "model_dump") else dict(item)
+        label = d.get("label", "").strip()
+        anchor = d.get("anchor", "").strip()
+        icon = d.get("icon", "").strip()
+        # Пропускаем пустые пункты
+        if not label or not anchor:
+            continue
+        # Нормализуем якорь
+        if not anchor.startswith("#"):
+            anchor = "#" + anchor
+        result.append({"label": label, "anchor": anchor, "icon": icon})
+
+    # Если пусто — подставляем стандартные
+    if not result:
+        result = [dict(x) for x in DEFAULT_SIDEBAR_ITEMS]
+
+    return result
+
+
 # ============ Генерация картинок ============
 
 def generate_image_url(prompt: str, width: int = 1200, height: int = 800) -> str:
@@ -31,7 +66,6 @@ def generate_image_url(prompt: str, width: int = 1200, height: int = 800) -> str
     prompt = prompt.strip()
     if not prompt:
         return ""
-    # Обрезаем слишком длинные промпты
     if len(prompt) > 300:
         prompt = prompt[:300]
     encoded = urllib.parse.quote(prompt)
@@ -44,14 +78,12 @@ def generate_image_url(prompt: str, width: int = 1200, height: int = 800) -> str
 # ============ Очистка ============
 
 def clean(text: str) -> str:
-    """Очищает текст от опасных HTML-тегов."""
     if not isinstance(text, str):
         return ""
     return bleach.clean(text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS)
 
 
 def clean_color(hex_color: str, default: str) -> str:
-    """Проверяет, что цвет — валидный HEX. Иначе возвращает default."""
     if not isinstance(hex_color, str):
         return default
     hex_color = hex_color.strip()
@@ -67,13 +99,11 @@ def clean_color(hex_color: str, default: str) -> str:
 
 
 def clean_anchor(anchor: str) -> str:
-    """Проверяет, что якорь безопасный (начинается с #)."""
     if not isinstance(anchor, str):
         return "#"
     anchor = anchor.strip()
     if not anchor.startswith("#"):
         anchor = "#" + anchor
-    # Разрешаем только латиницу, цифры, дефис, подчёркивание
     safe = "".join(c for c in anchor if c.isalnum() or c in "-#_")
     return safe if safe != "#" else "#"
 
@@ -81,7 +111,6 @@ def clean_anchor(anchor: str) -> str:
 # ============ Рендер ============
 
 def render_site(content: SiteContent) -> str:
-    """Подставляет данные в выбранный шаблон."""
     data = content.model_dump()
 
     # --- Текстовые поля ---
@@ -105,7 +134,7 @@ def render_site(content: SiteContent) -> str:
         service["description"] = clean(service.get("description", ""))
         service["price"] = clean(service.get("price", ""))
 
-    # --- Gallery + генерация картинок ---
+    # --- Gallery + картинки ---
     for item in data.get("gallery", []):
         item["title"] = clean(item.get("title", ""))
         item["description"] = clean(item.get("description", ""))
@@ -134,11 +163,8 @@ def render_site(content: SiteContent) -> str:
         member["role"] = clean(member.get("role", ""))
         member["description"] = clean(member.get("description", ""))
 
-    # --- Sidebar ---
-    for item in data.get("sidebar_items", []):
-        item["label"] = clean(item.get("label", ""))
-        item["anchor"] = clean_anchor(item.get("anchor", "#"))
-        item["icon"] = clean(item.get("icon", ""))
+    # --- Sidebar — ПОДСТАВЛЯЕМ СТАНДАРТНЫЕ, ЕСЛИ ПУСТО ---
+    data["sidebar_items"] = get_sidebar_items(content)
 
     # --- Hero image ---
     hero_prompt = data.get("hero_image_prompt", "")
@@ -161,7 +187,6 @@ def render_site(content: SiteContent) -> str:
 
 
 def save_site(html: str, output_dir: str = "output") -> Path:
-    """Сохраняет готовый HTML в файл output/index.html."""
     out = Path(output_dir)
     out.mkdir(exist_ok=True)
     index = out / "index.html"

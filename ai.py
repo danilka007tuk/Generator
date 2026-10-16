@@ -28,6 +28,7 @@ SYSTEM_PROMPT = """
 5. Язык ответа — тот же, что в запросе пользователя.
 6. НЕ добавляй пояснений, markdown-обёрток и комментариев. Только валидный JSON.
 7. Если пользователь указал название, адрес, телефон, услуги, часы — используй ИХ.
+8. ВСЕГДА заполняй sidebar_items — минимум 4 пункта. НЕ оставляй пустым.
 
 РЕШЕНИЕ О БЛОКАХ:
 Поле "blocks" — это список блоков в нужном порядке. Выбирай из:
@@ -37,7 +38,7 @@ SYSTEM_PROMPT = """
 - "services" — список услуг (для клиник, салонов, мастеров)
 - "gallery" — галерея (для фотостудий, салонов, ресторанов)
 - "pricing" — цены (если есть прайс)
-- "testimonials" — отзывы (всегда включай, если есть 3+ отзыва)
+- "testimonials" — отзывы (включай, если есть 3+ отзыва)
 - "team" — команда (для салонов, клиник, студий)
 - "faq" — частые вопросы (полезно всем)
 - "booking" — форма бронирования (для всех, кто оказывает услуги)
@@ -70,11 +71,11 @@ SYSTEM_PROMPT = """
 5. color_text — цвет текста (контрастный к фону).
 6. color_accent — яркий акцент (для CTA-кнопок).
 
-САЙДБАР:
-Реши, какие пункты меню показать в сайдбаре. 3–6 пунктов.
+САЙДБАР (ОБЯЗАТЕЛЬНО):
+ВСЕГДА заполняй поле sidebar_items — минимум 4 пункта, максимум 6.
 Каждый пункт содержит:
-- label — текст пункта (до 40 символов).
-- anchor — якорь на блок (например "#services", "#gallery", "#booking", "#contacts").
+- label — текст пункта (до 40 символов, на русском).
+- anchor — якорь на блок. ВСЕГДА из списка: "#services", "#gallery", "#pricing", "#testimonials", "#team", "#faq", "#booking", "#contacts", "#about", "#features".
 - icon — эмодзи (один символ).
 
 Также придумай текст главной кнопки в сайдбаре (sidebar_cta_text, до 40 символов) — обычно "Забронировать", "Записаться", "Оставить заявку".
@@ -93,53 +94,48 @@ SYSTEM_PROMPT = """
     {"label": "Записаться", "anchor": "#booking", "icon": "📅"},
     {"label": "Контакты", "anchor": "#contacts", "icon": "📞"}
   ]
+- Кафе: [
+    {"label": "О нас", "anchor": "#about", "icon": "☕"},
+    {"label": "Меню", "anchor": "#services", "icon": "🍰"},
+    {"label": "Галерея", "anchor": "#gallery", "icon": "🖼"},
+    {"label": "Контакты", "anchor": "#contacts", "icon": "📞"}
+  ]
 
 ОПИСАНИЯ ДЛЯ КАРТИНОК:
-Поле hero_image_prompt — текстовое описание для генерации фоновой картинки hero-блока (до 300 символов).
-Опиши сцену на английском языке, которую ИИ сможет нарисовать. Указывай стиль, освещение, объекты.
+Поле hero_image_prompt — текстовое описание для генерации фоновой картинки hero-блока (до 300 символов, на английском).
+Опиши сцену, которую ИИ сможет нарисовать: стиль, освещение, объекты.
 
 Примеры:
-- Для фотостудии: "Modern photo studio interior with soft light, professional cameras, minimalistic design, warm atmosphere"
-- Для кафе: "Cozy coffee shop interior with wooden tables, warm lighting, coffee cups, plants, inviting atmosphere"
-- Для клиники: "Modern medical clinic reception, clean white interior, soft blue accents, professional atmosphere"
+- Фотостудия: "Modern photo studio interior with soft light, professional cameras, minimalistic design, warm atmosphere"
+- Кафе: "Cozy coffee shop interior with wooden tables, warm lighting, coffee cups, plants, inviting atmosphere"
+- Клиника: "Modern medical clinic reception, clean white interior, soft blue accents, professional atmosphere"
 
-Поле gallery[].image_prompt — описание для каждой картинки галереи (до 300 символов).
-Опиши, что должно быть на картинке.
+Поле gallery[].image_prompt — описание для каждой картинки галереи (до 300 символов, на английском).
 
 Примеры:
 - "Portrait of young woman in natural light, professional photography, soft focus"
 - "Wedding couple holding hands, outdoor ceremony, golden hour, romantic"
 
 О КОМПАНИИ:
-- about_short — короткое описание компании (2–3 предложения, до 300 символов). Показывается на главной странице.
-- about_full — полное описание (1 абзац, до 1000 символов). Показывается в блоке "О нас".
-
-Пример about_short: "Фотостудия Кадр — команда профессиональных фотографов с 10-летним опытом. Мы создаём портреты, свадебные и семейные фотосессии в Москве."
+- about_short — короткое описание (2–3 предложения, до 300 символов).
+- about_full — полное описание (1 абзац, до 1000 символов).
 
 ОТЗЫВЫ:
 Поле testimonials — список из 3–5 отзывов. Каждый содержит:
 - author — имя клиента (до 80 символов).
 - text — текст отзыва (до 300 символов).
-- rating — оценка от 1 до 5 (целое число).
+- rating — оценка от 1 до 5 (целое).
 
 ЧАСТЫЕ ВОПРОСЫ:
 Поле faq — список из 3–5 вопросов. Каждый содержит:
 - question — вопрос (до 200 символов).
 - answer — ответ (до 500 символов).
 
-Примеры:
-- {"question": "Как записаться на съёмку?", "answer": "Через форму бронирования на сайте или по телефону."}
-- {"question": "Сколько стоит съёмка?", "answer": "От 5000 рублей за часовую сессию."}
-
 КОМАНДА:
-Поле team — список из 3–5 членов команды (для салонов, клиник, студий). Каждый содержит:
+Поле team — список из 3–5 членов команды. Каждый содержит:
 - name — имя (до 80 символов).
 - role — роль/должность (до 80 символов).
 - description — короткое описание (до 200 символов).
-
-Примеры:
-- {"name": "Анна Иванова", "role": "Главный фотограф", "description": "Специализируется на портретах и свадьбах"}
-- {"name": "Иван Петров", "role": "Визажист", "description": "Опыт 8 лет, работает с ведущими брендами"}
 
 СХЕМА ОТВЕТА:
 {
@@ -210,7 +206,6 @@ SYSTEM_PROMPT = """
 
 
 def generate_content(user_request: str, max_attempts: int = 3) -> SiteContent:
-    """Отправляет запрос в ИИ, валидирует ответ, при ошибке пробует снова."""
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_request},
