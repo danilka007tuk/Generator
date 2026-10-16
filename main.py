@@ -5,6 +5,9 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import date as date_type
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Depends, BackgroundTasks
@@ -185,7 +188,7 @@ async def send_notifications(text: str, session: AsyncSession):
 
     logger.info(f"Рассылка уведомления {len(recipients)} получателям")
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(verify=False, timeout=15) as client:
         for user_id in recipients:
             try:
                 response = await client.post(
@@ -193,11 +196,13 @@ async def send_notifications(text: str, session: AsyncSession):
                     params={"user_id": user_id},
                     headers={"Authorization": token},
                     json={"text": text},
-                    timeout=10,
+                    timeout=15,
                 )
                 if response.status_code != 200:
                     logger.warning(
                         f"MAX ответ {response.status_code} для {user_id}: {response.text[:200]}"
                     )
+                else:
+                    logger.info(f"Уведомление отправлено {user_id}")
             except Exception as e:
                 logger.error(f"Не удалось отправить уведомление {user_id}: {e}")
