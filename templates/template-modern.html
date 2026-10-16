@@ -15,18 +15,21 @@
             --sidebar-width: 260px;
         }
         * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+        html, body { height: 100%; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0; padding: 0;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
-        /* ============ КНОПКА-БУРГЕР ============ */
+        /* ============ КНОПКА-БУРГЕР (всегда видна) ============ */
         .sidebar-toggle {
-            display: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: fixed;
             top: 16px; left: 16px;
             z-index: 300;
@@ -40,7 +43,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        /* ============ САЙДБАР ============ */
+        /* ============ САЙДБАР (OVERLAY) ============ */
         .sidebar {
             position: fixed;
             left: 0; top: 0;
@@ -54,30 +57,57 @@
             flex-direction: column;
             z-index: 200;
             transition: transform 0.3s;
+            transform: translateX(-100%);
         }
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        /* ============ ЗАТЕМНЕНИЕ ФОНА ============ */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 150;
+        }
+        .sidebar-overlay.open {
+            display: block;
+        }
+
         .sidebar-logo {
             font-size: 1.25em;
             font-weight: 700;
             color: var(--primary);
             margin-bottom: 28px;
             line-height: 1.3;
+            cursor: pointer;
+            transition: opacity 0.2s;
         }
+        .sidebar-logo:hover { opacity: 0.8; }
         .sidebar-nav {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 6px;
             margin-bottom: 24px;
             flex-grow: 1;
         }
         .sidebar-nav a {
             color: #ddd;
             text-decoration: none;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 0.92em;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
             transition: all 0.2s;
+            display: block;
         }
         .sidebar-nav a:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        .sidebar-nav a.active {
             background: var(--primary);
             color: #fff;
         }
@@ -86,17 +116,20 @@
             background: var(--accent);
             color: #fff;
             text-align: center;
-            padding: 14px;
+            padding: 16px;
             border-radius: 10px;
             text-decoration: none;
             font-weight: 700;
             margin-bottom: 20px;
-            font-size: 0.95em;
+            font-size: 1em;
+            cursor: pointer;
             transition: transform 0.2s;
+            border: none;
+            width: 100%;
         }
         .sidebar-cta:hover { transform: scale(1.03); }
         .sidebar-contacts {
-            font-size: 0.82em;
+            font-size: 0.85em;
             color: #aaa;
             line-height: 1.7;
             border-top: 1px solid #333;
@@ -106,12 +139,26 @@
 
         /* ============ ОСНОВНОЙ КОНТЕНТ ============ */
         .main-content {
-            margin-left: var(--sidebar-width);
+            margin-left: 0;
             min-height: 100vh;
         }
         .container { max-width: 1000px; margin: 0 auto; padding: 0 32px; }
 
-        /* ============ HERO ============ */
+        /* ============ СЕКЦИИ (SPA) ============ */
+        .page-section {
+            display: none;
+            padding: 48px 0;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .page-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============ HERO (главная) ============ */
         .hero {
             position: relative;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -119,6 +166,10 @@
             padding: 80px 32px 60px;
             text-align: center;
             overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         {% if hero_image_url %}
         .hero {
@@ -129,51 +180,106 @@
             background-position: center;
         }
         {% endif %}
-        .hero h1 {
+        .hero-inner {
             position: relative;
-            font-size: 2.6em;
-            margin: 0 0 16px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .hero h1 {
+            font-size: 3em;
+            margin: 0 0 20px;
             font-weight: 800;
             text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+            line-height: 1.1;
         }
         .hero p {
-            position: relative;
-            font-size: 1.1em;
+            font-size: 1.2em;
             opacity: 0.95;
-            max-width: 600px;
-            margin: 0 auto;
+            max-width: 640px;
+            margin: 0 auto 32px;
             text-shadow: 0 1px 10px rgba(0,0,0,0.3);
         }
         .hero-about {
-            position: relative;
-            max-width: 600px;
-            margin: 20px auto 0;
-            font-size: 0.95em;
+            max-width: 640px;
+            margin: 0 auto 40px;
+            font-size: 1em;
             opacity: 0.9;
             line-height: 1.7;
         }
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .hero-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .hero-btn:hover { transform: scale(1.05); }
+        .hero-btn.secondary {
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.5);
+        }
 
-        /* ============ СЕКЦИИ ============ */
-        section { padding: 48px 0; }
-        section h2 {
-            text-align: center;
-            font-size: 1.9em;
-            margin: 0 0 12px;
+        /* ============ ЗАГОЛОВОК СЕКЦИИ + КРЕСТИК ============ */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--primary);
+        }
+        .section-header h2 {
+            margin: 0;
+            font-size: 2em;
             color: var(--text);
         }
-        .section-subtitle {
-            text-align: center;
-            color: #888;
-            margin: 0 0 32px;
-            font-size: 0.95em;
+        .close-btn {
+            background: transparent;
+            border: 2px solid var(--text);
+            color: var(--text);
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .close-btn:hover {
+            background: var(--text);
+            color: #fff;
         }
 
-        /* ============ FEATURES ============ */
-        .features-grid {
+        /* ============ ОБЩИЕ БЛОКИ (карточки) ============ */
+        .features-grid,
+        .services-grid,
+        .gallery-grid,
+        .pricing-grid,
+        .testimonials-grid,
+        .team-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             gap: 20px;
         }
+        .features-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+        .services-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+        .pricing-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+        .testimonials-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        .team-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+
         .feature {
             background: #fff;
             border-radius: 14px;
@@ -185,22 +291,6 @@
         .feature h3 { color: var(--primary); margin: 0 0 12px; font-size: 1.1em; }
         .feature p { margin: 0; color: #666; font-size: 0.92em; }
 
-        /* ============ ABOUT ============ */
-        .about {
-            background: #fff;
-            padding: 40px 32px;
-            border-radius: 16px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .about p { font-size: 1em; line-height: 1.8; color: #555; margin: 0; }
-
-        /* ============ SERVICES ============ */
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
-        }
         .service-card {
             background: #fff;
             border-radius: 14px;
@@ -212,12 +302,6 @@
         .service-card p { margin: 0 0 10px; color: #666; font-size: 0.92em; }
         .service-card .price { font-size: 1.1em; font-weight: 700; color: var(--primary); }
 
-        /* ============ GALLERY ============ */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 20px;
-        }
         .gallery-item {
             background: #fff;
             border-radius: 14px;
@@ -234,12 +318,6 @@
         .gallery-item h3 { margin: 0 0 6px; color: var(--primary); font-size: 1em; }
         .gallery-item p { margin: 0; color: #777; font-size: 0.88em; }
 
-        /* ============ PRICING ============ */
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 20px;
-        }
         .pricing-card {
             background: #fff;
             border-radius: 14px;
@@ -252,12 +330,6 @@
         .pricing-card .price { font-size: 1.5em; font-weight: 700; color: var(--primary); margin: 12px 0; }
         .pricing-card p { color: #666; font-size: 0.88em; margin: 0; }
 
-        /* ============ TESTIMONIALS ============ */
-        .testimonials-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
-        }
         .testimonial {
             background: #fff;
             border-radius: 14px;
@@ -268,12 +340,6 @@
         .testimonial .text { font-style: italic; color: #555; margin-bottom: 12px; line-height: 1.6; font-size: 0.95em; }
         .testimonial .author { font-weight: 700; color: var(--primary); font-size: 0.9em; }
 
-        /* ============ TEAM ============ */
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-        }
         .team-member {
             background: #fff;
             border-radius: 14px;
@@ -297,7 +363,15 @@
         .team-member .role { color: var(--primary); font-size: 0.85em; font-weight: 600; margin-bottom: 10px; }
         .team-member p { color: #777; font-size: 0.88em; margin: 0; }
 
-        /* ============ FAQ ============ */
+        .about {
+            background: #fff;
+            padding: 40px 32px;
+            border-radius: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .about p { font-size: 1em; line-height: 1.8; color: #555; margin: 0; }
+
         .faq-list { max-width: 800px; margin: 0 auto; }
         .faq-item {
             background: #fff;
@@ -309,7 +383,6 @@
         .faq-item h3 { margin: 0 0 10px; color: var(--primary); font-size: 1em; }
         .faq-item p { margin: 0; color: #555; line-height: 1.6; font-size: 0.95em; }
 
-        /* ============ BOOKING ============ */
         .booking {
             background: #fff;
             border-radius: 16px;
@@ -372,30 +445,25 @@
             font-size: 1em; font-weight: 700; cursor: pointer;
         }
 
-        /* ============ CONTACTS ============ */
         .contacts-grid { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
         .contact-item { text-align: center; flex: 1 1 180px; }
         .contact-item .label { font-size: 0.8em; color: #888; text-transform: uppercase; margin-bottom: 6px; }
         .contact-item .value { font-size: 1em; font-weight: 700; }
 
-        /* ============ CTA ============ */
         .cta {
             background: linear-gradient(135deg, var(--secondary), var(--primary));
             color: #fff; padding: 48px 24px; text-align: center; border-radius: 16px;
         }
         .cta h2 { margin: 0; color: #fff; font-size: 1.6em; }
 
-        /* ============ FOOTER ============ */
         footer {
             background: var(--text);
             color: #aaa;
             padding: 28px;
             text-align: center;
-            margin-top: 32px;
             font-size: 0.9em;
         }
 
-        /* ============ MODAL ============ */
         .success-modal {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.6); z-index: 1000;
@@ -414,18 +482,12 @@
 
         /* ============ АДАПТИВ ============ */
         @media (max-width: 900px) {
-            .sidebar-toggle { display: block; }
-            .sidebar {
-                transform: translateX(-100%);
-                width: 280px;
-            }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; }
-            .hero { padding: 80px 24px 48px; }
+            .hero { padding: 80px 24px 48px; min-height: auto; }
             .hero h1 { font-size: 2em; }
             .container { padding: 0 20px; }
-            section { padding: 32px 0; }
-            section h2 { font-size: 1.6em; }
+            .page-section { padding: 32px 0; }
+            .section-header h2 { font-size: 1.5em; }
+            .close-btn { width: 40px; height: 40px; font-size: 1.2em; }
         }
     </style>
 </head>
@@ -434,22 +496,29 @@
 <!-- КНОПКА-БУРГЕР -->
 <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
+<!-- ЗАТЕМНЕНИЕ ФОНА -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 <!-- САЙДБАР -->
 {% if sidebar_enabled %}
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">{{ company_name }}</div>
+    <div class="sidebar-logo" onclick="showSection('hero')">{{ company_name }}</div>
 
     {% if sidebar_items %}
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" id="sidebarNav">
         {% for item in sidebar_items %}
-        <a href="{{ item.anchor }}" onclick="closeSidebar()">{{ item.icon }} {{ item.label }}</a>
+        <a href="javascript:void(0)"
+           data-section="{{ item.anchor[1:] }}"
+           onclick="showSection('{{ item.anchor[1:] }}')">
+            {{ item.icon }} {{ item.label }}
+        </a>
         {% endfor %}
     </nav>
     {% endif %}
 
-    {% if sidebar_cta_text %}
-    <a href="#booking" class="sidebar-cta" onclick="closeSidebar()">{{ sidebar_cta_text }}</a>
-    {% endif %}
+    <button class="sidebar-cta" onclick="showSection('booking')">
+        {{ sidebar_cta_text or 'Забронировать' }}
+    </button>
 
     <div class="sidebar-contacts">
         <div>📞 {{ company_phone }}</div>
@@ -460,216 +529,274 @@
 
 <main class="main-content">
 
-{% for block in blocks %}
-
-    {% if block == "hero" %}
-    <section class="hero" id="hero">
+<!-- HERO (главная страница) -->
+<section class="hero page-section active" id="section-hero">
+    <div class="hero-inner">
         <h1>{{ hero_heading }}</h1>
         <p>{{ hero_subheading }}</p>
         {% if about_short %}
         <div class="hero-about">{{ about_short }}</div>
         {% endif %}
-    </section>
-
-    {% elif block == "features" and features %}
-    <section class="container" id="features">
-        <h2>Преимущества</h2>
-        <p class="section-subtitle">Почему выбирают нас</p>
-        <div class="features-grid">
-            {% for feature in features %}
-            <div class="feature">
-                <h3>{{ feature.title }}</h3>
-                <p>{{ feature.description }}</p>
-            </div>
-            {% endfor %}
+        <div class="hero-buttons">
+            <button class="hero-btn" onclick="showSection('booking')">
+                {{ sidebar_cta_text or 'Забронировать' }}
+            </button>
+            <button class="hero-btn secondary" onclick="showSection('services')">
+                Услуги
+            </button>
         </div>
-    </section>
+    </div>
+</section>
 
-    {% elif block == "about" and about_full %}
-    <section class="container" id="about">
-        <h2>О нас</h2>
-        <div class="about">
-            <p>{{ about_full }}</p>
-        </div>
-    </section>
+{% for block in blocks %}
+    {% if block != "hero" %}
 
-    {% elif block == "services" and services %}
-    <section class="container" id="services">
-        <h2>Наши услуги</h2>
-        <p class="section-subtitle">Что мы предлагаем</p>
-        <div class="services-grid">
-            {% for service in services %}
-            <div class="service-card">
-                <h3>{{ service.name }}</h3>
-                <p>{{ service.description }}</p>
-                {% if service.price %}<div class="price">{{ service.price }}</div>{% endif %}
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-
-    {% elif block == "gallery" and gallery %}
-    <section class="container" id="gallery">
-        <h2>Галерея</h2>
-        <p class="section-subtitle">Наши работы</p>
-        <div class="gallery-grid">
-            {% for item in gallery %}
-            <div class="gallery-item">
-                {% if item.image_url %}
-                <img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">
-                {% endif %}
-                <div class="caption">
-                    <h3>{{ item.title }}</h3>
-                    <p>{{ item.description }}</p>
+        {% if block == "features" and features %}
+        <section class="page-section" id="section-features">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Преимущества</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="features-grid">
+                    {% for feature in features %}
+                    <div class="feature">
+                        <h3>{{ feature.title }}</h3>
+                        <p>{{ feature.description }}</p>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            {% endfor %}
-        </div>
-    </section>
+        </section>
 
-    {% elif block == "pricing" and pricing %}
-    <section class="container" id="pricing">
-        <h2>Цены</h2>
-        <p class="section-subtitle">Прозрачные цены</p>
-        <div class="pricing-grid">
-            {% for item in pricing %}
-            <div class="pricing-card">
-                <h3>{{ item.name }}</h3>
-                <div class="price">{{ item.price }}</div>
-                <p>{{ item.description }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-
-    {% elif block == "testimonials" and testimonials %}
-    <section class="container" id="testimonials">
-        <h2>Отзывы</h2>
-        <p class="section-subtitle">Что говорят клиенты</p>
-        <div class="testimonials-grid">
-            {% for t in testimonials %}
-            <div class="testimonial">
-                <div class="stars">
-                    {% for i in range(t.rating) %}★{% endfor %}
-                    {% for i in range(5 - t.rating) %}☆{% endfor %}
+        {% elif block == "about" and about_full %}
+        <section class="page-section" id="section-about">
+            <div class="container">
+                <div class="section-header">
+                    <h2>О нас</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
                 </div>
-                <div class="text">«{{ t.text }}»</div>
-                <div class="author">— {{ t.author }}</div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-
-    {% elif block == "team" and team %}
-    <section class="container" id="team">
-        <h2>Наша команда</h2>
-        <p class="section-subtitle">Специалисты, которым можно доверять</p>
-        <div class="team-grid">
-            {% for member in team %}
-            <div class="team-member">
-                <div class="avatar">{{ member.name[0] }}</div>
-                <h3>{{ member.name }}</h3>
-                <div class="role">{{ member.role }}</div>
-                <p>{{ member.description }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-
-    {% elif block == "faq" and faq %}
-    <section class="container" id="faq">
-        <h2>Частые вопросы</h2>
-        <p class="section-subtitle">Отвечаем на главное</p>
-        <div class="faq-list">
-            {% for item in faq %}
-            <div class="faq-item">
-                <h3>{{ item.question }}</h3>
-                <p>{{ item.answer }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-
-    {% elif block == "booking" %}
-    <section class="container" id="booking">
-        <h2>Забронировать</h2>
-        <p class="section-subtitle">Выберите удобную дату</p>
-        <div class="booking">
-            <div class="calendar-header">
-                <button id="prevMonth" type="button">‹</button>
-                <div class="month-year" id="monthYear">—</div>
-                <button id="nextMonth" type="button">›</button>
-            </div>
-
-            <div class="weekdays">
-                <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div>
-                <div>Пт</div><div>Сб</div><div>Вс</div>
-            </div>
-
-            <div class="days" id="days"></div>
-
-            <form class="booking-form" id="bookingForm">
-                <h3>Вы выбрали: <span id="selectedDate"></span></h3>
-
-                <div class="form-group">
-                    <label for="service">Услуга</label>
-                    <select id="service" required>
-                        <option value="">— Выберите услугу —</option>
-                        {% for service in services %}
-                        <option value="{{ service.name }}">{{ service.name }}</option>
-                        {% endfor %}
-                    </select>
+                <div class="about">
+                    <p>{{ about_full }}</p>
                 </div>
-
-                <div class="form-group">
-                    <label for="name">Ваше имя</label>
-                    <input type="text" id="name" placeholder="Иван Иванов" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Телефон</label>
-                    <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="comment">Комментарий</label>
-                    <textarea id="comment" rows="3" placeholder="Пожелания..."></textarea>
-                </div>
-
-                <button type="submit" class="submit-btn">Отправить заявку</button>
-            </form>
-        </div>
-    </section>
-
-    {% elif block == "contacts" %}
-    <section class="container" id="contacts">
-        <h2>Контакты</h2>
-        <p class="section-subtitle">Мы всегда на связи</p>
-        <div class="contacts-grid">
-            <div class="contact-item">
-                <div class="label">Компания</div>
-                <div class="value">{{ company_name }}</div>
             </div>
-            <div class="contact-item">
-                <div class="label">Адрес</div>
-                <div class="value">{{ company_address }}</div>
-            </div>
-            <div class="contact-item">
-                <div class="label">Телефон</div>
-                <div class="value">{{ company_phone }}</div>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    {% elif block == "cta" %}
-    <section class="container" id="cta">
-        <div class="cta">
-            <h2>{{ cta_text }}</h2>
-        </div>
-    </section>
+        {% elif block == "services" and services %}
+        <section class="page-section" id="section-services">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Наши услуги</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="services-grid">
+                    {% for service in services %}
+                    <div class="service-card">
+                        <h3>{{ service.name }}</h3>
+                        <p>{{ service.description }}</p>
+                        {% if service.price %}<div class="price">{{ service.price }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
 
+        {% elif block == "gallery" and gallery %}
+        <section class="page-section" id="section-gallery">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Галерея</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="gallery-grid">
+                    {% for item in gallery %}
+                    <div class="gallery-item">
+                        {% if item.image_url %}
+                        <img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                        {% endif %}
+                        <div class="caption">
+                            <h3>{{ item.title }}</h3>
+                            <p>{{ item.description }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        {% elif block == "pricing" and pricing %}
+        <section class="page-section" id="section-pricing">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Цены</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="pricing-grid">
+                    {% for item in pricing %}
+                    <div class="pricing-card">
+                        <h3>{{ item.name }}</h3>
+                        <div class="price">{{ item.price }}</div>
+                        <p>{{ item.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        {% elif block == "testimonials" and testimonials %}
+        <section class="page-section" id="section-testimonials">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Отзывы</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="testimonials-grid">
+                    {% for t in testimonials %}
+                    <div class="testimonial">
+                        <div class="stars">
+                            {% for i in range(t.rating) %}★{% endfor %}
+                            {% for i in range(5 - t.rating) %}☆{% endfor %}
+                        </div>
+                        <div class="text">«{{ t.text }}»</div>
+                        <div class="author">— {{ t.author }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        {% elif block == "team" and team %}
+        <section class="page-section" id="section-team">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Наша команда</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="team-grid">
+                    {% for member in team %}
+                    <div class="team-member">
+                        <div class="avatar">{{ member.name[0] }}</div>
+                        <h3>{{ member.name }}</h3>
+                        <div class="role">{{ member.role }}</div>
+                        <p>{{ member.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        {% elif block == "faq" and faq %}
+        <section class="page-section" id="section-faq">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Частые вопросы</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="faq-list">
+                    {% for item in faq %}
+                    <div class="faq-item">
+                        <h3>{{ item.question }}</h3>
+                        <p>{{ item.answer }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        {% elif block == "booking" %}
+        <section class="page-section" id="section-booking">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Забронировать</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="booking">
+                    <div class="calendar-header">
+                        <button id="prevMonth" type="button">‹</button>
+                        <div class="month-year" id="monthYear">—</div>
+                        <button id="nextMonth" type="button">›</button>
+                    </div>
+
+                    <div class="weekdays">
+                        <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div>
+                        <div>Пт</div><div>Сб</div><div>Вс</div>
+                    </div>
+
+                    <div class="days" id="days"></div>
+
+                    <form class="booking-form" id="bookingForm">
+                        <h3>Вы выбрали: <span id="selectedDate"></span></h3>
+
+                        <div class="form-group">
+                            <label for="service">Услуга</label>
+                            <select id="service" required>
+                                <option value="">— Выберите услугу —</option>
+                                {% for service in services %}
+                                <option value="{{ service.name }}">{{ service.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">Ваше имя</label>
+                            <input type="text" id="name" placeholder="Иван Иванов" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Телефон</label>
+                            <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="comment">Комментарий</label>
+                            <textarea id="comment" rows="3" placeholder="Пожелания..."></textarea>
+                        </div>
+
+                        <button type="submit" class="submit-btn">Отправить заявку</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        {% elif block == "contacts" %}
+        <section class="page-section" id="section-contacts">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Контакты</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="contacts-grid">
+                    <div class="contact-item">
+                        <div class="label">Компания</div>
+                        <div class="value">{{ company_name }}</div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="label">Адрес</div>
+                        <div class="value">{{ company_address }}</div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="label">Телефон</div>
+                        <div class="value">{{ company_phone }}</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% elif block == "cta" %}
+        <section class="page-section" id="section-cta">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Готовы начать?</h2>
+                    <button class="close-btn" onclick="showSection('hero')" title="Закрыть">×</button>
+                </div>
+                <div class="cta">
+                    <h2>{{ cta_text }}</h2>
+                </div>
+            </div>
+        </section>
+
+        {% endif %}
     {% endif %}
-
 {% endfor %}
 
 </main>
@@ -696,14 +823,53 @@
     const selectedDateEl = document.getElementById('selectedDate');
     const successModal = document.getElementById('successModal');
 
+    // ============ ПЕРЕКЛЮЧЕНИЕ СЕКЦИЙ ============
+    function showSection(sectionId) {
+        // Скрываем все секции
+        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+
+        // Показываем нужную
+        const target = document.getElementById('section-' + sectionId);
+        if (target) {
+            target.classList.add('active');
+        } else {
+            // Если секции нет — показываем hero
+            document.getElementById('section-hero').classList.add('active');
+        }
+
+        // Обновляем активный пункт в сайдбаре
+        document.querySelectorAll('#sidebarNav a').forEach(a => {
+            if (a.dataset.section === sectionId) {
+                a.classList.add('active');
+            } else {
+                a.classList.remove('active');
+            }
+        });
+
+        // Прокручиваем страницу наверх
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // На мобильных — закрываем сайдбар
+        closeSidebar();
+
+        // Если открыли календарь — перерисовываем
+        if (sectionId === 'booking') {
+            renderCalendar();
+        }
+    }
+
     // ============ САЙДБАР ============
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
         if (sidebar) sidebar.classList.toggle('open');
+        if (overlay) overlay.classList.toggle('open');
     }
     function closeSidebar() {
         const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
         if (sidebar) sidebar.classList.remove('open');
+        if (overlay) overlay.classList.remove('open');
     }
 
     // ============ КАЛЕНДАРЬ ============
@@ -803,6 +969,7 @@
         renderCalendar();
     }
 
+    // Стартовая отрисовка календаря (когда секция ещё скрыта)
     renderCalendar();
 </script>
 </body>
