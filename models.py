@@ -29,6 +29,7 @@ class Subscriber(Base):
     __tablename__ = "subscribers"
 
     user_id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[str] = mapped_column(String(100), primary_key=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

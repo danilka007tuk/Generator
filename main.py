@@ -27,12 +27,12 @@ load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 logger = logging.getLogger("uvicorn.error")
 templates = Jinja2Templates(directory="templates")
 
-# Хранилище сгенерированного контента (в памяти)
 sites_content: dict[str, SiteContent] = {}
 
 
 class SubscriberRequest(BaseModel):
     user_id: int
+    site_id: str
 
 
 class BookingRequest(BaseModel):
@@ -52,7 +52,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# CORS — чтобы формы с GitHub Pages могли обращаться к API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -71,15 +70,17 @@ async def subscribe(
     sub: SubscriberRequest,
     session: AsyncSession = Depends(get_session),
 ):
-    """Регистрирует подписчика в БД."""
-    existing = await session.get(Subscriber, sub.user_id)
+    """Регистрирует подписчика конкретного сайта."""
+    existing = await session.get(Subscriber, (sub.user_id, sub.site_id))
     if not existing:
-        session.add(Subscriber(user_id=sub.user_id))
+        session.add(Subscriber(user_id=sub.user_id, site_id=sub.site_id))
         await session.commit()
 
-    result = await session.execute(select(Subscriber))
+    result = await session.execute(
+        select(Subscriber).where(Subscriber.site_id == sub.site_id)
+    )
     total = len(result.scalars().all())
-    logger.info(f"Подписчик {sub.user_id} зарегистрирован. Всего: {total}")
+    logger.info(f"Подписчик {sub.user_id} → {sub.site_id}. Всего на сайте: {total}")
     return {"ok": True, "total": total}
 
 
@@ -106,7 +107,6 @@ async def get_busy(
     site_id: str,
     session: AsyncSession = Depends(get_session),
 ):
-    """Возвращает занятые слоты для конкретного сайта."""
     today = date_type.today().isoformat()
     result = await session.execute(
         select(Booking.date, Booking.time).where(
@@ -126,7 +126,6 @@ async def create_booking(
     session: AsyncSession = Depends(get_session),
 ):
     """Принимает новую бронь."""
-    # Проверка занятости
     existing = await session.execute(
         select(Booking).where(
             Booking.site_id == site_id,
@@ -149,7 +148,6 @@ async def create_booking(
     session.add(booking)
     await session.commit()
 
-    # Формируем текст уведомления
     text = (
         f"🔔 Новая бронь!\n\n"
         f"🌐 Сайт: {site_id}\n"
@@ -160,22 +158,24 @@ async def create_booking(
         f"💬 {data.comment or '—'}"
     )
 
-    # Рассылаем в фоне, не блокируя ответ
-    background_tasks.add_task(send_notifications, text, session)
+    background_tasks.add_task(send_notifications, text, site_id, session)
 
     return {"ok": True}
 
 
-async def send_notifications(text: str, session: AsyncSession):
-    """Отправляет уведомление в MAX всем подписчикам + админу."""
+async def send_notifications(text: str, site_id: str, session: AsyncSession):
+    """Отправляет уведомление в MAX: подписчикам сайта + админу."""
     token = os.getenv("MAX_BOT_TOKEN")
     admin_id = os.getenv("MAX_ADMIN_ID")
     url = "https://platform-api2.max.ru/messages"
 
-    # Читаем подписчиков из БД
-    result = await session.execute(select(Subscriber.user_id))
+    # Подписчики ТОЛЬКО этого сайта
+    result = await session.execute(
+        select(Subscriber.user_id).where(Subscriber.site_id == site_id)
+    )
     recipients = {row.user_id for row in result.all()}
 
+    # Админ — всегда
     if admin_id:
         try:
             recipients.add(int(admin_id))
@@ -183,10 +183,10 @@ async def send_notifications(text: str, session: AsyncSession):
             logger.warning(f"MAX_ADMIN_ID не число: {admin_id}")
 
     if not recipients:
-        logger.warning("Нет получателей для уведомления")
+        logger.warning(f"Нет получателей для {site_id}")
         return
 
-    logger.info(f"Рассылка уведомления {len(recipients)} получателям")
+    logger.info(f"Рассылка [{site_id}] → {len(recipients)} получателям")
 
     async with httpx.AsyncClient(verify=False, timeout=15) as client:
         for user_id in recipients:
@@ -199,10 +199,8 @@ async def send_notifications(text: str, session: AsyncSession):
                     timeout=15,
                 )
                 if response.status_code != 200:
-                    logger.warning(
-                        f"MAX ответ {response.status_code} для {user_id}: {response.text[:200]}"
-                    )
+                    logger.warning(f"MAX {response.status_code} для {user_id}: {response.text[:200]}")
                 else:
                     logger.info(f"Уведомление отправлено {user_id}")
             except Exception as e:
-                logger.error(f"Не удалось отправить уведомление {user_id}: {e}")
+                logger.error(f"Не удалось отправить {user_id}: {e}")

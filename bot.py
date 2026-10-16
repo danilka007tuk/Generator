@@ -40,16 +40,6 @@ class Form(StatesGroup):
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
-    try:
-        async with httpx.AsyncClient() as client:
-            await client.post(
-                f"{SERVER_URL}/api/subscribe",
-                json={"user_id": message.from_user.id},
-                timeout=10,
-            )
-    except Exception as e:
-        print(f"Не удалось зарегистрировать подписчика: {e}")
-
     await message.answer(
         "👋 Привет! Я помогу создать сайт с онлайн-бронированием.\n"
         "\n"
@@ -345,7 +335,6 @@ async def handle_repo(message: Message, state: FSMContext):
 
     try:
         content = await asyncio.to_thread(generate_content, user_request, max_attempts=3)
-        # Принудительно сохраняем выбранный шаблон
         content.template_name = data.get('template_name', 'template-modern.html')
         content.palette_name = data.get('palette_name', 'auto')
         html = render_site(content, server_url=SERVER_URL, site_id=repo_name)
@@ -382,6 +371,18 @@ async def handle_repo(message: Message, state: FSMContext):
         await state.clear()
         return
 
+    # Автоматически подписываем создателя на уведомления его сайта
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                f"{SERVER_URL}/api/subscribe",
+                json={"user_id": message.from_user.id, "site_id": repo_name},
+                timeout=10,
+            )
+        logger.info(f"Создатель {message.from_user.id} подписан на {repo_name}")
+    except Exception as e:
+        logger.warning(f"Не удалось подписать создателя: {e}")
+
     await message.answer(
         "✅ Готово! Сайт опубликован.\n"
         "\n"
@@ -392,7 +393,9 @@ async def handle_repo(message: Message, state: FSMContext):
         f"{url}\n"
         "\n"
         "Откройте ссылку в браузере.\n"
-        "Если не открылась сразу — подождите 1–2 минуты."
+        "Если не открылась сразу — подождите 1–2 минуты.\n"
+        "\n"
+        "📬 Вы будете получать уведомления о заявках на этот сайт."
     )
     await state.clear()
 
