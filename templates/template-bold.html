@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ site_title }}</title>
+    <meta name="description" content="{{ meta_description }}">
+    <style>
+        :root {
+            --primary: {{ color_primary }};
+            --secondary: {{ color_secondary }};
+            --bg: {{ color_bg }};
+            --text: {{ color_text }};
+            --accent: {{ color_accent }};
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Arial Black', 'Helvetica', sans-serif;
+            margin: 0; padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+        .hero {
+            background: var(--primary);
+            color: #fff;
+            padding: 120px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+        .hero::after {
+            content: "";
+            position: absolute;
+            bottom: -150px;
+            left: -150px;
+            width: 500px;
+            height: 500px;
+            background: var(--secondary);
+            border-radius: 50%;
+            opacity: 0.25;
+        }
+        .hero-content {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 4.5em;
+            margin: 0 0 24px;
+            text-transform: uppercase;
+            letter-spacing: -0.03em;
+            line-height: 0.95;
+        }
+        .hero p {
+            font-family: 'Helvetica', sans-serif;
+            font-size: 1.3em;
+            font-weight: 400;
+            max-width: 640px;
+            margin: 0 auto;
+            opacity: 0.95;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+            padding: 80px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .feature {
+            background: #fff;
+            padding: 40px 32px;
+            border-left: 6px solid var(--accent);
+        }
+        .feature h3 {
+            color: var(--primary);
+            margin: 0 0 16px;
+            font-size: 1.3em;
+            text-transform: uppercase;
+        }
+        .feature p {
+            margin: 0;
+            color: #555;
+            font-size: 0.95em;
+            font-family: 'Helvetica', sans-serif;
+            font-weight: 400;
+        }
+
+        .services { padding: 80px 0; }
+        .services h2 {
+            text-align: center;
+            margin: 0 0 16px;
+            font-size: 3em;
+            text-transform: uppercase;
+        }
+        .services-subtitle {
+            text-align: center;
+            color: #888;
+            margin: 0 0 56px;
+            font-family: 'Helvetica', sans-serif;
+            font-weight: 400;
+        }
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .service-card {
+            background: #fff;
+            padding: 40px 32px;
+            border: 4px solid var(--text);
+            transition: transform 0.2s;
+        }
+        .service-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0 var(--primary);
+        }
+        .service-card h3 {
+            margin: 0 0 12px;
+            font-size: 1.4em;
+            text-transform: uppercase;
+            color: var(--text);
+        }
+        .service-card p {
+            margin: 0 0 16px;
+            color: #666;
+            font-family: 'Helvetica', sans-serif;
+            font-weight: 400;
+            font-size: 0.95em;
+        }
+        .service-card .price {
+            font-size: 1.6em;
+            color: var(--primary);
+            font-weight: 900;
+        }
+
+        .gallery { padding: 80px 0; background: var(--text); color: #fff; }
+        .gallery h2 {
+            text-align: center;
+            margin: 0 0 56px;
+            font-size: 3em;
+            text-transform: uppercase;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .gallery-item {
+            background: var(--primary);
+            padding: 40px 32px;
+            text-align: center;
+        }
+        .gallery-item h3 {
+            margin: 0 0 12px;
+            text-transform: uppercase;
+            color: #fff;
+            font-size: 1.2em;
+        }
+        .gallery-item p {
+            margin: 0;
+            color: rgba(255,255,255,0.85);
+            font-family: 'Helvetica', sans-serif;
+            font-size: 0.9em;
+        }
+
+        .pricing { padding: 80px 0; }
+        .pricing h2 {
+            text-align: center;
+            margin: 0 0 56px;
+            font-size: 3em;
+            text-transform: uppercase;
+        }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .pricing-card {
+            background: #fff;
+            border: 4px solid var(--primary);
+            padding: 48px 32px;
+            text-align: center;
+        }
+        .pricing-card h3 {
+            margin: 0 0 16px;
+            text-transform: uppercase;
+        }
+        .pricing-card .price {
+            font-size: 2.4em;
+            color: var(--primary);
+            font-weight: 900;
+            margin: 24px 0;
+        }
+        .pricing-card p {
+            color: #666;
+            font-family: 'Helvetica', sans-serif;
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        .booking {
+            background: #fff;
+            padding: 64px 40px;
+            margin: 80px auto;
+            max-width: 800px;
+            border: 4px solid var(--text);
+        }
+        .booking h2 {
+            text-align: center;
+            margin: 0 0 12px;
+            font-size: 2.4em;
+            text-transform: uppercase;
+        }
+        .booking .subtitle {
+            text-align: center;
+            color: #888;
+            margin: 0 0 48px;
+            font-family: 'Helvetica', sans-serif;
+            font-weight: 400;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .calendar-header button {
+            background: var(--primary);
+            border: none;
+            width: 48px; height: 48px;
+            font-size: 1.4em;
+            cursor: pointer;
+            color: #fff;
+            font-weight: 900;
+        }
+        .month-year {
+            font-size: 1.4em;
+            text-transform: uppercase;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .weekdays div {
+            text-align: center;
+            font-size: 0.85em;
+            color: #999;
+            padding: 12px 0;
+            text-transform: uppercase;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .day {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: var(--bg);
+            border: 2px solid transparent;
+            font-weight: 900;
+            transition: all 0.15s;
+        }
+        .day:hover:not(.disabled):not(.busy):not(.selected) {
+            border-color: var(--primary);
+            background: #fff;
+        }
+        .day.empty { background: transparent; cursor: default; }
+        .day.disabled { color: #ccc; cursor: not-allowed; background: transparent; }
+        .day.busy {
+            background: #ffe5e5;
+            color: #c0392b;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+        .day.selected { background: var(--primary); color: #fff; }
+        .day.today { border-color: var(--accent); }
+
+        .booking-form {
+            display: none;
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 4px solid var(--text);
+        }
+        .booking-form.active { display: block; }
+        .booking-form h3 {
+            text-align: center;
+            color: var(--primary);
+            margin: 0 0 32px;
+            text-transform: uppercase;
+            font-size: 1.2em;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: var(--text);
+            text-transform: uppercase;
+            font-weight: 900;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 16px;
+            border: 3px solid var(--text);
+            font-size: 1em;
+            font-family: 'Helvetica', sans-serif;
+            font-weight: 400;
+            background: #fff;
+            color: var(--text);
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 20px;
+            background: var(--primary);
+            color: #fff;
+            border: 4px solid var(--text);
+            font-size: 1.1em;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            letter-spacing: 0.1em;
+            transition: transform 0.15s;
+        }
+        .submit-btn:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0 var(--accent);
+        }
+
+        .contacts {
+            background: #fff;
+            padding: 64px 40px;

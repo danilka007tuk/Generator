@@ -19,20 +19,20 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Адрес сервера (на Aeza — localhost:8001)
 SERVER_URL = os.getenv("SERVER_URL", "http://127.0.0.1:8001")
 
 bot, dp, router = create_bot(max_token=os.getenv("MAX_BOT_TOKEN"))
 
 
 class Form(StatesGroup):
-    """Состояния диалога — 8 шагов."""
     waiting_company_name = State()
     waiting_sphere = State()
     waiting_services = State()
     waiting_address = State()
     waiting_phone = State()
     waiting_hours = State()
+    waiting_template = State()
+    waiting_palette = State()
     waiting_repo = State()
 
 
@@ -40,7 +40,6 @@ class Form(StatesGroup):
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
-    # Регистрируем пользователя как подписчика
     try:
         async with httpx.AsyncClient() as client:
             await client.post(
@@ -58,13 +57,11 @@ async def start(message: Message, state: FSMContext):
         "📋 Как это работает:\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
-        "Я задам вам **8 вопросов** о вашей компании.\n"
+        "Я задам вам несколько вопросов о вашей компании.\n"
         "Отвечайте на каждый — коротко и по делу.\n"
         "\n"
-        "После этого я сгенерирую сайт и опубликую его.\n"
-        "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📝 Шаг 1 из 7. Название компании\n"
+        "📝 Шаг 1. Название компании\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
         "Напишите название вашей компании.\n"
@@ -73,8 +70,6 @@ async def start(message: Message, state: FSMContext):
     )
     await state.set_state(Form.waiting_company_name)
 
-
-# ============ ШАГ 1: Название ============
 
 @router.message(Form.waiting_company_name)
 async def handle_company_name(message: Message, state: FSMContext):
@@ -89,7 +84,7 @@ async def handle_company_name(message: Message, state: FSMContext):
         f"✅ Отлично, «{company_name}»!\n"
         "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📝 Шаг 2 из 7. Сфера деятельности\n"
+        "📝 Шаг 2. Сфера деятельности\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
         "Чем занимается ваша компания?\n"
@@ -106,8 +101,6 @@ async def handle_company_name(message: Message, state: FSMContext):
     await state.set_state(Form.waiting_sphere)
 
 
-# ============ ШАГ 2: Сфера ============
-
 @router.message(Form.waiting_sphere)
 async def handle_sphere(message: Message, state: FSMContext):
     sphere = message.text.strip()
@@ -121,7 +114,7 @@ async def handle_sphere(message: Message, state: FSMContext):
         "✅ Принято!\n"
         "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📝 Шаг 3 из 7. Услуги\n"
+        "📝 Шаг 3. Услуги\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
         "Перечислите ваши услуги **через запятую**.\n"
@@ -132,8 +125,6 @@ async def handle_sphere(message: Message, state: FSMContext):
     )
     await state.set_state(Form.waiting_services)
 
-
-# ============ ШАГ 3: Услуги ============
 
 @router.message(Form.waiting_services)
 async def handle_services(message: Message, state: FSMContext):
@@ -148,7 +139,7 @@ async def handle_services(message: Message, state: FSMContext):
         "✅ Услуги записаны!\n"
         "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📝 Шаг 4 из 7. Адрес\n"
+        "📝 Шаг 4. Адрес\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
         "Напишите адрес вашей компании.\n"
@@ -160,8 +151,6 @@ async def handle_services(message: Message, state: FSMContext):
     await state.set_state(Form.waiting_address)
 
 
-# ============ ШАГ 4: Адрес ============
-
 @router.message(Form.waiting_address)
 async def handle_address(message: Message, state: FSMContext):
     address = message.text.strip()
@@ -171,7 +160,7 @@ async def handle_address(message: Message, state: FSMContext):
         "✅ Адрес записан!\n"
         "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📝 Шаг 5 из 7. Телефон\n"
+        "📝 Шаг 5. Телефон\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
         "Напишите номер телефона.\n"
@@ -180,8 +169,6 @@ async def handle_address(message: Message, state: FSMContext):
     )
     await state.set_state(Form.waiting_phone)
 
-
-# ============ ШАГ 5: Телефон ============
 
 @router.message(Form.waiting_phone)
 async def handle_phone(message: Message, state: FSMContext):
@@ -196,18 +183,16 @@ async def handle_phone(message: Message, state: FSMContext):
         "✅ Телефон записан!\n"
         "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📝 Шаг 6 из 7. Часы работы\n"
+        "📝 Шаг 6. Часы работы\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
         "Напишите часы работы.\n"
         "\n"
-        "Пример: «10:00–20:00»\n"
+        "Пример: «10:00-20:00»\n"
         "Или: «Ежедневно, кроме понедельника»"
     )
     await state.set_state(Form.waiting_hours)
 
-
-# ============ ШАГ 6: Часы работы ============
 
 @router.message(Form.waiting_hours)
 async def handle_hours(message: Message, state: FSMContext):
@@ -218,7 +203,92 @@ async def handle_hours(message: Message, state: FSMContext):
         "✅ Часы работы записаны!\n"
         "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📝 Шаг 7 из 7. Имя для сайта\n"
+        "🎨 Шаг 7. Выберите стиль сайта\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Напишите **номер** стиля:\n"
+        "\n"
+        "1. 🌑 Тёмный — для IT, стартапов, услуг\n"
+        "2. ☀️ Светлый — для салонов, клиник, мастеров\n"
+        "3. 🔥 Тёплый — для кафе, ресторанов, отелей\n"
+        "4. ⚡ Яркий — для авто, спорта, развлечений"
+    )
+    await state.set_state(Form.waiting_template)
+
+
+@router.message(Form.waiting_template)
+async def handle_template(message: Message, state: FSMContext):
+    choice = message.text.strip()
+    mapping = {
+        "1": "template-modern.html",
+        "2": "template-light.html",
+        "3": "template-warm.html",
+        "4": "template-bold.html",
+    }
+    if choice not in mapping:
+        await message.answer(
+            "❌ Введите номер от 1 до 4:\n"
+            "1 — Тёмный\n"
+            "2 — Светлый\n"
+            "3 — Тёплый\n"
+            "4 — Яркий"
+        )
+        return
+
+    await state.update_data(template_name=mapping[choice])
+
+    await message.answer(
+        "✅ Стиль выбран!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🎨 Шаг 8. Выберите палитру\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Напишите **номер** палитры:\n"
+        "\n"
+        "1. 🔵 Синяя\n"
+        "2. 🔴 Красная\n"
+        "3. 🟢 Зелёная\n"
+        "4. 🌸 Розовая\n"
+        "5. 🟡 Золотая\n"
+        "6. ⚫ Чёрно-белая\n"
+        "7. 🎯 Авто (ИИ подберёт под сферу)"
+    )
+    await state.set_state(Form.waiting_palette)
+
+
+@router.message(Form.waiting_palette)
+async def handle_palette(message: Message, state: FSMContext):
+    choice = message.text.strip()
+    mapping = {
+        "1": "blue",
+        "2": "red",
+        "3": "green",
+        "4": "pink",
+        "5": "gold",
+        "6": "black",
+        "7": "auto",
+    }
+    if choice not in mapping:
+        await message.answer(
+            "❌ Введите номер от 1 до 7:\n"
+            "1 — Синяя\n"
+            "2 — Красная\n"
+            "3 — Зелёная\n"
+            "4 — Розовая\n"
+            "5 — Золотая\n"
+            "6 — Чёрно-белая\n"
+            "7 — Авто"
+        )
+        return
+
+    await state.update_data(palette_name=mapping[choice])
+
+    await message.answer(
+        "✅ Палитра выбрана!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 Шаг 9. Имя для сайта\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
         "Придумайте короткое имя для сайта.\n"
@@ -237,8 +307,6 @@ async def handle_hours(message: Message, state: FSMContext):
     await state.set_state(Form.waiting_repo)
 
 
-# ============ ШАГ 7: Репозиторий + генерация ============
-
 @router.message(Form.waiting_repo)
 async def handle_repo(message: Message, state: FSMContext):
     repo_name = message.text.strip().lower()
@@ -252,16 +320,12 @@ async def handle_repo(message: Message, state: FSMContext):
             "• цифры 0-9\n"
             "• дефис -\n"
             "\n"
-            "От 3 до 50 символов.\n"
-            "\n"
             "Попробуйте снова:"
         )
         return
 
-    # Собираем все данные из FSM
     data = await state.get_data()
 
-    # Формируем структурированный запрос для ИИ
     user_request = (
         f"Компания: {data.get('company_name', '')}\n"
         f"Сфера: {data.get('sphere', '')}\n"
@@ -269,6 +333,8 @@ async def handle_repo(message: Message, state: FSMContext):
         f"Адрес: {data.get('address', '')}\n"
         f"Телефон: {data.get('phone', '')}\n"
         f"Часы работы: {data.get('hours', '')}\n"
+        f"Шаблон: {data.get('template_name', 'template-modern.html')}\n"
+        f"Палитра: {data.get('palette_name', 'auto')}\n"
     )
 
     await message.answer(
@@ -279,6 +345,9 @@ async def handle_repo(message: Message, state: FSMContext):
 
     try:
         content = await asyncio.to_thread(generate_content, user_request, max_attempts=3)
+        # Принудительно сохраняем выбранный шаблон
+        content.template_name = data.get('template_name', 'template-modern.html')
+        content.palette_name = data.get('palette_name', 'auto')
         html = render_site(content)
         path = save_site(html)
     except Exception as error:
@@ -323,29 +392,12 @@ async def handle_repo(message: Message, state: FSMContext):
         f"{url}\n"
         "\n"
         "Откройте ссылку в браузере.\n"
-        "Если не открылась сразу — подождите 1–2 минуты.\n"
-        "\n"
-        "Эту ссылку можно отправлять клиентам."
+        "Если не открылась сразу — подождите 1–2 минуты."
     )
     await state.clear()
 
 
-# ============ Уведомления ============
-
-async def notify_admin(text: str):
-    """Отправляет уведомление администратору в MAX."""
-    admin_id = os.getenv("MAX_ADMIN_ID")
-    if not admin_id:
-        print("MAX_ADMIN_ID не указан в .env — уведомление не отправлено")
-        return
-    try:
-        await bot.send_message(chat_id=int(admin_id), text=text)
-    except Exception as e:
-        print(f"Не удалось отправить уведомление админу: {e}")
-
-
 async def run_bot():
-    """Запускает бота. Вызывается из main.py или отдельно."""
     print("=" * 50)
     print("✅ Бот успешно запущен!")
     print("🤖 Платформа: MAX")

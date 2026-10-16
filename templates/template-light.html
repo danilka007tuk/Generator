@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ site_title }}</title>
+    <meta name="description" content="{{ meta_description }}">
+    <style>
+        :root {
+            --primary: {{ color_primary }};
+            --secondary: {{ color_secondary }};
+            --bg: {{ color_bg }};
+            --text: {{ color_text }};
+            --accent: {{ color_accent }};
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0; padding: 0;
+            background: #ffffff;
+            color: var(--text);
+            line-height: 1.7;
+            font-weight: 300;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+
+        .hero {
+            background: #ffffff;
+            color: var(--text);
+            padding: 140px 20px 100px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .hero h1 {
+            font-size: 3.5em;
+            margin: 0 0 24px;
+            font-weight: 200;
+            letter-spacing: -0.02em;
+        }
+        .hero p {
+            font-size: 1.15em;
+            color: #888;
+            max-width: 640px;
+            margin: 0 auto;
+            font-weight: 300;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1px;
+            background: #f0f0f0;
+            margin: 0;
+            border-top: 1px solid #f0f0f0;
+        }
+        .feature {
+            background: #ffffff;
+            padding: 48px 32px;
+            text-align: left;
+        }
+        .feature h3 {
+            color: var(--primary);
+            margin: 0 0 16px;
+            font-size: 1.1em;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .feature p {
+            margin: 0;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .services { padding: 100px 0; }
+        .services h2 {
+            text-align: center;
+            margin: 0 0 16px;
+            font-size: 1em;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--primary);
+        }
+        .services-subtitle {
+            text-align: center;
+            font-size: 2em;
+            font-weight: 200;
+            margin: 0 0 72px;
+        }
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 48px;
+        }
+        .service-card {
+            padding: 0;
+            border-top: 1px solid var(--text);
+            padding-top: 24px;
+        }
+        .service-card h3 { margin: 0 0 12px; font-weight: 400; font-size: 1.2em; }
+        .service-card p { margin: 0 0 16px; color: #666; font-size: 0.95em; }
+        .service-card .price {
+            font-size: 1.1em;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .gallery { padding: 100px 0; background: #fafafa; }
+        .gallery h2 {
+            text-align: center;
+            margin: 0 0 72px;
+            font-size: 1em;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--primary);
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 32px;
+        }
+        .gallery-item {
+            background: #ffffff;
+            padding: 40px 28px;
+            text-align: center;
+        }
+        .gallery-item h3 {
+            margin: 0 0 12px;
+            font-weight: 400;
+            color: var(--text);
+        }
+        .gallery-item p { margin: 0; color: #888; font-size: 0.9em; }
+
+        .pricing { padding: 100px 0; }
+        .pricing h2 {
+            text-align: center;
+            margin: 0 0 72px;
+            font-size: 1em;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--primary);
+        }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 32px;
+        }
+        .pricing-card {
+            border: 1px solid #e0e0e0;
+            padding: 48px 32px;
+            text-align: center;
+        }
+        .pricing-card h3 { margin: 0 0 16px; font-weight: 400; }
+        .pricing-card .price {
+            font-size: 2em;
+            font-weight: 200;
+            color: var(--primary);
+            margin: 24px 0;
+        }
+        .pricing-card p { color: #666; font-size: 0.9em; margin: 0; }
+
+        .booking {
+            background: #fafafa;
+            padding: 100px 40px;
+        }
+        .booking h2 {
+            text-align: center;
+            margin: 0 0 12px;
+            font-size: 2em;
+            font-weight: 200;
+        }
+        .booking .subtitle {
+            text-align: center;
+            color: #888;
+            margin: 0 0 64px;
+            font-size: 0.95em;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            max-width: 640px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .calendar-header button {
+            background: transparent;
+            border: 1px solid #ddd;
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: var(--text);
+        }
+        .calendar-header button:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .month-year { font-size: 1.1em; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+            max-width: 640px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .weekdays div {
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.75em;
+            color: #888;
+            padding: 12px 0;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        .day {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            background: transparent;
+            border: 1px solid transparent;
+            font-weight: 300;
+        }
+        .day:hover:not(.disabled):not(.busy):not(.selected) {
+            background: var(--primary);
+            color: #fff;
+        }
+        .day.empty { cursor: default; }
+        .day.disabled { color: #ddd; cursor: not-allowed; }
+        .day.busy {
+            color: #ccc;
+            text-decoration: line-through;
+            cursor: not-allowed;
+        }
+        .day.selected {
+            background: var(--primary);
+            color: #fff;
+        }
+        .day.today { border-color: var(--text); }
+
+        .booking-form {
+            display: none;
+            margin: 64px auto 0;
+            max-width: 480px;
+            padding-top: 48px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .booking-form.active { display: block; }
+        .booking-form h3 {
+            text-align: center;
+            color: var(--text);
+            margin: 0 0 40px;
+            font-weight: 300;
+            font-size: 1.3em;
+        }
+        .form-group { margin-bottom: 24px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.8em;
+            color: #888;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 14px 0;
+            border: none;
+            border-bottom: 1px solid #ddd;
+            border-radius: 0;
+            font-size: 1em;
+            font-family: inherit;
+            background: transparent;
+            color: var(--text);
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-bottom-color: var(--primary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 0;
+            font-size: 0.9em;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .submit-btn:hover { background: var(--text); }
+
+        .contacts {
+            padding: 100px 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .contacts h2 {
+            text-align: center;
+            margin: 0 0 72px;
+            font-size: 1em;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--primary);
+        }
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 48px;
+            text-align: center;
+        }
+        .contact-item .label {
+            font-size: 0.75em;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        .contact-item .value {
+            font-size: 1.05em;
+            font-weight: 300;
+        }
+
+        .cta {
+            background: var(--text);
+            color: #fff;
+            padding: 120px 40px;
+            text-align: center;
+        }
+        .cta h2 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 200;
+            letter-spacing: -0.02em;
+        }
+
+        footer {
+            background: #ffffff;
+            color: #aaa;
+            padding: 48px;
+            text-align: center;
+            font-size: 0.85em;
+            border-top: 1px solid #f0f0f0;
+            letter-spacing: 0.05em;
+        }
+
+        .success-modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(255,255,255,0.95); z-index: 1000;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .success-modal.active { display: flex; }
+        .success-modal .modal-content {
+            background: #fff; border: 1px solid #e0e0e0;
+            padding: 72px 48px; max-width: 480px; text-align: center;
+        }
+        .success-modal h3 {
+            color: var(--primary);
+            margin: 0 0 24px;
+            font-weight: 300;
+            font-size: 1.6em;
+        }
+        .success-modal p { color: #666; margin: 0 0 32px; }
+        .success-modal button {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 14px 40px;
+            border-radius: 0;
+            cursor: pointer;
+            font-size: 0.85em;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 2.2em; }
+            .hero { padding: 80px 20px 60px; }
+            .booking { padding: 60px 20px; }
+            .container { padding: 0 20px; }
+        }
+    </style>
+</head>
+<body>
+
+{% for block in blocks %}
+
+    {% if block == "hero" %}
+    <section class="hero">
+        <h1>{{ hero_heading }}</h1>
+        <p>{{ hero_subheading }}</p>
+    </section>
+
+    {% elif block == "features" and features %}
+    <section class="features">
+        {% for feature in features %}
+        <div class="feature">
+            <h3>{{ feature.title }}</h3>
+            <p>{{ feature.description }}</p>
+        </div>
+        {% endfor %}
+    </section>
+
+    {% elif block == "services" and services %}
+    <section class="container services">
+        <h2>Услуги</h2>
+        <p class="services-subtitle">Что мы предлагаем</p>
+        <div class="services-grid">
+            {% for service in services %}
+            <div class="service-card">
+                <h3>{{ service.name }}</h3>
+                <p>{{ service.description }}</p>
+                {% if service.price %}<div class="price">{{ service.price }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% elif block == "gallery" and gallery %}
+    <section class="gallery">
+        <div class="container">
+            <h2>Галерея</h2>
+            <div class="gallery-grid">
+                {% for item in gallery %}
+                <div class="gallery-item">
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.description }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {% elif block == "pricing" and pricing %}
+    <section class="container pricing">
+        <h2>Цены</h2>
+        <div class="pricing-grid">
+            {% for item in pricing %}
+            <div class="pricing-card">
+                <h3>{{ item.name }}</h3>
+                <div class="price">{{ item.price }}</div>
+                <p>{{ item.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% elif block == "booking" %}
+    <section class="booking">
+        <h2>Онлайн-запись</h2>
+        <p class="subtitle">Выберите удобную дату</p>
+
+        <div class="calendar-header">
+            <button id="prevMonth" type="button">‹</button>
+            <div class="month-year" id="monthYear">—</div>
+            <button id="nextMonth" type="button">›</button>
+        </div>
+
+        <div class="weekdays">
+            <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div>
+            <div>Пт</div><div>Сб</div><div>Вс</div>
+        </div>
+
+        <div class="days" id="days"></div>
+
+        <form class="booking-form" id="bookingForm">
+            <h3>Вы выбрали: <span id="selectedDate"></span></h3>
+
+            <div class="form-group">
+                <label for="service">Услуга</label>
+                <select id="service" required>
+                    <option value="">— Выберите услугу —</option>
+                    {% for service in services %}
+                    <option value="{{ service.name }}">{{ service.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Ваше имя</label>
+                <input type="text" id="name" placeholder="Иван Иванов" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Телефон</label>
+                <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
+            </div>
+
+            <div class="form-group">
+                <label for="comment">Комментарий</label>
+                <textarea id="comment" rows="3" placeholder="Пожелания..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">Отправить заявку</button>
+        </form>
+    </section>
+
+    {% elif block == "contacts" %}
+    <section class="contacts">
+        <h2>Контакты</h2>
+        <div class="contacts-grid">
+            <div class="contact-item">
+                <div class="label">Компания</div>
+                <div class="value">{{ company_name }}</div>
+            </div>
+            <div class="contact-item">
+                <div class="label">Адрес</div>
+                <div class="value">{{ company_address }}</div>
+            </div>
+            <div class="contact-item">
+                <div class="label">Телефон</div>
+                <div class="value">{{ company_phone }}</div>
+            </div>
+        </div>
+    </section>
+
+    {% elif block == "cta" %}
+    <section class="cta">
+        <h2>{{ cta_text }}</h2>
+    </section>
+
+    {% endif %}
+
+{% endfor %}
+
+<footer>{{ footer_text }}</footer>
+
+<div class="success-modal" id="successModal">
+    <div class="modal-content">
+        <h3>Заявка отправлена</h3>
+        <p>{{ booking_confirmation }}</p>
+        <button onclick="closeModal()">Хорошо</button>
+    </div>
+</div>
+
+<script>
+    const SERVER_URL = 'http://127.0.0.1:8001';
+    let currentMonth = new Date();
+    let selectedDate = null;
+    const busyDates = [];
+
+    const monthYearEl = document.getElementById('monthYear');
+    const daysEl = document.getElementById('days');
+    const formEl = document.getElementById('bookingForm');
+    const selectedDateEl = document.getElementById('selectedDate');
+    const successModal = document.getElementById('successModal');
+
+    function renderCalendar() {
+        if (!daysEl) return;
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+        monthYearEl.textContent = monthNames[month] + ' ' + year;
+        const firstDay = new Date(year, month, 1);
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        let startOffset = firstDay.getDay() - 1;
+        if (startOffset < 0) startOffset = 6;
+        daysEl.innerHTML = '';
+        for (let i = 0; i < startOffset; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'day empty';
+            daysEl.appendChild(empty);
+        }
+        const today = new Date(); today.setHours(0,0,0,0);
+        for (let d = 1; d <= totalDays; d++) {
+            const dateObj = new Date(year, month, d);
+            const iso = formatISO(dateObj);
+            const dayEl = document.createElement('div');
+            dayEl.className = 'day';
+            dayEl.textContent = d;
+            if (dateObj < today) { dayEl.classList.add('disabled'); }
+            else if (busyDates.includes(iso)) { dayEl.classList.add('busy'); }
+            else {
+                if (iso === formatISO(today)) dayEl.classList.add('today');
+                if (iso === selectedDate) dayEl.classList.add('selected');
+                dayEl.addEventListener('click', () => selectDate(iso, dateObj));
+            }
+            daysEl.appendChild(dayEl);
+        }
+    }
+
+    function formatISO(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function selectDate(iso, dateObj) {
+        selectedDate = iso;
+        const formatted = dateObj.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
+        if (selectedDateEl) selectedDateEl.textContent = formatted;
+        if (formEl) formEl.classList.add('active');
+        renderCalendar();
+        if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    const prevBtn = document.getElementById('prevMonth');
+    const nextBtn = document.getElementById('nextMonth');
+    if (prevBtn) prevBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); });
+    if (nextBtn) nextBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); });
+
+    if (formEl) {
+        formEl.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const service = document.getElementById('service').value;
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const comment = document.getElementById('comment').value.trim();
+
+            if (!selectedDate || !service || !name || !phone) { alert('Заполните все поля'); return; }
+
+            const submitBtn = formEl.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Отправляю...';
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/book/site`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ date: selectedDate, time: '10:00', service, name, phone, comment }),
+                });
+                if (!response.ok) throw new Error('Ошибка сервера');
+                busyDates.push(selectedDate);
+                successModal.classList.add('active');
+            } catch (error) {
+                alert('Не удалось отправить заявку. Попробуйте позже.');
+                console.error(error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Отправить заявку';
+            }
+        });
+    }
+
+    function closeModal() {
+        successModal.classList.remove('active');
+        formEl.reset();
+        formEl.classList.remove('active');
+        selectedDate = null;
+        renderCalendar();
+    }
+
+    renderCalendar();
+</script>
+</body>
+</html>
