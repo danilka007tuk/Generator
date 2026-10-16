@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>{{ site_title }}</title>
     <meta name="description" content="{{ meta_description }}">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: {{ color_primary }};
@@ -12,8 +12,10 @@
             --bg: {{ color_bg }};
             --text: {{ color_text }};
             --accent: {{ color_accent }};
+            --sidebar-width: 260px;
         }
         * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', Arial, sans-serif;
             margin: 0; padding: 0;
@@ -22,131 +24,242 @@
             line-height: 1.7;
             font-weight: 300;
         }
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
         h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; font-weight: 400; }
 
-        .hero {
-            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+        /* ============ САЙДБАР ============ */
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
             color: #fff;
-            padding: 140px 20px 120px;
+            padding: 40px 28px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 56px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            line-height: 1.3;
+        }
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 40px;
+            flex-grow: 1;
+        }
+        .sidebar-nav a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+        }
+        .sidebar-nav a:hover {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+        }
+        .sidebar-cta {
+            display: block;
+            background: var(--accent);
+            color: #fff;
             text-align: center;
+            padding: 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.05em;
+            margin-bottom: 24px;
+            transition: transform 0.2s;
+        }
+        .sidebar-cta:hover { transform: scale(1.03); }
+        .sidebar-contacts {
+            font-size: 0.85em;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.9;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 24px;
+        }
+        .sidebar-contacts div { margin-bottom: 8px; }
+
+        /* ============ ОСНОВНОЙ КОНТЕНТ ============ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+
+        /* ============ HERO ============ */
+        .hero {
             position: relative;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 160px 40px 140px;
+            text-align: center;
+            overflow: hidden;
         }
         .hero::before {
             content: "";
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.15), transparent 70%);
+            background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.2), transparent 70%);
         }
+        {% if hero_image_url %}
+        .hero {
+            background-image:
+                linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35)),
+                url('{{ hero_image_url }}');
+            background-size: cover;
+            background-position: center;
+        }
+        {% endif %}
         .hero h1 {
             position: relative;
-            font-size: 4em;
+            font-size: 4.2em;
             margin: 0 0 24px;
-            letter-spacing: -0.01em;
+            line-height: 1.1;
+            text-shadow: 0 4px 30px rgba(0,0,0,0.4);
         }
         .hero p {
             position: relative;
-            font-size: 1.2em;
-            opacity: 0.9;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.25em;
+            font-weight: 300;
+            opacity: 0.95;
             max-width: 640px;
             margin: 0 auto;
+            text-shadow: 0 2px 15px rgba(0,0,0,0.3);
+        }
+        .hero-about {
+            position: relative;
+            max-width: 640px;
+            margin: 32px auto 0;
             font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            opacity: 0.9;
+            line-height: 1.8;
         }
 
-        .features {
+        /* ============ СЕКЦИИ ============ */
+        section { padding: 100px 0; }
+        section h2 {
+            text-align: center;
+            font-size: 2.8em;
+            margin: 0 0 16px;
+            font-weight: 400;
+        }
+        .section-subtitle {
+            text-align: center;
+            color: #999;
+            margin: 0 0 72px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95em;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        /* ============ FEATURES ============ */
+        .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 32px;
-            padding: 100px 32px;
-            max-width: 1100px;
-            margin: 0 auto;
         }
         .feature {
             background: #fff;
             border-radius: 8px;
-            padding: 40px 28px;
+            padding: 48px 36px;
             text-align: center;
             box-shadow: 0 4px 24px rgba(0,0,0,0.06);
             border-top: 4px solid var(--accent);
         }
         .feature h3 {
             color: var(--primary);
-            margin: 0 0 16px;
-            font-size: 1.4em;
+            margin: 0 0 20px;
+            font-size: 1.5em;
         }
-        .feature p { margin: 0; color: #666; font-size: 0.95em; }
+        .feature p { margin: 0; color: #666; font-family: 'Inter', sans-serif; font-size: 0.95em; }
 
-        .services { padding: 80px 0; }
-        .services h2 {
+        /* ============ ABOUT ============ */
+        .about {
+            max-width: 800px;
+            margin: 0 auto;
             text-align: center;
-            margin: 0 0 16px;
-            font-size: 2.6em;
         }
-        .services-subtitle {
-            text-align: center;
-            color: #888;
-            margin: 0 0 72px;
+        .about p {
             font-family: 'Inter', sans-serif;
-            font-size: 1.05em;
+            font-size: 1.15em;
+            line-height: 1.9;
+            color: #555;
+            font-weight: 300;
         }
+
+        /* ============ SERVICES ============ */
         .services-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 40px;
         }
         .service-card {
             background: #fff;
             border-radius: 8px;
-            padding: 32px;
+            padding: 40px 32px;
             box-shadow: 0 4px 24px rgba(0,0,0,0.05);
         }
         .service-card h3 {
-            margin: 0 0 12px;
-            font-size: 1.3em;
+            margin: 0 0 16px;
+            font-size: 1.4em;
             color: var(--text);
         }
-        .service-card p { margin: 0 0 16px; color: #666; font-size: 0.95em; }
+        .service-card p { margin: 0 0 20px; color: #666; font-family: 'Inter', sans-serif; font-size: 0.95em; }
         .service-card .price {
             font-family: 'Playfair Display', serif;
-            font-size: 1.4em;
+            font-size: 1.5em;
             font-weight: 700;
             color: var(--primary);
         }
 
-        .gallery { padding: 80px 0; background: rgba(0,0,0,0.02); }
-        .gallery h2 {
-            text-align: center;
-            margin: 0 0 72px;
-            font-size: 2.6em;
-        }
+        /* ============ GALLERY ============ */
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 32px;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 32px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
         }
         .gallery-item {
             background: #fff;
             border-radius: 8px;
-            padding: 32px;
-            text-align: center;
+            overflow: hidden;
             box-shadow: 0 4px 24px rgba(0,0,0,0.05);
         }
+        .gallery-item img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-item .caption {
+            padding: 24px;
+        }
         .gallery-item h3 {
-            margin: 0 0 12px;
+            margin: 0 0 8px;
+            font-size: 1.15em;
             color: var(--primary);
-            font-size: 1.2em;
         }
-        .gallery-item p { margin: 0; color: #777; font-size: 0.9em; }
+        .gallery-item p { margin: 0; color: #777; font-family: 'Inter', sans-serif; font-size: 0.9em; }
 
-        .pricing { padding: 80px 0; }
-        .pricing h2 {
-            text-align: center;
-            margin: 0 0 72px;
-            font-size: 2.6em;
-        }
+        /* ============ PRICING ============ */
         .pricing-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -156,37 +269,121 @@
             background: #fff;
             border: 2px solid var(--accent);
             border-radius: 8px;
-            padding: 40px 32px;
+            padding: 48px 32px;
             text-align: center;
         }
-        .pricing-card h3 { margin: 0 0 16px; font-size: 1.3em; }
+        .pricing-card h3 {
+            margin: 0 0 16px;
+            font-size: 1.3em;
+        }
         .pricing-card .price {
             font-family: 'Playfair Display', serif;
-            font-size: 2.2em;
+            font-size: 2.4em;
+            font-weight: 700;
             color: var(--primary);
             margin: 24px 0;
         }
-        .pricing-card p { color: #777; font-size: 0.9em; margin: 0; }
+        .pricing-card p { color: #777; font-family: 'Inter', sans-serif; font-size: 0.9em; margin: 0; }
 
+        /* ============ TESTIMONIALS ============ */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 32px;
+        }
+        .testimonial {
+            background: #fff;
+            border-radius: 8px;
+            padding: 40px 32px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+        }
+        .testimonial .stars {
+            color: var(--accent);
+            font-size: 1.2em;
+            letter-spacing: 0.15em;
+            margin-bottom: 16px;
+        }
+        .testimonial .text {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: #444;
+            margin-bottom: 20px;
+            line-height: 1.7;
+            font-size: 1.05em;
+        }
+        .testimonial .author {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9em;
+            color: var(--primary);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        /* ============ TEAM ============ */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 40px;
+        }
+        .team-member {
+            background: #fff;
+            border-radius: 8px;
+            padding: 40px 32px;
+            text-align: center;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+        }
+        .team-member .avatar {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4em;
+            font-weight: 700;
+        }
+        .team-member h3 {
+            margin: 0 0 8px;
+            font-size: 1.3em;
+        }
+        .team-member .role {
+            font-family: 'Inter', sans-serif;
+            color: var(--primary);
+            font-size: 0.85em;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        .team-member p { color: #777; font-family: 'Inter', sans-serif; font-size: 0.9em; margin: 0; }
+
+        /* ============ FAQ ============ */
+        .faq-list { max-width: 800px; margin: 0 auto; }
+        .faq-item {
+            background: #fff;
+            border-radius: 8px;
+            padding: 32px 32px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .faq-item h3 {
+            margin: 0 0 16px;
+            font-size: 1.2em;
+            color: var(--primary);
+        }
+        .faq-item p { margin: 0; color: #555; font-family: 'Inter', sans-serif; line-height: 1.8; font-size: 0.95em; }
+
+        /* ============ BOOKING ============ */
         .booking {
             background: #fff;
             border-radius: 12px;
-            padding: 72px 48px;
-            margin: 80px auto;
-            max-width: 800px;
+            padding: 64px 48px;
             box-shadow: 0 8px 48px rgba(0,0,0,0.08);
         }
-        .booking h2 {
-            text-align: center;
-            margin: 0 0 12px;
-            font-size: 2.2em;
-        }
-        .booking .subtitle {
-            text-align: center;
-            color: #888;
-            margin: 0 0 56px;
-        }
-
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -196,18 +393,18 @@
         .calendar-header button {
             background: var(--bg);
             border: none;
-            width: 48px; height: 48px;
+            width: 52px; height: 52px;
             border-radius: 50%;
-            font-size: 1.3em;
+            font-size: 1.4em;
             cursor: pointer;
             color: var(--primary);
+            transition: all 0.2s;
         }
         .calendar-header button:hover { background: var(--primary); color: #fff; }
         .month-year {
             font-family: 'Playfair Display', serif;
-            font-size: 1.4em;
+            font-size: 1.5em;
         }
-
         .weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -216,12 +413,12 @@
         }
         .weekdays div {
             text-align: center;
+            font-family: 'Inter', sans-serif;
             font-weight: 600;
             font-size: 0.85em;
             color: #999;
             padding: 12px 0;
         }
-
         .days {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -236,11 +433,9 @@
             cursor: pointer;
             background: var(--bg);
             border: 2px solid transparent;
-            font-weight: 400;
+            font-family: 'Inter', sans-serif;
         }
-        .day:hover:not(.disabled):not(.busy):not(.selected) {
-            border-color: var(--primary);
-        }
+        .day:hover:not(.disabled):not(.busy):not(.selected) { border-color: var(--primary); }
         .day.empty { background: transparent; cursor: default; }
         .day.disabled { color: #ccc; cursor: not-allowed; background: transparent; }
         .day.busy { background: #ffe5e5; color: #c0392b; cursor: not-allowed; text-decoration: line-through; }
@@ -258,12 +453,13 @@
             text-align: center;
             color: var(--primary);
             margin: 0 0 32px;
-            font-size: 1.3em;
+            font-size: 1.5em;
         }
         .form-group { margin-bottom: 24px; }
         .form-group label {
             display: block;
             margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
             font-size: 0.9em;
             color: #666;
             font-weight: 500;
@@ -274,7 +470,7 @@
             border: 2px solid #e8e0d8;
             border-radius: 8px;
             font-size: 1em;
-            font-family: inherit;
+            font-family: 'Inter', sans-serif;
             background: var(--bg);
             color: var(--text);
         }
@@ -283,111 +479,144 @@
             border-color: var(--primary);
             background: #fff;
         }
-
         .submit-btn {
             width: 100%;
-            padding: 18px;
+            padding: 20px;
             background: var(--primary);
             color: #fff;
             border: none;
             border-radius: 8px;
             font-family: 'Playfair Display', serif;
-            font-size: 1.15em;
+            font-size: 1.2em;
             font-weight: 700;
             cursor: pointer;
             transition: background 0.3s;
         }
         .submit-btn:hover { background: var(--secondary); }
 
-        .contacts {
-            background: #fff;
-            padding: 72px 48px;
-            margin: 80px auto;
-            max-width: 900px;
-            border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
-        }
-        .contacts h2 {
-            text-align: center;
-            margin: 0 0 56px;
-            font-size: 2.2em;
-        }
+        /* ============ CONTACTS ============ */
         .contacts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 48px;
             text-align: center;
         }
         .contact-item .label {
+            font-family: 'Inter', sans-serif;
             font-size: 0.8em;
             color: #999;
             text-transform: uppercase;
-            letter-spacing: 0.15em;
-            margin-bottom: 12px;
+            letter-spacing: 0.2em;
+            margin-bottom: 16px;
             font-weight: 600;
         }
         .contact-item .value {
             font-family: 'Playfair Display', serif;
-            font-size: 1.15em;
+            font-size: 1.2em;
         }
 
+        /* ============ CTA ============ */
         .cta {
             background: linear-gradient(135deg, var(--secondary), var(--primary));
             color: #fff;
-            padding: 100px 32px;
+            padding: 120px 48px;
             text-align: center;
             border-radius: 12px;
-            margin: 80px auto;
-            max-width: 1100px;
         }
-        .cta h2 { margin: 0; font-size: 2.4em; }
+        .cta h2 { margin: 0; color: #fff; font-size: 2.8em; }
 
+        /* ============ FOOTER ============ */
         footer {
             background: var(--text);
             color: #aaa;
-            padding: 48px;
+            padding: 56px 48px;
             text-align: center;
+            font-family: 'Inter', sans-serif;
             font-size: 0.9em;
         }
 
+        /* ============ MODAL ============ */
         .success-modal {
             display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.7); z-index: 1000;
+            background: rgba(0,0,0,0.75); z-index: 1000;
             align-items: center; justify-content: center; padding: 20px;
         }
         .success-modal.active { display: flex; }
         .success-modal .modal-content {
             background: #fff;
             border-radius: 12px;
-            padding: 56px 48px;
-            max-width: 440px;
+            padding: 64px 48px;
+            max-width: 480px;
             text-align: center;
         }
         .success-modal h3 {
             color: var(--primary);
-            margin: 0 0 20px;
-            font-size: 1.6em;
+            margin: 0 0 24px;
+            font-size: 1.8em;
         }
+        .success-modal p { color: #666; font-family: 'Inter', sans-serif; margin: 0 0 32px; }
         .success-modal button {
             background: var(--primary);
             color: #fff;
             border: none;
-            padding: 14px 40px;
+            padding: 16px 48px;
             border-radius: 8px;
             font-family: 'Playfair Display', serif;
-            font-size: 1em;
+            font-size: 1.05em;
             cursor: pointer;
-            margin-top: 24px;
         }
 
-        @media (max-width: 600px) {
-            .hero h1 { font-size: 2.4em; }
-            .hero { padding: 80px 20px 60px; }
-            .booking { padding: 32px 20px; }
+        /* ============ АДАПТИВ ============ */
+        @media (max-width: 900px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                padding: 24px 20px;
+            }
+            .sidebar-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .sidebar-nav a { padding: 8px 12px; font-size: 0.85em; }
+            .sidebar-contacts { display: none; }
+            .main-content { margin-left: 0; }
+            .hero h1 { font-size: 2.6em; }
+            .hero { padding: 80px 24px 60px; }
+            .container { padding: 0 20px; }
+            .booking { padding: 40px 24px; }
+            section { padding: 60px 0; }
         }
     </style>
 </head>
 <body>
+
+<!-- САЙДБАР -->
+{% if sidebar_enabled %}
+<aside class="sidebar">
+    <div class="sidebar-logo">{{ company_name }}</div>
+
+    {% if sidebar_items %}
+    <nav class="sidebar-nav">
+        {% for item in sidebar_items %}
+        <a href="{{ item.anchor }}">{{ item.icon }} {{ item.label }}</a>
+        {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if sidebar_cta_text %}
+    <a href="#booking" class="sidebar-cta">{{ sidebar_cta_text }}</a>
+    {% endif %}
+
+    <div class="sidebar-contacts">
+        <div>📞 {{ company_phone }}</div>
+        <div>📍 {{ company_address }}</div>
+    </div>
+</aside>
+{% endif %}
+
+<main class="main-content">
 
 {% for block in blocks %}
 
@@ -395,22 +624,37 @@
     <section class="hero">
         <h1>{{ hero_heading }}</h1>
         <p>{{ hero_subheading }}</p>
+        {% if about_short %}
+        <div class="hero-about">{{ about_short }}</div>
+        {% endif %}
     </section>
 
     {% elif block == "features" and features %}
-    <section class="features">
-        {% for feature in features %}
-        <div class="feature">
-            <h3>{{ feature.title }}</h3>
-            <p>{{ feature.description }}</p>
+    <section class="container">
+        <h2>Преимущества</h2>
+        <p class="section-subtitle">Почему выбирают нас</p>
+        <div class="features-grid">
+            {% for feature in features %}
+            <div class="feature">
+                <h3>{{ feature.title }}</h3>
+                <p>{{ feature.description }}</p>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+    </section>
+
+    {% elif block == "about" and about_full %}
+    <section class="container">
+        <div class="about">
+            <h2>О нас</h2>
+            <p>{{ about_full }}</p>
+        </div>
     </section>
 
     {% elif block == "services" and services %}
-    <section class="container services">
+    <section class="container">
         <h2>Наши услуги</h2>
-        <p class="services-subtitle">Что мы предлагаем нашим гостям</p>
+        <p class="section-subtitle">Что мы предлагаем</p>
         <div class="services-grid">
             {% for service in services %}
             <div class="service-card">
@@ -423,21 +667,28 @@
     </section>
 
     {% elif block == "gallery" and gallery %}
-    <section class="gallery">
+    <section class="container">
         <h2>Галерея</h2>
+        <p class="section-subtitle">Наши работы</p>
         <div class="gallery-grid">
             {% for item in gallery %}
             <div class="gallery-item">
-                <h3>{{ item.title }}</h3>
-                <p>{{ item.description }}</p>
+                {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                {% endif %}
+                <div class="caption">
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.description }}</p>
+                </div>
             </div>
             {% endfor %}
         </div>
     </section>
 
     {% elif block == "pricing" and pricing %}
-    <section class="container pricing">
+    <section class="container">
         <h2>Наши цены</h2>
+        <p class="section-subtitle">Прозрачное ценообразование</p>
         <div class="pricing-grid">
             {% for item in pricing %}
             <div class="pricing-card">
@@ -449,11 +700,59 @@
         </div>
     </section>
 
+    {% elif block == "testimonials" and testimonials %}
+    <section class="container">
+        <h2>Отзывы</h2>
+        <p class="section-subtitle">Что говорят клиенты</p>
+        <div class="testimonials-grid">
+            {% for t in testimonials %}
+            <div class="testimonial">
+                <div class="stars">
+                    {% for i in range(t.rating) %}★{% endfor %}
+                    {% for i in range(5 - t.rating) %}☆{% endfor %}
+                </div>
+                <div class="text">«{{ t.text }}»</div>
+                <div class="author">— {{ t.author }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% elif block == "team" and team %}
+    <section class="container">
+        <h2>Наша команда</h2>
+        <p class="section-subtitle">Специалисты, которым можно доверять</p>
+        <div class="team-grid">
+            {% for member in team %}
+            <div class="team-member">
+                <div class="avatar">{{ member.name[0] }}</div>
+                <h3>{{ member.name }}</h3>
+                <div class="role">{{ member.role }}</div>
+                <p>{{ member.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% elif block == "faq" and faq %}
+    <section class="container">
+        <h2>Частые вопросы</h2>
+        <p class="section-subtitle">Отвечаем на главное</p>
+        <div class="faq-list">
+            {% for item in faq %}
+            <div class="faq-item">
+                <h3>{{ item.question }}</h3>
+                <p>{{ item.answer }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
     {% elif block == "booking" %}
     <section class="container">
         <div class="booking">
             <h2>Забронировать визит</h2>
-            <p class="subtitle">Выберите удобную дату</p>
+            <p class="section-subtitle">Выберите удобную дату</p>
 
             <div class="calendar-header">
                 <button id="prevMonth" type="button">‹</button>
@@ -503,21 +802,20 @@
 
     {% elif block == "contacts" %}
     <section class="container">
-        <div class="contacts">
-            <h2>Контакты</h2>
-            <div class="contacts-grid">
-                <div class="contact-item">
-                    <div class="label">Компания</div>
-                    <div class="value">{{ company_name }}</div>
-                </div>
-                <div class="contact-item">
-                    <div class="label">Адрес</div>
-                    <div class="value">{{ company_address }}</div>
-                </div>
-                <div class="contact-item">
-                    <div class="label">Телефон</div>
-                    <div class="value">{{ company_phone }}</div>
-                </div>
+        <h2>Контакты</h2>
+        <p class="section-subtitle">Мы всегда на связи</p>
+        <div class="contacts-grid">
+            <div class="contact-item">
+                <div class="label">Компания</div>
+                <div class="value">{{ company_name }}</div>
+            </div>
+            <div class="contact-item">
+                <div class="label">Адрес</div>
+                <div class="value">{{ company_address }}</div>
+            </div>
+            <div class="contact-item">
+                <div class="label">Телефон</div>
+                <div class="value">{{ company_phone }}</div>
             </div>
         </div>
     </section>
@@ -532,6 +830,8 @@
     {% endif %}
 
 {% endfor %}
+
+</main>
 
 <footer>{{ footer_text }}</footer>
 

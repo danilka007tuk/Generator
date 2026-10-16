@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>{{ site_title }}</title>
     <meta name="description" content="{{ meta_description }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: {{ color_primary }};
@@ -11,46 +12,165 @@
             --bg: {{ color_bg }};
             --text: {{ color_text }};
             --accent: {{ color_accent }};
+            --sidebar-width: 260px;
         }
         * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
             margin: 0; padding: 0;
             background: #ffffff;
             color: var(--text);
             line-height: 1.7;
             font-weight: 300;
         }
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+        h1, h2, h3 { font-weight: 200; letter-spacing: -0.01em; }
 
+        /* ============ САЙДБАР ============ */
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: #ffffff;
+            border-right: 1px solid #f0f0f0;
+            padding: 40px 28px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            font-size: 1.2em;
+            font-weight: 500;
+            color: var(--text);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 56px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--primary);
+        }
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 40px;
+            flex-grow: 1;
+        }
+        .sidebar-nav a {
+            color: #888;
+            text-decoration: none;
+            padding: 12px 0;
+            font-size: 0.9em;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #f8f8f8;
+            transition: color 0.3s;
+        }
+        .sidebar-nav a:hover {
+            color: var(--primary);
+        }
+        .sidebar-cta {
+            display: block;
+            background: var(--primary);
+            color: #fff;
+            text-align: center;
+            padding: 16px;
+            text-decoration: none;
+            font-size: 0.85em;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            transition: background 0.3s;
+        }
+        .sidebar-cta:hover { background: var(--text); }
+        .sidebar-contacts {
+            font-size: 0.8em;
+            color: #999;
+            line-height: 1.9;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 24px;
+            margin-top: 24px;
+            letter-spacing: 0.02em;
+        }
+        .sidebar-contacts div { margin-bottom: 6px; }
+
+        /* ============ ОСНОВНОЙ КОНТЕНТ ============ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+
+        /* ============ HERO ============ */
         .hero {
+            position: relative;
             background: #ffffff;
             color: var(--text);
-            padding: 140px 20px 100px;
+            padding: 160px 48px 120px;
             text-align: center;
             border-bottom: 1px solid #f0f0f0;
+            overflow: hidden;
         }
+        {% if hero_image_url %}
+        .hero {
+            background-image:
+                linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.92)),
+                url('{{ hero_image_url }}');
+            background-size: cover;
+            background-position: center;
+        }
+        {% endif %}
         .hero h1 {
-            font-size: 3.5em;
+            position: relative;
+            font-size: 3.8em;
             margin: 0 0 24px;
             font-weight: 200;
             letter-spacing: -0.02em;
         }
         .hero p {
+            position: relative;
             font-size: 1.15em;
             color: #888;
             max-width: 640px;
             margin: 0 auto;
             font-weight: 300;
         }
+        .hero-about {
+            position: relative;
+            max-width: 600px;
+            margin: 32px auto 0;
+            color: #999;
+            font-size: 0.95em;
+            line-height: 1.8;
+        }
 
-        .features {
+        /* ============ СЕКЦИИ ============ */
+        section { padding: 100px 0; }
+        section h2 {
+            font-size: 2.4em;
+            margin: 0 0 16px;
+            text-align: center;
+            font-weight: 200;
+        }
+        .section-subtitle {
+            text-align: center;
+            color: #aaa;
+            margin: 0 0 72px;
+            font-size: 0.9em;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        /* ============ FEATURES ============ */
+        .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1px;
             background: #f0f0f0;
-            margin: 0;
-            border-top: 1px solid #f0f0f0;
         }
         .feature {
             background: #ffffff;
@@ -60,174 +180,235 @@
         .feature h3 {
             color: var(--primary);
             margin: 0 0 16px;
-            font-size: 1.1em;
+            font-size: 0.9em;
             font-weight: 600;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.15em;
             text-transform: uppercase;
         }
-        .feature p {
-            margin: 0;
-            color: #666;
-            font-size: 0.95em;
+        .feature p { margin: 0; color: #666; font-size: 0.95em; line-height: 1.7; }
+
+        /* ============ ABOUT ============ */
+        .about {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 0 48px;
+        }
+        .about p {
+            font-size: 1.15em;
+            line-height: 1.9;
+            color: #555;
+            font-weight: 300;
         }
 
-        .services { padding: 100px 0; }
-        .services h2 {
-            text-align: center;
-            margin: 0 0 16px;
-            font-size: 1em;
-            font-weight: 400;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--primary);
-        }
-        .services-subtitle {
-            text-align: center;
-            font-size: 2em;
-            font-weight: 200;
-            margin: 0 0 72px;
-        }
+        /* ============ SERVICES ============ */
         .services-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 48px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 40px;
         }
         .service-card {
-            padding: 0;
+            padding: 40px 0 0;
             border-top: 1px solid var(--text);
-            padding-top: 24px;
         }
-        .service-card h3 { margin: 0 0 12px; font-weight: 400; font-size: 1.2em; }
-        .service-card p { margin: 0 0 16px; color: #666; font-size: 0.95em; }
+        .service-card h3 {
+            margin: 0 0 16px;
+            font-size: 1.3em;
+            font-weight: 400;
+        }
+        .service-card p { margin: 0 0 20px; color: #666; font-size: 0.95em; }
         .service-card .price {
             font-size: 1.1em;
             color: var(--primary);
             font-weight: 500;
+            letter-spacing: 0.05em;
         }
 
-        .gallery { padding: 100px 0; background: #fafafa; }
-        .gallery h2 {
-            text-align: center;
-            margin: 0 0 72px;
-            font-size: 1em;
-            font-weight: 400;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--primary);
-        }
+        /* ============ GALLERY ============ */
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
         }
         .gallery-item {
-            background: #ffffff;
-            padding: 40px 28px;
-            text-align: center;
+            background: #fafafa;
+            overflow: hidden;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s;
+        }
+        .gallery-item:hover img { transform: scale(1.05); }
+        .gallery-item .caption {
+            padding: 24px;
         }
         .gallery-item h3 {
-            margin: 0 0 12px;
+            margin: 0 0 8px;
+            font-size: 1.05em;
             font-weight: 400;
-            color: var(--text);
         }
-        .gallery-item p { margin: 0; color: #888; font-size: 0.9em; }
+        .gallery-item p { margin: 0; color: #888; font-size: 0.85em; }
 
-        .pricing { padding: 100px 0; }
-        .pricing h2 {
-            text-align: center;
-            margin: 0 0 72px;
-            font-size: 1em;
-            font-weight: 400;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--primary);
-        }
+        /* ============ PRICING ============ */
         .pricing-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 32px;
         }
         .pricing-card {
-            border: 1px solid #e0e0e0;
-            padding: 48px 32px;
+            border: 1px solid #e8e8e8;
+            padding: 56px 32px;
             text-align: center;
+            transition: border-color 0.3s;
         }
-        .pricing-card h3 { margin: 0 0 16px; font-weight: 400; }
+        .pricing-card:hover { border-color: var(--primary); }
+        .pricing-card h3 {
+            margin: 0 0 16px;
+            font-size: 1.1em;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
         .pricing-card .price {
-            font-size: 2em;
+            font-size: 2.2em;
             font-weight: 200;
             color: var(--primary);
             margin: 24px 0;
         }
-        .pricing-card p { color: #666; font-size: 0.9em; margin: 0; }
+        .pricing-card p { color: #777; font-size: 0.9em; margin: 0; }
 
-        .booking {
-            background: #fafafa;
-            padding: 100px 40px;
+        /* ============ TESTIMONIALS ============ */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 32px;
         }
-        .booking h2 {
+        .testimonial {
+            padding: 40px 0;
+            border-top: 1px solid #e8e8e8;
+        }
+        .testimonial .stars {
+            color: var(--accent);
+            font-size: 1em;
+            letter-spacing: 0.2em;
+            margin-bottom: 20px;
+        }
+        .testimonial .text {
+            color: #444;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            font-size: 1.05em;
+            font-style: italic;
+        }
+        .testimonial .author {
+            font-size: 0.85em;
+            color: #999;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        /* ============ TEAM ============ */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 40px;
+        }
+        .team-member {
             text-align: center;
-            margin: 0 0 12px;
-            font-size: 2em;
+        }
+        .team-member .avatar {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.4em;
             font-weight: 200;
         }
-        .booking .subtitle {
-            text-align: center;
-            color: #888;
-            margin: 0 0 64px;
-            font-size: 0.95em;
+        .team-member h3 { margin: 0 0 8px; font-size: 1.15em; font-weight: 400; }
+        .team-member .role {
+            color: var(--primary);
+            font-size: 0.8em;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            font-weight: 500;
         }
+        .team-member p { color: #777; font-size: 0.9em; margin: 0; }
 
+        /* ============ FAQ ============ */
+        .faq-list { max-width: 800px; margin: 0 auto; }
+        .faq-item {
+            padding: 32px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .faq-item h3 {
+            margin: 0 0 16px;
+            font-size: 1.1em;
+            font-weight: 400;
+            color: var(--primary);
+        }
+        .faq-item p { margin: 0; color: #666; line-height: 1.8; font-size: 0.95em; }
+
+        /* ============ BOOKING ============ */
+        .booking {
+            background: #fafafa;
+            padding: 80px 48px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
         .calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 32px;
-            max-width: 640px;
-            margin-left: auto;
-            margin-right: auto;
+            margin-bottom: 40px;
         }
         .calendar-header button {
             background: transparent;
             border: 1px solid #ddd;
-            width: 48px; height: 48px;
+            width: 52px; height: 52px;
             border-radius: 50%;
             font-size: 1.2em;
             cursor: pointer;
             color: var(--text);
+            transition: all 0.3s;
         }
         .calendar-header button:hover {
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
         }
-        .month-year { font-size: 1.1em; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; }
-
+        .month-year {
+            font-size: 1.1em;
+            font-weight: 400;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
         .weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 8px;
             margin-bottom: 12px;
-            max-width: 640px;
-            margin-left: auto;
-            margin-right: auto;
         }
         .weekdays div {
             text-align: center;
-            font-weight: 500;
             font-size: 0.75em;
-            color: #888;
+            color: #aaa;
             padding: 12px 0;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
+            font-weight: 500;
         }
-
         .days {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 8px;
-            max-width: 640px;
-            margin: 0 auto;
         }
         .day {
             aspect-ratio: 1/1;
@@ -246,22 +427,14 @@
         }
         .day.empty { cursor: default; }
         .day.disabled { color: #ddd; cursor: not-allowed; }
-        .day.busy {
-            color: #ccc;
-            text-decoration: line-through;
-            cursor: not-allowed;
-        }
-        .day.selected {
-            background: var(--primary);
-            color: #fff;
-        }
+        .day.busy { color: #ccc; text-decoration: line-through; cursor: not-allowed; }
+        .day.selected { background: var(--primary); color: #fff; }
         .day.today { border-color: var(--text); }
 
         .booking-form {
             display: none;
-            margin: 64px auto 0;
-            max-width: 480px;
-            padding-top: 48px;
+            margin-top: 56px;
+            padding-top: 56px;
             border-top: 1px solid #e0e0e0;
         }
         .booking-form.active { display: block; }
@@ -272,114 +445,102 @@
             font-weight: 300;
             font-size: 1.3em;
         }
-        .form-group { margin-bottom: 24px; }
+        .form-group { margin-bottom: 28px; }
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-size: 0.8em;
-            color: #888;
+            margin-bottom: 12px;
+            font-size: 0.75em;
+            color: #999;
             font-weight: 500;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
         }
         .form-group input, .form-group textarea, .form-group select {
             width: 100%;
-            padding: 14px 0;
+            padding: 16px 0;
             border: none;
             border-bottom: 1px solid #ddd;
-            border-radius: 0;
             font-size: 1em;
             font-family: inherit;
+            font-weight: 300;
             background: transparent;
             color: var(--text);
-            transition: border-color 0.3s;
         }
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
             outline: none;
             border-bottom-color: var(--primary);
         }
-
         .submit-btn {
             width: 100%;
-            padding: 18px;
+            padding: 20px;
             background: var(--primary);
             color: #fff;
             border: none;
-            border-radius: 0;
-            font-size: 0.9em;
+            font-size: 0.85em;
             font-weight: 500;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.25em;
             text-transform: uppercase;
             cursor: pointer;
             transition: background 0.3s;
         }
         .submit-btn:hover { background: var(--text); }
 
-        .contacts {
-            padding: 100px 40px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .contacts h2 {
-            text-align: center;
-            margin: 0 0 72px;
-            font-size: 1em;
-            font-weight: 400;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--primary);
-        }
+        /* ============ CONTACTS ============ */
         .contacts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             gap: 48px;
             text-align: center;
         }
         .contact-item .label {
             font-size: 0.75em;
-            color: #888;
+            color: #aaa;
+            letter-spacing: 0.25em;
             text-transform: uppercase;
-            letter-spacing: 0.2em;
             margin-bottom: 16px;
             font-weight: 500;
         }
-        .contact-item .value {
-            font-size: 1.05em;
-            font-weight: 300;
-        }
+        .contact-item .value { font-size: 1.05em; font-weight: 300; }
 
+        /* ============ CTA ============ */
         .cta {
             background: var(--text);
             color: #fff;
-            padding: 120px 40px;
+            padding: 120px 48px;
             text-align: center;
         }
         .cta h2 {
             margin: 0;
-            font-size: 2.5em;
+            color: #fff;
+            font-size: 2.6em;
             font-weight: 200;
             letter-spacing: -0.02em;
         }
 
+        /* ============ FOOTER ============ */
         footer {
-            background: #ffffff;
+            background: #fff;
             color: #aaa;
-            padding: 48px;
+            padding: 56px 48px;
             text-align: center;
             font-size: 0.85em;
             border-top: 1px solid #f0f0f0;
             letter-spacing: 0.05em;
         }
 
+        /* ============ MODAL ============ */
         .success-modal {
             display: none; position: fixed; inset: 0;
-            background: rgba(255,255,255,0.95); z-index: 1000;
+            background: rgba(255,255,255,0.97); z-index: 1000;
             align-items: center; justify-content: center; padding: 20px;
         }
         .success-modal.active { display: flex; }
         .success-modal .modal-content {
-            background: #fff; border: 1px solid #e0e0e0;
-            padding: 72px 48px; max-width: 480px; text-align: center;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            padding: 72px 48px;
+            max-width: 480px;
+            text-align: center;
         }
         .success-modal h3 {
             color: var(--primary);
@@ -392,23 +553,68 @@
             background: transparent;
             color: var(--primary);
             border: 1px solid var(--primary);
-            padding: 14px 40px;
-            border-radius: 0;
+            padding: 16px 48px;
             cursor: pointer;
-            font-size: 0.85em;
-            letter-spacing: 0.2em;
+            font-size: 0.8em;
+            letter-spacing: 0.25em;
             text-transform: uppercase;
+            transition: all 0.3s;
         }
+        .success-modal button:hover { background: var(--primary); color: #fff; }
 
-        @media (max-width: 600px) {
-            .hero h1 { font-size: 2.2em; }
-            .hero { padding: 80px 20px 60px; }
-            .booking { padding: 60px 20px; }
-            .container { padding: 0 20px; }
+        /* ============ АДАПТИВ ============ */
+        @media (max-width: 900px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid #f0f0f0;
+                padding: 24px 20px;
+            }
+            .sidebar-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .sidebar-nav a { padding: 8px 12px; border: none; font-size: 0.8em; }
+            .sidebar-contacts { display: none; }
+            .main-content { margin-left: 0; }
+            .hero h1 { font-size: 2.4em; }
+            .hero { padding: 80px 24px 60px; }
+            .container { padding: 0 24px; }
+            .booking { padding: 40px 24px; }
+            section { padding: 60px 0; }
         }
     </style>
 </head>
 <body>
+
+<!-- САЙДБАР -->
+{% if sidebar_enabled %}
+<aside class="sidebar">
+    <div class="sidebar-logo">{{ company_name }}</div>
+
+    {% if sidebar_items %}
+    <nav class="sidebar-nav">
+        {% for item in sidebar_items %}
+        <a href="{{ item.anchor }}">{{ item.icon }} {{ item.label }}</a>
+        {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if sidebar_cta_text %}
+    <a href="#booking" class="sidebar-cta">{{ sidebar_cta_text }}</a>
+    {% endif %}
+
+    <div class="sidebar-contacts">
+        <div>📞 {{ company_phone }}</div>
+        <div>📍 {{ company_address }}</div>
+    </div>
+</aside>
+{% endif %}
+
+<main class="main-content">
 
 {% for block in blocks %}
 
@@ -416,22 +622,37 @@
     <section class="hero">
         <h1>{{ hero_heading }}</h1>
         <p>{{ hero_subheading }}</p>
+        {% if about_short %}
+        <div class="hero-about">{{ about_short }}</div>
+        {% endif %}
     </section>
 
     {% elif block == "features" and features %}
-    <section class="features">
-        {% for feature in features %}
-        <div class="feature">
-            <h3>{{ feature.title }}</h3>
-            <p>{{ feature.description }}</p>
+    <section class="container">
+        <h2>Преимущества</h2>
+        <p class="section-subtitle">Почему выбирают нас</p>
+        <div class="features-grid">
+            {% for feature in features %}
+            <div class="feature">
+                <h3>{{ feature.title }}</h3>
+                <p>{{ feature.description }}</p>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+    </section>
+
+    {% elif block == "about" and about_full %}
+    <section class="container">
+        <div class="about">
+            <h2>О нас</h2>
+            <p>{{ about_full }}</p>
+        </div>
     </section>
 
     {% elif block == "services" and services %}
-    <section class="container services">
+    <section class="container">
         <h2>Услуги</h2>
-        <p class="services-subtitle">Что мы предлагаем</p>
+        <p class="section-subtitle">Что мы предлагаем</p>
         <div class="services-grid">
             {% for service in services %}
             <div class="service-card">
@@ -444,23 +665,28 @@
     </section>
 
     {% elif block == "gallery" and gallery %}
-    <section class="gallery">
-        <div class="container">
-            <h2>Галерея</h2>
-            <div class="gallery-grid">
-                {% for item in gallery %}
-                <div class="gallery-item">
+    <section class="container">
+        <h2>Галерея</h2>
+        <p class="section-subtitle">Наши работы</p>
+        <div class="gallery-grid">
+            {% for item in gallery %}
+            <div class="gallery-item">
+                {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                {% endif %}
+                <div class="caption">
                     <h3>{{ item.title }}</h3>
                     <p>{{ item.description }}</p>
                 </div>
-                {% endfor %}
             </div>
+            {% endfor %}
         </div>
     </section>
 
     {% elif block == "pricing" and pricing %}
-    <section class="container pricing">
+    <section class="container">
         <h2>Цены</h2>
+        <p class="section-subtitle">Прозрачное ценообразование</p>
         <div class="pricing-grid">
             {% for item in pricing %}
             <div class="pricing-card">
@@ -472,59 +698,110 @@
         </div>
     </section>
 
+    {% elif block == "testimonials" and testimonials %}
+    <section class="container">
+        <h2>Отзывы</h2>
+        <p class="section-subtitle">Что говорят клиенты</p>
+        <div class="testimonials-grid">
+            {% for t in testimonials %}
+            <div class="testimonial">
+                <div class="stars">
+                    {% for i in range(t.rating) %}★{% endfor %}
+                    {% for i in range(5 - t.rating) %}☆{% endfor %}
+                </div>
+                <div class="text">«{{ t.text }}»</div>
+                <div class="author">— {{ t.author }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% elif block == "team" and team %}
+    <section class="container">
+        <h2>Команда</h2>
+        <p class="section-subtitle">Специалисты, которым можно доверять</p>
+        <div class="team-grid">
+            {% for member in team %}
+            <div class="team-member">
+                <div class="avatar">{{ member.name[0] }}</div>
+                <h3>{{ member.name }}</h3>
+                <div class="role">{{ member.role }}</div>
+                <p>{{ member.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% elif block == "faq" and faq %}
+    <section class="container">
+        <h2>Частые вопросы</h2>
+        <p class="section-subtitle">Отвечаем на главное</p>
+        <div class="faq-list">
+            {% for item in faq %}
+            <div class="faq-item">
+                <h3>{{ item.question }}</h3>
+                <p>{{ item.answer }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
     {% elif block == "booking" %}
-    <section class="booking">
-        <h2>Онлайн-запись</h2>
-        <p class="subtitle">Выберите удобную дату</p>
+    <section class="container">
+        <div class="booking">
+            <h2>Онлайн-запись</h2>
+            <p class="section-subtitle">Выберите удобную дату</p>
 
-        <div class="calendar-header">
-            <button id="prevMonth" type="button">‹</button>
-            <div class="month-year" id="monthYear">—</div>
-            <button id="nextMonth" type="button">›</button>
+            <div class="calendar-header">
+                <button id="prevMonth" type="button">‹</button>
+                <div class="month-year" id="monthYear">—</div>
+                <button id="nextMonth" type="button">›</button>
+            </div>
+
+            <div class="weekdays">
+                <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div>
+                <div>Пт</div><div>Сб</div><div>Вс</div>
+            </div>
+
+            <div class="days" id="days"></div>
+
+            <form class="booking-form" id="bookingForm">
+                <h3>Вы выбрали: <span id="selectedDate"></span></h3>
+
+                <div class="form-group">
+                    <label for="service">Услуга</label>
+                    <select id="service" required>
+                        <option value="">— Выберите услугу —</option>
+                        {% for service in services %}
+                        <option value="{{ service.name }}">{{ service.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Ваше имя</label>
+                    <input type="text" id="name" placeholder="Иван Иванов" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Телефон</label>
+                    <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="comment">Комментарий</label>
+                    <textarea id="comment" rows="3" placeholder="Пожелания..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Отправить заявку</button>
+            </form>
         </div>
-
-        <div class="weekdays">
-            <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div>
-            <div>Пт</div><div>Сб</div><div>Вс</div>
-        </div>
-
-        <div class="days" id="days"></div>
-
-        <form class="booking-form" id="bookingForm">
-            <h3>Вы выбрали: <span id="selectedDate"></span></h3>
-
-            <div class="form-group">
-                <label for="service">Услуга</label>
-                <select id="service" required>
-                    <option value="">— Выберите услугу —</option>
-                    {% for service in services %}
-                    <option value="{{ service.name }}">{{ service.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="name">Ваше имя</label>
-                <input type="text" id="name" placeholder="Иван Иванов" required>
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Телефон</label>
-                <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
-            </div>
-
-            <div class="form-group">
-                <label for="comment">Комментарий</label>
-                <textarea id="comment" rows="3" placeholder="Пожелания..."></textarea>
-            </div>
-
-            <button type="submit" class="submit-btn">Отправить заявку</button>
-        </form>
     </section>
 
     {% elif block == "contacts" %}
-    <section class="contacts">
+    <section class="container">
         <h2>Контакты</h2>
+        <p class="section-subtitle">Мы всегда на связи</p>
         <div class="contacts-grid">
             <div class="contact-item">
                 <div class="label">Компания</div>
@@ -549,6 +826,8 @@
     {% endif %}
 
 {% endfor %}
+
+</main>
 
 <footer>{{ footer_text }}</footer>
 

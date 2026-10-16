@@ -11,8 +11,10 @@
             --bg: {{ color_bg }};
             --text: {{ color_text }};
             --accent: {{ color_accent }};
+            --sidebar-width: 260px;
         }
         * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0; padding: 0;
@@ -20,86 +22,319 @@
             color: var(--text);
             line-height: 1.6;
         }
-        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
 
+        /* ============ САЙДБАР ============ */
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--text);
+            color: #fff;
+            padding: 32px 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 40px;
+            line-height: 1.3;
+        }
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 32px;
+            flex-grow: 1;
+        }
+        .sidebar-nav a {
+            color: #ddd;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+        }
+        .sidebar-nav a:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        .sidebar-cta {
+            display: block;
+            background: var(--accent);
+            color: #fff;
+            text-align: center;
+            padding: 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            margin-bottom: 24px;
+            transition: transform 0.2s;
+        }
+        .sidebar-cta:hover { transform: scale(1.03); }
+        .sidebar-contacts {
+            font-size: 0.85em;
+            color: #aaa;
+            line-height: 1.8;
+            border-top: 1px solid #333;
+            padding-top: 24px;
+        }
+        .sidebar-contacts div { margin-bottom: 8px; }
+
+        /* ============ ОСНОВНОЙ КОНТЕНТ ============ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 40px; }
+
+        /* ============ HERO С КАРТИНКОЙ ============ */
         .hero {
+            position: relative;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: #fff;
-            padding: 120px 20px 100px;
+            padding: 140px 40px 120px;
             text-align: center;
+            overflow: hidden;
         }
-        .hero h1 { font-size: 3.2em; margin: 0 0 24px; font-weight: 800; }
-        .hero p { font-size: 1.2em; opacity: 0.9; max-width: 640px; margin: 0 auto; }
+        {% if hero_image_url %}
+        .hero {
+            background-image:
+                linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4)),
+                url('{{ hero_image_url }}');
+            background-size: cover;
+            background-position: center;
+        }
+        {% endif %}
+        .hero h1 {
+            position: relative;
+            font-size: 3.5em;
+            margin: 0 0 24px;
+            font-weight: 800;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+        .hero p {
+            position: relative;
+            font-size: 1.25em;
+            opacity: 0.95;
+            max-width: 640px;
+            margin: 0 auto;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.3);
+        }
+        .hero-about {
+            position: relative;
+            max-width: 640px;
+            margin: 32px auto 0;
+            font-size: 1em;
+            opacity: 0.9;
+            line-height: 1.7;
+        }
 
-        .features { display: flex; gap: 24px; padding: 80px 0; flex-wrap: wrap; justify-content: center; }
-        .feature {
-            flex: 1 1 240px; max-width: 320px;
-            background: #fff; border-radius: 16px;
-            padding: 32px; text-align: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        /* ============ ОБЩИЕ СЕКЦИИ ============ */
+        section { padding: 80px 0; }
+        section h2 {
+            text-align: center;
+            font-size: 2.2em;
+            margin: 0 0 16px;
+            color: var(--text);
         }
-        .feature h3 { color: var(--primary); margin: 0 0 16px; font-size: 1.3em; }
+        .section-subtitle {
+            text-align: center;
+            color: #888;
+            margin: 0 0 56px;
+            font-size: 1em;
+        }
+
+        /* ============ FEATURES ============ */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+        }
+        .feature {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+            border-top: 4px solid var(--primary);
+        }
+        .feature h3 { color: var(--primary); margin: 0 0 16px; font-size: 1.2em; }
         .feature p { margin: 0; color: #666; font-size: 0.95em; }
 
-        .services { padding: 60px 0; }
-        .services h2 { text-align: center; margin: 0 0 48px; font-size: 2.2em; }
-        .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+        /* ============ ABOUT ============ */
+        .about {
+            background: #fff;
+            padding: 80px 40px;
+            border-radius: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .about p { font-size: 1.05em; line-height: 1.8; color: #555; }
+
+        /* ============ SERVICES ============ */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
         .service-card {
-            background: #fff; border-radius: 16px; padding: 28px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.06);
             border-left: 4px solid var(--primary);
         }
-        .service-card h3 { margin: 0 0 12px; }
+        .service-card h3 { margin: 0 0 12px; font-size: 1.2em; }
         .service-card p { margin: 0 0 12px; color: #666; font-size: 0.95em; }
         .service-card .price { font-size: 1.2em; font-weight: 700; color: var(--primary); }
 
-        .gallery { padding: 60px 0; }
-        .gallery h2 { text-align: center; margin: 0 0 48px; font-size: 2.2em; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
-        .gallery-item {
-            background: #fff; border-radius: 16px; padding: 24px;
-            text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        /* ============ GALLERY С КАРТИНКАМИ ============ */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
         }
-        .gallery-item h3 { margin: 0 0 8px; color: var(--primary); }
+        .gallery-item {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-item .caption {
+            padding: 20px;
+        }
+        .gallery-item h3 { margin: 0 0 8px; color: var(--primary); font-size: 1.1em; }
+        .gallery-item p { margin: 0; color: #777; font-size: 0.9em; }
 
-        .pricing { padding: 60px 0; }
-        .pricing h2 { text-align: center; margin: 0 0 48px; font-size: 2.2em; }
-        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+        /* ============ PRICING ============ */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+        }
         .pricing-card {
-            background: #fff; border-radius: 16px; padding: 32px;
-            text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
             border-top: 4px solid var(--accent);
         }
+        .pricing-card h3 { margin: 0 0 12px; }
         .pricing-card .price { font-size: 1.8em; font-weight: 700; color: var(--primary); margin: 16px 0; }
+        .pricing-card p { color: #666; font-size: 0.9em; margin: 0; }
 
-        .booking { background: #fff; border-radius: 20px; padding: 48px; margin: 60px 0; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
-        .booking h2 { text-align: center; margin: 0 0 12px; font-size: 1.9em; }
-        .booking .subtitle { text-align: center; color: #888; margin: 0 0 40px; }
+        /* ============ TESTIMONIALS ============ */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .testimonial {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+        .testimonial .stars { color: #ffc107; font-size: 1.1em; margin-bottom: 12px; }
+        .testimonial .text { font-style: italic; color: #555; margin-bottom: 16px; line-height: 1.6; }
+        .testimonial .author { font-weight: 700; color: var(--primary); }
 
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        /* ============ TEAM ============ */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 24px;
+        }
+        .team-member {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+        .team-member .avatar {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 2em;
+            font-weight: 700;
+        }
+        .team-member h3 { margin: 0 0 8px; }
+        .team-member .role { color: var(--primary); font-size: 0.9em; font-weight: 600; margin-bottom: 12px; }
+        .team-member p { color: #777; font-size: 0.9em; margin: 0; }
+
+        /* ============ FAQ ============ */
+        .faq-list { max-width: 800px; margin: 0 auto; }
+        .faq-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .faq-item h3 { margin: 0 0 12px; color: var(--primary); font-size: 1.1em; }
+        .faq-item p { margin: 0; color: #555; line-height: 1.7; }
+
+        /* ============ BOOKING ============ */
+        .booking {
+            background: #fff;
+            border-radius: 20px;
+            padding: 48px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
         .calendar-header button {
-            background: var(--primary); border: none; width: 44px; height: 44px;
-            border-radius: 12px; font-size: 1.3em; cursor: pointer; color: #fff;
+            background: var(--primary);
+            border: none;
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            font-size: 1.3em;
+            cursor: pointer;
+            color: #fff;
         }
         .month-year { font-size: 1.3em; font-weight: 700; }
-
         .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px; }
         .weekdays div { text-align: center; font-weight: 600; font-size: 0.85em; color: #888; padding: 8px 0; }
-
         .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
         .day {
-            aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
-            border-radius: 10px; cursor: pointer; background: var(--bg); border: 2px solid transparent;
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            background: var(--bg);
+            border: 2px solid transparent;
         }
-        .day:hover:not(.disabled):not(.busy):not(.selected) {
-            background: var(--primary); color: #fff;
-        }
+        .day:hover:not(.disabled):not(.busy):not(.selected) { background: var(--primary); color: #fff; }
         .day.empty { background: transparent; cursor: default; }
         .day.disabled { color: #ccc; cursor: not-allowed; background: transparent; }
         .day.busy { background: #ffe5e5; color: #c0392b; cursor: not-allowed; text-decoration: line-through; }
         .day.selected { background: var(--primary); color: #fff; border-color: var(--accent); }
         .day.today { font-weight: 700; border-color: var(--primary); }
-
         .booking-form { display: none; margin-top: 40px; padding-top: 40px; border-top: 1px solid #eee; }
         .booking-form.active { display: block; }
         .booking-form h3 { text-align: center; color: var(--primary); margin: 0 0 28px; }
@@ -112,7 +347,6 @@
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
             outline: none; border-color: var(--primary); background: #fff;
         }
-
         .submit-btn {
             width: 100%; padding: 18px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -120,22 +354,29 @@
             font-size: 1.05em; font-weight: 700; cursor: pointer;
         }
 
-        .contacts { background: #fff; border-radius: 20px; padding: 48px; margin: 40px 0; box-shadow: 0 8px 32px rgba(0,0,0,0.06); }
-        .contacts h2 { text-align: center; margin: 0 0 36px; }
+        /* ============ CONTACTS ============ */
         .contacts-grid { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
         .contact-item { text-align: center; flex: 1 1 200px; }
         .contact-item .label { font-size: 0.85em; color: #888; text-transform: uppercase; margin-bottom: 8px; }
         .contact-item .value { font-size: 1.1em; font-weight: 700; }
 
+        /* ============ CTA ============ */
         .cta {
             background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: #fff; padding: 72px 20px; text-align: center;
-            border-radius: 20px; margin: 40px 0;
+            color: #fff; padding: 72px 40px; text-align: center; border-radius: 20px;
         }
-        .cta h2 { margin: 0; font-size: 2em; }
+        .cta h2 { margin: 0; color: #fff; font-size: 2em; }
 
-        footer { background: var(--text); color: #aaa; padding: 40px; text-align: center; margin-top: 60px; }
+        /* ============ FOOTER ============ */
+        footer {
+            background: var(--text);
+            color: #aaa;
+            padding: 40px;
+            text-align: center;
+            margin-top: 60px;
+        }
 
+        /* ============ MODAL ============ */
         .success-modal {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.6); z-index: 1000;
@@ -152,13 +393,56 @@
             padding: 14px 32px; border-radius: 10px; cursor: pointer; margin-top: 20px;
         }
 
-        @media (max-width: 600px) {
+        /* ============ АДАПТИВ ============ */
+        @media (max-width: 900px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                padding: 20px;
+            }
+            .sidebar-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .sidebar-nav a { padding: 8px 12px; font-size: 0.85em; }
+            .sidebar-contacts { display: none; }
+            .main-content { margin-left: 0; }
             .hero h1 { font-size: 2.2em; }
-            .booking { padding: 28px; }
+            .hero { padding: 80px 24px 60px; }
+            .container { padding: 0 20px; }
+            section { padding: 60px 0; }
         }
     </style>
 </head>
 <body>
+
+<!-- САЙДБАР -->
+{% if sidebar_enabled %}
+<aside class="sidebar">
+    <div class="sidebar-logo">{{ company_name }}</div>
+
+    {% if sidebar_items %}
+    <nav class="sidebar-nav">
+        {% for item in sidebar_items %}
+        <a href="{{ item.anchor }}">{{ item.icon }} {{ item.label }}</a>
+        {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if sidebar_cta_text %}
+    <a href="#booking" class="sidebar-cta">{{ sidebar_cta_text }}</a>
+    {% endif %}
+
+    <div class="sidebar-contacts">
+        <div>📞 {{ company_phone }}</div>
+        <div>📍 {{ company_address }}</div>
+    </div>
+</aside>
+{% endif %}
+
+<main class="main-content">
 
 {% for block in blocks %}
 
@@ -166,21 +450,37 @@
     <section class="hero">
         <h1>{{ hero_heading }}</h1>
         <p>{{ hero_subheading }}</p>
+        {% if about_short %}
+        <div class="hero-about">{{ about_short }}</div>
+        {% endif %}
     </section>
 
     {% elif block == "features" and features %}
-    <section class="container features">
-        {% for feature in features %}
-        <div class="feature">
-            <h3>{{ feature.title }}</h3>
-            <p>{{ feature.description }}</p>
+    <section class="container">
+        <h2>Преимущества</h2>
+        <p class="section-subtitle">Почему выбирают нас</p>
+        <div class="features-grid">
+            {% for feature in features %}
+            <div class="feature">
+                <h3>{{ feature.title }}</h3>
+                <p>{{ feature.description }}</p>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+    </section>
+
+    {% elif block == "about" and about_full %}
+    <section class="container">
+        <div class="about">
+            <h2>О нас</h2>
+            <p>{{ about_full }}</p>
+        </div>
     </section>
 
     {% elif block == "services" and services %}
-    <section class="container services">
+    <section class="container">
         <h2>Наши услуги</h2>
+        <p class="section-subtitle">Что мы предлагаем</p>
         <div class="services-grid">
             {% for service in services %}
             <div class="service-card">
@@ -193,21 +493,28 @@
     </section>
 
     {% elif block == "gallery" and gallery %}
-    <section class="container gallery">
+    <section class="container">
         <h2>Галерея</h2>
+        <p class="section-subtitle">Наши работы</p>
         <div class="gallery-grid">
             {% for item in gallery %}
             <div class="gallery-item">
-                <h3>{{ item.title }}</h3>
-                <p>{{ item.description }}</p>
+                {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                {% endif %}
+                <div class="caption">
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.description }}</p>
+                </div>
             </div>
             {% endfor %}
         </div>
     </section>
 
     {% elif block == "pricing" and pricing %}
-    <section class="container pricing">
+    <section class="container">
         <h2>Цены</h2>
+        <p class="section-subtitle">Прозрачные цены</p>
         <div class="pricing-grid">
             {% for item in pricing %}
             <div class="pricing-card">
@@ -219,59 +526,110 @@
         </div>
     </section>
 
+    {% elif block == "testimonials" and testimonials %}
+    <section class="container">
+        <h2>Отзывы</h2>
+        <p class="section-subtitle">Что говорят клиенты</p>
+        <div class="testimonials-grid">
+            {% for t in testimonials %}
+            <div class="testimonial">
+                <div class="stars">
+                    {% for i in range(t.rating) %}★{% endfor %}
+                    {% for i in range(5 - t.rating) %}☆{% endfor %}
+                </div>
+                <div class="text">«{{ t.text }}»</div>
+                <div class="author">— {{ t.author }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% elif block == "team" and team %}
+    <section class="container">
+        <h2>Наша команда</h2>
+        <p class="section-subtitle">Специалисты, которым можно доверять</p>
+        <div class="team-grid">
+            {% for member in team %}
+            <div class="team-member">
+                <div class="avatar">{{ member.name[0] }}</div>
+                <h3>{{ member.name }}</h3>
+                <div class="role">{{ member.role }}</div>
+                <p>{{ member.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% elif block == "faq" and faq %}
+    <section class="container">
+        <h2>Частые вопросы</h2>
+        <p class="section-subtitle">Отвечаем на главное</p>
+        <div class="faq-list">
+            {% for item in faq %}
+            <div class="faq-item">
+                <h3>{{ item.question }}</h3>
+                <p>{{ item.answer }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
     {% elif block == "booking" %}
-    <section class="container booking">
-        <h2>Забронировать день</h2>
-        <p class="subtitle">Выберите свободную дату и оставьте заявку</p>
+    <section class="container">
+        <div class="booking">
+            <h2>Забронировать</h2>
+            <p class="section-subtitle">Выберите удобную дату</p>
 
-        <div class="calendar-header">
-            <button id="prevMonth" type="button">‹</button>
-            <div class="month-year" id="monthYear">—</div>
-            <button id="nextMonth" type="button">›</button>
+            <div class="calendar-header">
+                <button id="prevMonth" type="button">‹</button>
+                <div class="month-year" id="monthYear">—</div>
+                <button id="nextMonth" type="button">›</button>
+            </div>
+
+            <div class="weekdays">
+                <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div>
+                <div>Пт</div><div>Сб</div><div>Вс</div>
+            </div>
+
+            <div class="days" id="days"></div>
+
+            <form class="booking-form" id="bookingForm">
+                <h3>Вы выбрали: <span id="selectedDate"></span></h3>
+
+                <div class="form-group">
+                    <label for="service">Услуга</label>
+                    <select id="service" required>
+                        <option value="">— Выберите услугу —</option>
+                        {% for service in services %}
+                        <option value="{{ service.name }}">{{ service.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Ваше имя</label>
+                    <input type="text" id="name" placeholder="Иван Иванов" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Телефон</label>
+                    <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="comment">Комментарий</label>
+                    <textarea id="comment" rows="3" placeholder="Пожелания..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Отправить заявку</button>
+            </form>
         </div>
-
-        <div class="weekdays">
-            <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div>
-            <div>Пт</div><div>Сб</div><div>Вс</div>
-        </div>
-
-        <div class="days" id="days"></div>
-
-        <form class="booking-form" id="bookingForm">
-            <h3>Вы выбрали: <span id="selectedDate"></span></h3>
-
-            <div class="form-group">
-                <label for="service">Услуга</label>
-                <select id="service" required>
-                    <option value="">— Выберите услугу —</option>
-                    {% for service in services %}
-                    <option value="{{ service.name }}">{{ service.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="name">Ваше имя</label>
-                <input type="text" id="name" placeholder="Иван Иванов" required>
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Телефон</label>
-                <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
-            </div>
-
-            <div class="form-group">
-                <label for="comment">Комментарий</label>
-                <textarea id="comment" rows="3" placeholder="Пожелания..."></textarea>
-            </div>
-
-            <button type="submit" class="submit-btn">Отправить заявку</button>
-        </form>
     </section>
 
     {% elif block == "contacts" %}
-    <section class="container contacts">
+    <section class="container">
         <h2>Контакты</h2>
+        <p class="section-subtitle">Мы всегда на связи</p>
         <div class="contacts-grid">
             <div class="contact-item">
                 <div class="label">Компания</div>
@@ -289,13 +647,17 @@
     </section>
 
     {% elif block == "cta" %}
-    <section class="container cta">
-        <h2>{{ cta_text }}</h2>
+    <section class="container">
+        <div class="cta">
+            <h2>{{ cta_text }}</h2>
+        </div>
     </section>
 
     {% endif %}
 
 {% endfor %}
+
+</main>
 
 <footer>{{ footer_text }}</footer>
 

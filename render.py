@@ -1,4 +1,5 @@
 from pathlib import Path
+import urllib.parse
 import bleach
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from schemas import SiteContent
@@ -21,6 +22,26 @@ ALLOWED_TEMPLATES = [
     "template-bold.html",
 ]
 
+# ============ Генерация картинок ============
+
+def generate_image_url(prompt: str, width: int = 1200, height: int = 800) -> str:
+    """Генерирует URL картинки через pollinations.ai по текстовому описанию."""
+    if not prompt or not isinstance(prompt, str):
+        return ""
+    prompt = prompt.strip()
+    if not prompt:
+        return ""
+    # Обрезаем слишком длинные промпты
+    if len(prompt) > 300:
+        prompt = prompt[:300]
+    encoded = urllib.parse.quote(prompt)
+    return (
+        f"https://image.pollinations.ai/prompt/{encoded}"
+        f"?width={width}&height={height}&nologo=true"
+    )
+
+
+# ============ Очистка ============
 
 def clean(text: str) -> str:
     """Очищает текст от опасных HTML-тегов."""
@@ -45,45 +66,92 @@ def clean_color(hex_color: str, default: str) -> str:
     return hex_color
 
 
+def clean_anchor(anchor: str) -> str:
+    """Проверяет, что якорь безопасный (начинается с #)."""
+    if not isinstance(anchor, str):
+        return "#"
+    anchor = anchor.strip()
+    if not anchor.startswith("#"):
+        anchor = "#" + anchor
+    # Разрешаем только латиницу, цифры, дефис, подчёркивание
+    safe = "".join(c for c in anchor if c.isalnum() or c in "-#_")
+    return safe if safe != "#" else "#"
+
+
+# ============ Рендер ============
+
 def render_site(content: SiteContent) -> str:
     """Подставляет данные в выбранный шаблон."""
     data = content.model_dump()
 
-    # Чистим текстовые поля
+    # --- Текстовые поля ---
     for key in [
         "site_title", "meta_description", "hero_heading", "hero_subheading",
         "company_name", "company_address", "company_phone",
         "working_hours", "booking_confirmation", "cta_text", "footer_text",
+        "about_short", "about_full", "sidebar_cta_text",
     ]:
         if key in data:
             data[key] = clean(data[key])
 
+    # --- Features ---
     for feature in data.get("features", []):
         feature["title"] = clean(feature.get("title", ""))
         feature["description"] = clean(feature.get("description", ""))
 
+    # --- Services ---
     for service in data.get("services", []):
         service["name"] = clean(service.get("name", ""))
         service["description"] = clean(service.get("description", ""))
         service["price"] = clean(service.get("price", ""))
 
+    # --- Gallery + генерация картинок ---
     for item in data.get("gallery", []):
         item["title"] = clean(item.get("title", ""))
         item["description"] = clean(item.get("description", ""))
+        prompt = item.get("image_prompt", "") or item.get("title", "")
+        item["image_url"] = generate_image_url(prompt, width=600, height=400)
 
+    # --- Pricing ---
     for item in data.get("pricing", []):
         item["name"] = clean(item.get("name", ""))
         item["description"] = clean(item.get("description", ""))
         item["price"] = clean(item.get("price", ""))
 
-    # Чистим цвета
+    # --- Testimonials ---
+    for testimonial in data.get("testimonials", []):
+        testimonial["author"] = clean(testimonial.get("author", ""))
+        testimonial["text"] = clean(testimonial.get("text", ""))
+
+    # --- FAQ ---
+    for faq in data.get("faq", []):
+        faq["question"] = clean(faq.get("question", ""))
+        faq["answer"] = clean(faq.get("answer", ""))
+
+    # --- Team ---
+    for member in data.get("team", []):
+        member["name"] = clean(member.get("name", ""))
+        member["role"] = clean(member.get("role", ""))
+        member["description"] = clean(member.get("description", ""))
+
+    # --- Sidebar ---
+    for item in data.get("sidebar_items", []):
+        item["label"] = clean(item.get("label", ""))
+        item["anchor"] = clean_anchor(item.get("anchor", "#"))
+        item["icon"] = clean(item.get("icon", ""))
+
+    # --- Hero image ---
+    hero_prompt = data.get("hero_image_prompt", "")
+    data["hero_image_url"] = generate_image_url(hero_prompt, width=1920, height=1080)
+
+    # --- Цвета ---
     data["color_primary"] = clean_color(data.get("color_primary", ""), "#667eea")
     data["color_secondary"] = clean_color(data.get("color_secondary", ""), "#764ba2")
     data["color_bg"] = clean_color(data.get("color_bg", ""), "#f4f6fa")
     data["color_text"] = clean_color(data.get("color_text", ""), "#2c3e50")
     data["color_accent"] = clean_color(data.get("color_accent", ""), "#667eea")
 
-    # Выбираем шаблон
+    # --- Шаблон ---
     template_name = data.get("template_name", "template-modern.html")
     if template_name not in ALLOWED_TEMPLATES:
         template_name = "template-modern.html"

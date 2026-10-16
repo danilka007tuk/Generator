@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class Feature(BaseModel):
-    """Одно преимущество на сайте."""
+    """Одно преимущество."""
     title: str = Field(max_length=60)
     description: str = Field(max_length=300)
 
@@ -18,6 +18,34 @@ class GalleryItem(BaseModel):
     """Один элемент галереи."""
     title: str = Field(max_length=80)
     description: str = Field(max_length=200)
+    image_prompt: str = Field(default="", max_length=300)
+
+
+class Testimonial(BaseModel):
+    """Один отзыв."""
+    author: str = Field(max_length=80)
+    text: str = Field(max_length=300)
+    rating: int = Field(default=5, ge=1, le=5)
+
+
+class FAQItem(BaseModel):
+    """Один вопрос-ответ."""
+    question: str = Field(max_length=200)
+    answer: str = Field(max_length=500)
+
+
+class SidebarItem(BaseModel):
+    """Один пункт сайдбара."""
+    label: str = Field(max_length=40)
+    anchor: str = Field(max_length=40)
+    icon: str = Field(default="", max_length=10)
+
+
+class TeamMember(BaseModel):
+    """Один член команды."""
+    name: str = Field(max_length=80)
+    role: str = Field(max_length=80)
+    description: str = Field(default="", max_length=200)
 
 
 class SiteContent(BaseModel):
@@ -48,6 +76,20 @@ class SiteContent(BaseModel):
     # === Hero ===
     hero_heading: str = Field(max_length=60)
     hero_subheading: str = Field(max_length=200)
+    hero_image_prompt: str = Field(
+        default="", max_length=300,
+        description="Описание для генерации фоновой картинки hero-блока"
+    )
+
+    # === О компании (новое) ===
+    about_short: str = Field(
+        default="", max_length=300,
+        description="Короткое описание компании (2-3 предложения)"
+    )
+    about_full: str = Field(
+        default="", max_length=1000,
+        description="Полное описание компании для блока 'О нас'"
+    )
 
     # === Features ===
     features: list[Feature] = Field(default_factory=list)
@@ -60,6 +102,29 @@ class SiteContent(BaseModel):
 
     # === Pricing ===
     pricing: list[ServiceItem] = Field(default_factory=list)
+
+    # === Testimonials (новое) ===
+    testimonials: list[Testimonial] = Field(default_factory=list)
+
+    # === FAQ (новое) ===
+    faq: list[FAQItem] = Field(default_factory=list)
+
+    # === Team (новое) ===
+    team: list[TeamMember] = Field(default_factory=list)
+
+    # === Sidebar (новое) ===
+    sidebar_enabled: bool = Field(
+        default=True,
+        description="Показывать ли сайдбар"
+    )
+    sidebar_items: list[SidebarItem] = Field(
+        default_factory=list,
+        description="Пункты меню в сайдбаре"
+    )
+    sidebar_cta_text: str = Field(
+        default="Забронировать", max_length=40,
+        description="Текст главной кнопки в сайдбаре"
+    )
 
     # === Contacts ===
     company_name: str = Field(max_length=100)
