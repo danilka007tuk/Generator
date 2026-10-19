@@ -968,7 +968,7 @@
             submitBtn.textContent = 'Отправляю...';
 
             try {
-                const response = await fetch(`${SERVER_URL}/api/book/site`, {
+                const response = await fetch(`${SERVER_URL}/api/book/{{ site_id }}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ date: selectedDate, time: '10:00', service, name, phone, comment }),

@@ -1,6 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
 venv/
 .env
-__pycache__/
-*.pyc
+*.db
+bookings.db
+bookings.db.backup*
 output/
+*.log
+bot.log
+server.log
+cloudflared.log
 .idea/
+.DS_Store
