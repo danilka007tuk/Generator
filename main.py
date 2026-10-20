@@ -9,6 +9,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 import httpx
+import resend
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,6 +42,7 @@ class BookingRequest(BaseModel):
     service: str
     name: str
     phone: str
+    email: str = ""        # <--- добавили email
     comment: str = ""
 
 
@@ -148,6 +150,7 @@ async def create_booking(
     session.add(booking)
     await session.commit()
 
+    # Текст для MAX
     text = (
         f"🔔 Новая бронь!\n\n"
         f"🌐 Сайт: {site_id}\n"
@@ -155,10 +158,15 @@ async def create_booking(
         f"💼 Услуга: {data.service}\n"
         f"👤 {data.name}\n"
         f"📞 {data.phone}\n"
+        f"📧 {data.email or '—'}\n"
         f"💬 {data.comment or '—'}"
     )
 
+    # 1. MAX-уведомление
     background_tasks.add_task(send_notifications, text, site_id, session)
+
+    # 2. Email-уведомление (Resend)
+    background_tasks.add_task(send_email_resend, site_id, data)
 
     return {"ok": True}
 
@@ -169,13 +177,11 @@ async def send_notifications(text: str, site_id: str, session: AsyncSession):
     admin_id = os.getenv("MAX_ADMIN_ID")
     url = "https://platform-api2.max.ru/messages"
 
-    # Подписчики ТОЛЬКО этого сайта
     result = await session.execute(
         select(Subscriber.user_id).where(Subscriber.site_id == site_id)
     )
     recipients = {row.user_id for row in result.all()}
 
-    # Админ — всегда
     if admin_id:
         try:
             recipients.add(int(admin_id))
@@ -204,3 +210,35 @@ async def send_notifications(text: str, site_id: str, session: AsyncSession):
                     logger.info(f"Уведомление отправлено {user_id}")
             except Exception as e:
                 logger.error(f"Не удалось отправить {user_id}: {e}")
+
+
+async def send_email_resend(site_id: str, data: BookingRequest):
+    """Отправляет email клиенту (если указан email)."""
+    resend.api_key = os.getenv("RESEND_API_KEY")
+    if not resend.api_key:
+        logger.warning("RESEND_API_KEY не задан — email не отправлен")
+        return
+
+    if not data.email:
+        logger.info("Клиент не указал email — пропускаем")
+        return
+
+    try:
+        params = {
+            "from": "onboarding@resend.dev",
+            "to": [data.email],
+            "subject": f"Подтверждение записи на {data.service}",
+            "html": f"""
+            <h2>Ваша заявка принята!</h2>
+            <p><strong>Сайт:</strong> {site_id}</p>
+            <p><strong>Услуга:</strong> {data.service}</p>
+            <p><strong>Дата:</strong> {data.date} в {data.time}</p>
+            <p><strong>Имя:</strong> {data.name}</p>
+            <p><strong>Телефон:</strong> {data.phone}</p>
+            <p>Спасибо! Мы свяжемся с вами для подтверждения.</p>
+            """
+        }
+        response = resend.Emails.send(params)
+        logger.info(f"Email отправлен {data.email}. ID: {response.get('id')}")
+    except Exception as e:
+        logger.error(f"Ошибка отправки email: {e}")
