@@ -4,15 +4,15 @@ import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения из .env
+# Загружаем переменные окружения из .env (чтобы работало и из консоли)
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
-from github import Github, GithubException
+from github import Github, GithubException, Auth
 
 logger = logging.getLogger(__name__)
 
-# Инициализация GitHub клиента
-g = Github(os.getenv("GITHUB_TOKEN"))
+# Инициализация GitHub клиента (используем современный Auth)
+g = Github(auth=Auth.Token(os.getenv("GITHUB_TOKEN")))
 USER = os.getenv("GITHUB_USERNAME")
 
 def deploy_to_github(repo_name: str, html_path: Path) -> str:
@@ -41,23 +41,22 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
             logger.error(f"Ошибка при заливке index.html: {e}")
             raise e
 
-    # === 3. Заливаем register.html (если есть) ===
+    # === 3. Заливаем register.html (ОБЯЗАТЕЛЬНО, даже если он не изменился) ===
     register_path = html_path.parent / "register.html"
     if register_path.exists():
         register_content = register_path.read_text(encoding="utf-8")
         try:
             existing = repo.get_contents("register.html")
+            # Обновляем файл, если он уже есть
             repo.update_file("register.html", "Update register", register_content, existing.sha)
         except GithubException as e:
             if e.status == 404:
-                try:
-                    repo.create_file("register.html", "Add register", register_content)
-                except GithubException as ex:
-                    logger.error(f"Не удалось залить register.html: {ex}")
-                    print(f"Не удалось залить register.html: {ex}")
+                # Создаем файл, если его нет
+                repo.create_file("register.html", "Add register", register_content)
             else:
                 logger.error(f"Ошибка при получении register.html: {e}")
-                print(f"Ошибка при получении register.html: {e}")
+    else:
+        logger.warning(f"Файл register.html не найден по пути {register_path}")
 
     # === 4. Заливаем картинки ===
     images_dir = html_path.parent / "images"
@@ -76,10 +75,8 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
                         repo.create_file(img_path_in_repo, f"Add {img_file.name}", img_bytes)
                     except GithubException as ex:
                         logger.error(f"Не удалось залить {img_file.name}: {ex}")
-                        print(f"Не удалось залить {img_file.name}: {ex}")
                 else:
                     logger.error(f"Ошибка при получении {img_path_in_repo}: {e}")
-                    print(f"Ошибка при получении {img_path_in_repo}: {e}")
 
     # === 5. Включаем GitHub Pages ===
     try:
