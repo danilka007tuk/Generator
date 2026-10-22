@@ -25,205 +25,72 @@
             overflow-x: hidden;
         }
 
-        /* ============ КНОПКА-БУРГЕР ============ */
+        /* КНОПКА-БУРГЕР */
         .sidebar-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            top: 16px; left: 16px;
-            z-index: 300;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            width: 48px; height: 48px;
-            border-radius: 10px;
-            font-size: 1.4em;
-            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            position: fixed; top: 16px; left: 16px;
+            z-index: 300; background: var(--primary); color: #fff;
+            border: none; width: 48px; height: 48px;
+            border-radius: 10px; font-size: 1.4em; cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        /* ============ САЙДБАР (OVERLAY) ============ */
+        /* САЙДБАР */
         .sidebar {
-            position: fixed;
-            left: 0; top: 0;
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: var(--text);
-            color: #fff;
-            padding: 28px 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            z-index: 400;
-            transition: transform 0.3s;
+            position: fixed; left: 0; top: 0;
+            width: var(--sidebar-width); height: 100vh;
+            background: var(--text); color: #fff;
+            padding: 28px 20px; overflow-y: auto;
+            display: flex; flex-direction: column;
+            z-index: 400; transition: transform 0.3s;
             transform: translateX(-100%);
         }
         .sidebar.open { transform: translateX(0); }
         .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 350;
+            display: none; position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.5); z-index: 350;
         }
         .sidebar-overlay.open { display: block; }
 
-        .sidebar-logo {
-            font-size: 1.25em;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 28px;
-            line-height: 1.3;
-        }
-        .sidebar-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 24px;
-            flex-grow: 1;
-        }
-        .sidebar-nav a {
-            color: #ddd;
-            text-decoration: none;
-            padding: 14px 16px;
-            border-radius: 10px;
-            font-size: 1em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: block;
-        }
+        .sidebar-logo { font-size: 1.25em; font-weight: 700; color: var(--primary); margin-bottom: 28px; line-height: 1.3; }
+        .sidebar-nav { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; flex-grow: 1; }
+        .sidebar-nav a { color: #ddd; text-decoration: none; padding: 14px 16px; border-radius: 10px; font-size: 1em; font-weight: 500; cursor: pointer; transition: all 0.2s; display: block; }
         .sidebar-nav a:hover { background: var(--primary); color: #fff; }
-        .sidebar-cta {
-            display: block;
-            background: var(--accent);
-            color: #fff;
-            text-align: center;
-            padding: 16px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 700;
-            margin-bottom: 20px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: transform 0.2s;
-            border: none;
-            width: 100%;
-        }
+        .sidebar-cta { display: block; background: var(--accent); color: #fff; text-align: center; padding: 16px; border-radius: 10px; text-decoration: none; font-weight: 700; margin-bottom: 20px; font-size: 1em; cursor: pointer; transition: transform 0.2s; border: none; width: 100%; }
         .sidebar-cta:hover { transform: scale(1.03); }
-        .sidebar-contacts {
-            font-size: 0.85em;
-            color: #aaa;
-            line-height: 1.7;
-            border-top: 1px solid #333;
-            padding-top: 16px;
-        }
+        .sidebar-contacts { font-size: 0.85em; color: #aaa; line-height: 1.7; border-top: 1px solid #333; padding-top: 16px; }
         .sidebar-contacts div { margin-bottom: 6px; }
 
-        /* ============ ОСНОВНОЙ КОНТЕНТ ============ */
-        .main-content {
-            margin-left: 0;
-            min-height: 100vh;
-        }
+        /* ОСНОВНОЙ КОНТЕНТ */
+        .main-content { margin-left: 0; min-height: 100vh; }
         .container { max-width: 1000px; margin: 0 auto; padding: 0 32px; }
 
-        /* ============ HERO (главная страница) ============ */
+        /* HERO */
         .hero {
-            position: relative;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #fff;
-            padding: 80px 32px 60px;
-            text-align: center;
-            overflow: hidden;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative; background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff; padding: 80px 32px 60px; text-align: center;
+            overflow: hidden; min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
         }
         {% if hero_image_url %}
         .hero {
-            background-image:
-                linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4)),
-                url('{{ hero_image_url }}');
-            background-size: cover;
-            background-position: center;
+            background-image: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url('{{ hero_image_url }}');
+            background-size: cover; background-position: center;
         }
         {% endif %}
-        .hero-inner {
-            position: relative;
-            max-width: 800px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        .hero h1 {
-            font-size: 3em;
-            margin: 0 0 20px;
-            font-weight: 800;
-            text-shadow: 0 2px 20px rgba(0,0,0,0.3);
-            line-height: 1.1;
-        }
-        .hero p {
-            font-size: 1.2em;
-            opacity: 0.95;
-            max-width: 640px;
-            margin: 0 auto 24px;
-            text-shadow: 0 1px 10px rgba(0,0,0,0.3);
-        }
-        .hero-about {
-            max-width: 640px;
-            margin: 0 auto 32px;
-            font-size: 1em;
-            opacity: 0.9;
-            line-height: 1.7;
-        }
-        .hero-contacts {
-            display: flex;
-            gap: 32px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 32px;
-            font-size: 1em;
-        }
-        .hero-contacts div {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-shadow: 0 1px 10px rgba(0,0,0,0.4);
-        }
-        .hero-buttons {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .hero-btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 10px;
-            font-size: 1em;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+        .hero-inner { position: relative; max-width: 800px; margin: 0 auto; width: 100%; }
+        .hero h1 { font-size: 3em; margin: 0 0 20px; font-weight: 800; text-shadow: 0 2px 20px rgba(0,0,0,0.3); line-height: 1.1; }
+        .hero p { font-size: 1.2em; opacity: 0.95; max-width: 640px; margin: 0 auto 24px; text-shadow: 0 1px 10px rgba(0,0,0,0.3); }
+        .hero-about { max-width: 640px; margin: 0 auto 32px; font-size: 1em; opacity: 0.9; line-height: 1.7; }
+        .hero-contacts { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; font-size: 1em; }
+        .hero-contacts div { display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 10px rgba(0,0,0,0.4); }
+        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .hero-btn { background: var(--accent); color: #fff; border: none; padding: 16px 32px; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; transition: transform 0.2s; }
         .hero-btn:hover { transform: scale(1.05); }
-        .hero-btn.secondary {
-            background: rgba(255,255,255,0.15);
-            border: 2px solid rgba(255,255,255,0.5);
-        }
+        .hero-btn.secondary { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.5); }
 
-        /* ============ ОБЩИЕ БЛОКИ (карточки) ============ */
-        .features-grid,
-        .services-grid,
-        .gallery-grid,
-        .pricing-grid,
-        .testimonials-grid,
-        .team-grid {
-            display: grid;
-            gap: 20px;
-        }
+        /* ОБЩИЕ БЛОКИ */
+        .features-grid, .services-grid, .gallery-grid, .pricing-grid, .testimonials-grid, .team-grid { display: grid; gap: 20px; }
         .features-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
         .services-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
         .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
@@ -231,142 +98,52 @@
         .testimonials-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
         .team-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 
-        .feature {
-            background: #fff;
-            border-radius: 14px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 6px 24px rgba(0,0,0,0.06);
-            border-top: 4px solid var(--primary);
-        }
+        .feature { background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 6px 24px rgba(0,0,0,0.06); border-top: 4px solid var(--primary); }
         .feature h3 { color: var(--primary); margin: 0 0 12px; font-size: 1.1em; }
         .feature p { margin: 0; color: #666; font-size: 0.92em; }
 
-        .service-card {
-            background: #fff;
-            border-radius: 14px;
-            padding: 24px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-            border-left: 4px solid var(--primary);
-        }
+        .service-card { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-left: 4px solid var(--primary); }
         .service-card h3 { margin: 0 0 10px; font-size: 1.1em; }
         .service-card p { margin: 0 0 10px; color: #666; font-size: 0.92em; }
         .service-card .price { font-size: 1.1em; font-weight: 700; color: var(--primary); }
 
-        .gallery-item {
-            background: #fff;
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-        }
-        .gallery-item img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            display: block;
-        }
+        .gallery-item { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+        .gallery-item img { width: 100%; height: 180px; object-fit: cover; display: block; }
         .gallery-item .caption { padding: 16px; }
         .gallery-item h3 { margin: 0 0 6px; color: var(--primary); font-size: 1em; }
         .gallery-item p { margin: 0; color: #777; font-size: 0.88em; }
 
-        .pricing-card {
-            background: #fff;
-            border-radius: 14px;
-            padding: 28px 24px;
-            text-align: center;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-            border-top: 4px solid var(--accent);
-        }
+        .pricing-card { background: #fff; border-radius: 14px; padding: 28px 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-top: 4px solid var(--accent); }
         .pricing-card h3 { margin: 0 0 10px; font-size: 1.05em; }
         .pricing-card .price { font-size: 1.5em; font-weight: 700; color: var(--primary); margin: 12px 0; }
         .pricing-card p { color: #666; font-size: 0.88em; margin: 0; }
 
-        .testimonial {
-            background: #fff;
-            border-radius: 14px;
-            padding: 24px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-        }
+        .testimonial { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
         .testimonial .stars { color: #ffc107; font-size: 1em; margin-bottom: 10px; }
         .testimonial .text { font-style: italic; color: #555; margin-bottom: 12px; line-height: 1.6; font-size: 0.95em; }
         .testimonial .author { font-weight: 700; color: var(--primary); font-size: 0.9em; }
 
-        .team-member {
-            background: #fff;
-            border-radius: 14px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-        }
-        .team-member .avatar {
-            width: 70px; height: 70px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            margin: 0 auto 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 1.8em;
-            font-weight: 700;
-        }
+        .team-member { background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+        .team-member .avatar { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.8em; font-weight: 700; }
         .team-member h3 { margin: 0 0 6px; font-size: 1em; }
         .team-member .role { color: var(--primary); font-size: 0.85em; font-weight: 600; margin-bottom: 10px; }
         .team-member p { color: #777; font-size: 0.88em; margin: 0; }
 
-        .about {
-            background: #fff;
-            padding: 40px 32px;
-            border-radius: 16px;
-        }
+        .about { background: #fff; padding: 40px 32px; border-radius: 16px; }
         .about p { font-size: 1em; line-height: 1.8; color: #555; margin: 0; }
 
-        .faq-item {
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px 24px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
+        .faq-item { background: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .faq-item h3 { margin: 0 0 10px; color: var(--primary); font-size: 1em; }
         .faq-item p { margin: 0; color: #555; line-height: 1.6; font-size: 0.95em; }
 
-        .booking {
-            background: #fff;
-            border-radius: 16px;
-            padding: 32px 24px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-        }
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .calendar-header button {
-            background: var(--primary);
-            border: none;
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            cursor: pointer;
-            color: #fff;
-        }
+        .booking { background: #fff; border-radius: 16px; padding: 32px 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-header button { background: var(--primary); border: none; width: 40px; height: 40px; border-radius: 10px; font-size: 1.2em; cursor: pointer; color: #fff; }
         .month-year { font-size: 1.15em; font-weight: 700; }
         .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
         .weekdays div { text-align: center; font-weight: 600; font-size: 0.8em; color: #888; padding: 6px 0; }
         .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .day {
-            aspect-ratio: 1/1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            cursor: pointer;
-            background: var(--bg);
-            border: 2px solid transparent;
-            font-size: 0.95em;
-        }
+        .day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; background: var(--bg); border: 2px solid transparent; font-size: 0.95em; }
         .day:hover:not(.disabled):not(.busy):not(.selected) { background: var(--primary); color: #fff; }
         .day.empty { background: transparent; cursor: default; }
         .day.disabled { color: #ccc; cursor: not-allowed; background: transparent; }
@@ -379,128 +156,37 @@
         .booking-form h3 { text-align: center; color: var(--primary); margin: 0 0 20px; font-size: 1.1em; }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; margin-bottom: 6px; font-size: 0.88em; color: #555; font-weight: 600; }
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%; padding: 12px 14px; border: 2px solid #e0e0ec;
-            border-radius: 10px; font-size: 0.95em; font-family: inherit; background: var(--bg);
-        }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-            outline: none; border-color: var(--primary); background: #fff;
-        }
-        .submit-btn {
-            width: 100%; padding: 14px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #fff; border: none; border-radius: 10px;
-            font-size: 1em; font-weight: 700; cursor: pointer;
-        }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 14px; border: 2px solid #e0e0ec; border-radius: 10px; font-size: 0.95em; font-family: inherit; background: var(--bg); }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--primary); background: #fff; }
+        .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border: none; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; }
 
         .contacts-grid { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
         .contact-item { text-align: center; flex: 1 1 180px; }
         .contact-item .label { font-size: 0.8em; color: #888; text-transform: uppercase; margin-bottom: 6px; }
         .contact-item .value { font-size: 1em; font-weight: 700; }
 
-        .cta {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: #fff; padding: 48px 24px; text-align: center; border-radius: 16px;
-        }
+        .cta { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #fff; padding: 48px 24px; text-align: center; border-radius: 16px; }
         .cta h2 { margin: 0; color: #fff; font-size: 1.6em; }
 
-        footer {
-            background: var(--text);
-            color: #aaa;
-            padding: 28px;
-            text-align: center;
-            font-size: 0.9em;
-        }
+        footer { background: var(--text); color: #aaa; padding: 28px; text-align: center; font-size: 0.9em; }
 
-        /* ============ МОДАЛЬНЫЕ ОКНА (OVERLAY-БЛОКИ) ============ */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 500;
-            padding: 40px 20px;
-            overflow-y: auto;
-        }
-        .modal.open {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-        }
-        .modal-box {
-            background: var(--bg);
-            border-radius: 16px;
-            max-width: 1000px;
-            width: 100%;
-            padding: 40px 32px;
-            position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-            animation: fadeIn 0.3s ease-in;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid var(--primary);
-        }
-        .modal-header h2 {
-            margin: 0;
-            font-size: 2em;
-            color: var(--text);
-        }
-        .modal-close {
-            background: transparent;
-            border: 2px solid var(--text);
-            color: var(--text);
-            width: 48px; height: 48px;
-            border-radius: 50%;
-            font-size: 1.5em;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            flex-shrink: 0;
-        }
-        .modal-close:hover {
-            background: var(--text);
-            color: #fff;
-        }
+        /* МОДАЛЬНЫЕ ОКНА */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; padding: 40px 20px; overflow-y: auto; }
+        .modal.open { display: flex; align-items: flex-start; justify-content: center; }
+        .modal-box { background: var(--bg); border-radius: 16px; max-width: 1000px; width: 100%; padding: 40px 32px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease-in; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid var(--primary); }
+        .modal-header h2 { margin: 0; font-size: 2em; color: var(--text); }
+        .modal-close { background: transparent; border: 2px solid var(--text); color: var(--text); width: 48px; height: 48px; border-radius: 50%; font-size: 1.5em; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
+        .modal-close:hover { background: var(--text); color: #fff; }
 
-        /* Модалка успеха */
-        .success-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 700;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+        .success-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 700; align-items: center; justify-content: center; padding: 20px; }
         .success-modal.active { display: flex; }
-        .success-modal .modal-content {
-            background: #fff;
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 400px;
-            text-align: center;
-        }
+        .success-modal .modal-content { background: #fff; border-radius: 16px; padding: 32px; max-width: 400px; text-align: center; }
         .success-modal h3 { color: #43a047; margin: 0 0 12px; }
-        .success-modal button {
-            background: var(--primary); color: #fff; border: none;
-            padding: 12px 24px; border-radius: 10px; cursor: pointer; margin-top: 12px;
-        }
+        .success-modal button { background: var(--primary); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; margin-top: 12px; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ============ АДАПТИВ ============ */
         @media (max-width: 900px) {
             .hero { padding: 80px 24px 48px; min-height: auto; }
             .hero h1 { font-size: 2em; }
@@ -513,17 +199,12 @@
 </head>
 <body>
 
-<!-- КНОПКА-БУРГЕР -->
 <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
-
-<!-- ЗАТЕМНЕНИЕ ФОНА -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- САЙДБАР -->
 {% if sidebar_enabled %}
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">{{ company_name }}</div>
-
     {% if sidebar_items %}
     <nav class="sidebar-nav" id="sidebarNav">
         {% for item in sidebar_items %}
@@ -533,72 +214,48 @@
         {% endfor %}
     </nav>
     {% endif %}
-
     <button class="sidebar-cta" onclick="openModal('booking')">
         {{ sidebar_cta_text or 'Забронировать' }}
     </button>
-
     <div class="sidebar-contacts">
         <div>📞 {{ company_phone }}</div>
         <div>📍 {{ company_address }}</div>
-        {% if working_hours %}
-        <div>🕐 {{ working_hours }}</div>
-        {% endif %}
+        {% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}
     </div>
 </aside>
 {% endif %}
 
 <main class="main-content">
-
-<!-- ГЛАВНАЯ (HERO) -->
 <section class="hero" id="section-hero">
     <div class="hero-inner">
         <h1>{{ hero_heading }}</h1>
         <p>{{ hero_subheading }}</p>
-        {% if about_short %}
-        <div class="hero-about">{{ about_short }}</div>
-        {% endif %}
+        {% if about_short %}<div class="hero-about">{{ about_short }}</div>{% endif %}
         <div class="hero-contacts">
             <div>📞 {{ company_phone }}</div>
             <div>📍 {{ company_address }}</div>
-            {% if working_hours %}
-            <div>🕐 {{ working_hours }}</div>
-            {% endif %}
+            {% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}
         </div>
         <div class="hero-buttons">
             <button class="hero-btn" onclick="openModal('booking')">
                 {{ sidebar_cta_text or 'Забронировать' }}
             </button>
             {% if services %}
-            <button class="hero-btn secondary" onclick="openModal('services')">
-                Услуги
-            </button>
+            <button class="hero-btn secondary" onclick="openModal('services')">Услуги</button>
             {% endif %}
         </div>
     </div>
 </section>
-
 </main>
 
 <footer>{{ footer_text }}</footer>
 
-<!-- ============ МОДАЛКИ ============ -->
-
+<!-- МОДАЛКИ -->
 {% if features %}
 <div class="modal" id="modal-features" onclick="modalOutsideClick(event, 'features')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>Преимущества</h2>
-            <button class="modal-close" onclick="closeModal('features')">×</button>
-        </div>
-        <div class="features-grid">
-            {% for feature in features %}
-            <div class="feature">
-                <h3>{{ feature.title }}</h3>
-                <p>{{ feature.description }}</p>
-            </div>
-            {% endfor %}
-        </div>
+        <div class="modal-header"><h2>Преимущества</h2><button class="modal-close" onclick="closeModal('features')">×</button></div>
+        <div class="features-grid">{% for f in features %}<div class="feature"><h3>{{ f.title }}</h3><p>{{ f.description }}</p></div>{% endfor %}</div>
     </div>
 </div>
 {% endif %}
@@ -606,13 +263,8 @@
 {% if about_full %}
 <div class="modal" id="modal-about" onclick="modalOutsideClick(event, 'about')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>О нас</h2>
-            <button class="modal-close" onclick="closeModal('about')">×</button>
-        </div>
-        <div class="about">
-            <p>{{ about_full }}</p>
-        </div>
+        <div class="modal-header"><h2>О нас</h2><button class="modal-close" onclick="closeModal('about')">×</button></div>
+        <div class="about"><p>{{ about_full }}</p></div>
     </div>
 </div>
 {% endif %}
@@ -620,19 +272,8 @@
 {% if services %}
 <div class="modal" id="modal-services" onclick="modalOutsideClick(event, 'services')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>Наши услуги</h2>
-            <button class="modal-close" onclick="closeModal('services')">×</button>
-        </div>
-        <div class="services-grid">
-            {% for service in services %}
-            <div class="service-card">
-                <h3>{{ service.name }}</h3>
-                <p>{{ service.description }}</p>
-                {% if service.price %}<div class="price">{{ service.price }}</div>{% endif %}
-            </div>
-            {% endfor %}
-        </div>
+        <div class="modal-header"><h2>Наши услуги</h2><button class="modal-close" onclick="closeModal('services')">×</button></div>
+        <div class="services-grid">{% for s in services %}<div class="service-card"><h3>{{ s.name }}</h3><p>{{ s.description }}</p>{% if s.price %}<div class="price">{{ s.price }}</div>{% endif %}</div>{% endfor %}</div>
     </div>
 </div>
 {% endif %}
@@ -640,23 +281,8 @@
 {% if gallery %}
 <div class="modal" id="modal-gallery" onclick="modalOutsideClick(event, 'gallery')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>Галерея</h2>
-            <button class="modal-close" onclick="closeModal('gallery')">×</button>
-        </div>
-        <div class="gallery-grid">
-            {% for item in gallery %}
-            <div class="gallery-item">
-                {% if item.image_url %}
-                <img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">
-                {% endif %}
-                <div class="caption">
-                    <h3>{{ item.title }}</h3>
-                    <p>{{ item.description }}</p>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+        <div class="modal-header"><h2>Галерея</h2><button class="modal-close" onclick="closeModal('gallery')">×</button></div>
+        <div class="gallery-grid">{% for item in gallery %}<div class="gallery-item">{% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">{% endif %}<div class="caption"><h3>{{ item.title }}</h3><p>{{ item.description }}</p></div></div>{% endfor %}</div>
     </div>
 </div>
 {% endif %}
@@ -664,19 +290,8 @@
 {% if pricing %}
 <div class="modal" id="modal-pricing" onclick="modalOutsideClick(event, 'pricing')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>Цены</h2>
-            <button class="modal-close" onclick="closeModal('pricing')">×</button>
-        </div>
-        <div class="pricing-grid">
-            {% for item in pricing %}
-            <div class="pricing-card">
-                <h3>{{ item.name }}</h3>
-                <div class="price">{{ item.price }}</div>
-                <p>{{ item.description }}</p>
-            </div>
-            {% endfor %}
-        </div>
+        <div class="modal-header"><h2>Цены</h2><button class="modal-close" onclick="closeModal('pricing')">×</button></div>
+        <div class="pricing-grid">{% for p in pricing %}<div class="pricing-card"><h3>{{ p.name }}</h3><div class="price">{{ p.price }}</div><p>{{ p.description }}</p></div>{% endfor %}</div>
     </div>
 </div>
 {% endif %}
@@ -684,22 +299,8 @@
 {% if testimonials %}
 <div class="modal" id="modal-testimonials" onclick="modalOutsideClick(event, 'testimonials')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>Отзывы</h2>
-            <button class="modal-close" onclick="closeModal('testimonials')">×</button>
-        </div>
-        <div class="testimonials-grid">
-            {% for t in testimonials %}
-            <div class="testimonial">
-                <div class="stars">
-                    {% for i in range(t.rating) %}★{% endfor %}
-                    {% for i in range(5 - t.rating) %}☆{% endfor %}
-                </div>
-                <div class="text">«{{ t.text }}»</div>
-                <div class="author">— {{ t.author }}</div>
-            </div>
-            {% endfor %}
-        </div>
+        <div class="modal-header"><h2>Отзывы</h2><button class="modal-close" onclick="closeModal('testimonials')">×</button></div>
+        <div class="testimonials-grid">{% for t in testimonials %}<div class="testimonial"><div class="stars">{% for i in range(t.rating) %}★{% endfor %}{% for i in range(5 - t.rating) %}☆{% endfor %}</div><div class="text">«{{ t.text }}»</div><div class="author">— {{ t.author }}</div></div>{% endfor %}</div>
     </div>
 </div>
 {% endif %}
@@ -707,20 +308,8 @@
 {% if team %}
 <div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>Наша команда</h2>
-            <button class="modal-close" onclick="closeModal('team')">×</button>
-        </div>
-        <div class="team-grid">
-            {% for member in team %}
-            <div class="team-member">
-                <div class="avatar">{{ member.name[0] }}</div>
-                <h3>{{ member.name }}</h3>
-                <div class="role">{{ member.role }}</div>
-                <p>{{ member.description }}</p>
-            </div>
-            {% endfor %}
-        </div>
+        <div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div>
+        <div class="team-grid">{% for m in team %}<div class="team-member"><div class="avatar">{{ m.name[0] }}</div><h3>{{ m.name }}</h3><div class="role">{{ m.role }}</div><p>{{ m.description }}</p></div>{% endfor %}</div>
     </div>
 </div>
 {% endif %}
@@ -728,100 +317,42 @@
 {% if faq %}
 <div class="modal" id="modal-faq" onclick="modalOutsideClick(event, 'faq')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>Частые вопросы</h2>
-            <button class="modal-close" onclick="closeModal('faq')">×</button>
-        </div>
-        <div class="faq-list">
-            {% for item in faq %}
-            <div class="faq-item">
-                <h3>{{ item.question }}</h3>
-                <p>{{ item.answer }}</p>
-            </div>
-            {% endfor %}
-        </div>
+        <div class="modal-header"><h2>Частые вопросы</h2><button class="modal-close" onclick="closeModal('faq')">×</button></div>
+        <div class="faq-list">{% for item in faq %}<div class="faq-item"><h3>{{ item.question }}</h3><p>{{ item.answer }}</p></div>{% endfor %}</div>
     </div>
 </div>
 {% endif %}
 
 <div class="modal" id="modal-contacts" onclick="modalOutsideClick(event, 'contacts')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>Контакты</h2>
-            <button class="modal-close" onclick="closeModal('contacts')">×</button>
-        </div>
+        <div class="modal-header"><h2>Контакты</h2><button class="modal-close" onclick="closeModal('contacts')">×</button></div>
         <div class="contacts-grid">
-            <div class="contact-item">
-                <div class="label">Компания</div>
-                <div class="value">{{ company_name }}</div>
-            </div>
-            <div class="contact-item">
-                <div class="label">Адрес</div>
-                <div class="value">{{ company_address }}</div>
-            </div>
-            <div class="contact-item">
-                <div class="label">Телефон</div>
-                <div class="value">{{ company_phone }}</div>
-            </div>
-            {% if working_hours %}
-            <div class="contact-item">
-                <div class="label">Часы работы</div>
-                <div class="value">{{ working_hours }}</div>
-            </div>
-            {% endif %}
+            <div class="contact-item"><div class="label">Компания</div><div class="value">{{ company_name }}</div></div>
+            <div class="contact-item"><div class="label">Адрес</div><div class="value">{{ company_address }}</div></div>
+            <div class="contact-item"><div class="label">Телефон</div><div class="value">{{ company_phone }}</div></div>
+            {% if working_hours %}<div class="contact-item"><div class="label">Часы работы</div><div class="value">{{ working_hours }}</div></div>{% endif %}
         </div>
     </div>
 </div>
 
-<!-- МОДАЛКА БРОНИРОВАНИЯ (всегда есть) -->
 <div class="modal" id="modal-booking" onclick="modalOutsideClick(event, 'booking')">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <h2>Забронировать</h2>
-            <button class="modal-close" onclick="closeModal('booking')">×</button>
-        </div>
+        <div class="modal-header"><h2>Забронировать</h2><button class="modal-close" onclick="closeModal('booking')">×</button></div>
         <div class="booking">
             <div class="calendar-header">
                 <button id="prevMonth" type="button">‹</button>
                 <div class="month-year" id="monthYear">—</div>
                 <button id="nextMonth" type="button">›</button>
             </div>
-
-            <div class="weekdays">
-                <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div>
-                <div>Пт</div><div>Сб</div><div>Вс</div>
-            </div>
-
+            <div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div>
             <div class="days" id="days"></div>
-
             <form class="booking-form" id="bookingForm">
                 <h3>Вы выбрали: <span id="selectedDate"></span></h3>
-
-                <div class="form-group">
-                    <label for="service">Услуга</label>
-                    <select id="service" required>
-                        <option value="">— Выберите услугу —</option>
-                        {% for service in services %}
-                        <option value="{{ service.name }}">{{ service.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="name">Ваше имя</label>
-                    <input type="text" id="name" placeholder="Иван Иванов" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Телефон</label>
-                    <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="comment">Комментарий</label>
-                    <textarea id="comment" rows="3" placeholder="Пожелания..."></textarea>
-                </div>
-
+                <div class="form-group"><label for="service">Услуга</label><select id="service" required><option value="">— Выберите услугу —</option>{% for s in services %}<option value="{{ s.name }}">{{ s.name }}</option>{% endfor %}</select></div>
+                <div class="form-group"><label for="name">Ваше имя</label><input type="text" id="name" placeholder="Иван Иванов" required></div>
+                <div class="form-group"><label for="phone">Телефон</label><input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required></div>
+                <div class="form-group"><label for="email">Email (для подтверждения)</label><input type="email" id="email" placeholder="mail@example.com"></div>
+                <div class="form-group"><label for="comment">Комментарий</label><textarea id="comment" rows="3" placeholder="Пожелания..."></textarea></div>
                 <button type="submit" class="submit-btn">Отправить заявку</button>
             </form>
         </div>
@@ -838,6 +369,7 @@
 
 <script>
     const SERVER_URL = '{{ server_url | default("http://127.0.0.1:8001") }}';
+    const SITE_ID = '{{ site_id | default("site") }}';
     let currentMonth = new Date();
     let selectedDate = null;
     let busyDates = [];
@@ -848,7 +380,6 @@
     const selectedDateEl = document.getElementById('selectedDate');
     const successModal = document.getElementById('successModal');
 
-    // ============ САЙДБАР ============
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
@@ -862,19 +393,13 @@
         if (overlay) overlay.classList.remove('open');
     }
 
-    // ============ МОДАЛКИ ============
     function openModal(name) {
         const modal = document.getElementById('modal-' + name);
-        if (!modal) {
-            console.warn('Модалка не найдена: modal-' + name);
-            return;
-        }
+        if (!modal) return;
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
         closeSidebar();
-        if (name === 'booking') {
-            renderCalendar();
-        }
+        if (name === 'booking') renderCalendar();
     }
     function closeModal(name) {
         const modal = document.getElementById('modal-' + name);
@@ -883,21 +408,16 @@
         document.body.style.overflow = '';
     }
     function modalOutsideClick(event, name) {
-        if (event.target.id === 'modal-' + name) {
-            closeModal(name);
-        }
+        if (event.target.id === 'modal-' + name) closeModal(name);
     }
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.modal.open').forEach(m => {
-                m.classList.remove('open');
-            });
+            document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
             document.body.style.overflow = '';
             closeSidebar();
         }
     });
 
-    // ============ КАЛЕНДАРЬ ============
     function renderCalendar() {
         if (!daysEl) return;
         const year = currentMonth.getFullYear();
@@ -921,8 +441,8 @@
             const dayEl = document.createElement('div');
             dayEl.className = 'day';
             dayEl.textContent = d;
-            if (dateObj < today) { dayEl.classList.add('disabled'); }
-            else if (busyDates.includes(iso)) { dayEl.classList.add('busy'); }
+            if (dateObj < today) dayEl.classList.add('disabled');
+            else if (busyDates.includes(iso)) dayEl.classList.add('busy');
             else {
                 if (iso === formatISO(today)) dayEl.classList.add('today');
                 if (iso === selectedDate) dayEl.classList.add('selected');
@@ -959,6 +479,7 @@
             const service = document.getElementById('service').value;
             const name = document.getElementById('name').value.trim();
             const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
             const comment = document.getElementById('comment').value.trim();
 
             if (!selectedDate || !service || !name || !phone) { alert('Заполните все поля'); return; }
@@ -968,12 +489,13 @@
             submitBtn.textContent = 'Отправляю...';
 
             try {
-                const response = await fetch(`${SERVER_URL}/api/book/{{ site_id }}`, {
+                const response = await fetch(`${SERVER_URL}/api/book/${SITE_ID}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ date: selectedDate, time: '10:00', service, name, phone, comment }),
+                    body: JSON.stringify({ date: selectedDate, time: '10:00', service, name, phone, email, comment }),
                 });
-                if (!response.ok) throw new Error('Ошибка сервера');
+                const result = await response.json();
+                if (!response.ok || !result.ok) throw new Error(result.error || 'Ошибка сервера');
                 busyDates.push(selectedDate);
                 closeModal('booking');
                 successModal.classList.add('active');
@@ -989,10 +511,7 @@
 
     function closeSuccessModal() {
         successModal.classList.remove('active');
-        if (formEl) {
-            formEl.reset();
-            formEl.classList.remove('active');
-        }
+        if (formEl) { formEl.reset(); formEl.classList.remove('active'); }
         selectedDate = null;
         renderCalendar();
     }
