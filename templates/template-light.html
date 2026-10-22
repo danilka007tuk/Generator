@@ -88,7 +88,7 @@
         .main-content { margin-left: 0; min-height: 100vh; }
         .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
 
-        /* HERO — УНИВЕРСАЛЬНЫЙ */
+        /* HERO */
         .hero {
             position: relative;
             background-color: #f5f5f5;
@@ -110,10 +110,7 @@
             content: "";
             position: absolute;
             inset: 0;
-            background: linear-gradient(
-                rgba(255, 255, 255, 0.55),
-                rgba(255, 255, 255, 0.7)
-            );
+            background: linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.7));
             z-index: 1;
         }
         {% endif %}
@@ -295,6 +292,16 @@
 </head>
 <body>
 
+<script>
+    (function() {
+        const email = localStorage.getItem('user_email');
+        const urlParams = new URLSearchParams(window.location.search);
+        const verified = urlParams.get('verified');
+        if (!email && !verified) { window.location.href = 'register.html'; return; }
+        if (verified) { window.history.replaceState({}, '', 'index.html'); }
+    })();
+</script>
+
 <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -435,14 +442,10 @@
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Забронировать</h2><button class="modal-close" onclick="closeModal('booking')">×</button></div>
         <div class="booking">
-
-            <!-- ШАГ 1: МАСТЕРА -->
             <div id="stepMaster">
                 <h3 style="text-align:center; margin-bottom:16px; font-weight:400;">Выберите мастера</h3>
                 <div class="master-selection" id="masterSelection"></div>
             </div>
-
-            <!-- ШАГ 2: КАЛЕНДАРЬ -->
             <div id="stepCalendar" style="display:none;">
                 <div class="calendar-header">
                     <button id="prevMonth" type="button">‹</button>
@@ -452,14 +455,10 @@
                 <div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div>
                 <div class="days" id="days"></div>
             </div>
-
-            <!-- ШАГ 3: СЛОТЫ -->
             <div class="time-slots-wrapper" id="timeSlotsWrapper">
                 <h3>Выберите время</h3>
                 <div class="time-slots" id="timeSlots"></div>
             </div>
-
-            <!-- ШАГ 4: ФОРМА -->
             <form class="booking-form" id="bookingForm">
                 <h3>Вы выбрали: <span id="selectedDate"></span> в <span id="selectedTimeText"></span></h3>
                 <div class="form-group"><label for="service">Услуга</label><select id="service" required><option value="">— Выберите услугу —</option></select></div>
@@ -486,7 +485,6 @@
     const SITE_ID = '{{ site_id | default("site") }}';
     const WORKING_HOURS = '{{ working_hours | default("09:00-20:00") }}';
     const TEAM = {{ team | tojson if team else '[]' }};
-    const ALL_SERVICES = {{ services | tojson if services else '[]' }};
 
     let currentMonth = new Date();
     let selectedMaster = null;
@@ -526,10 +524,7 @@
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
         closeSidebar();
-        if (name === 'booking') {
-            resetBooking();
-            renderMasters();
-        }
+        if (name === 'booking') { resetBooking(); renderMasters(); }
     }
     function closeModal(name) {
         const modal = document.getElementById('modal-' + name);
@@ -571,7 +566,6 @@
         document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         selectedMaster = master;
-
         serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>';
         const services = master.services && master.services.length > 0 ? master.services : [];
         services.forEach(s => {
@@ -580,12 +574,10 @@
             opt.textContent = s;
             serviceSelect.appendChild(opt);
         });
-
         stepMaster.style.display = 'none';
         stepCalendar.style.display = 'block';
         timeSlotsWrapper.style.display = 'none';
         formEl.classList.remove('active');
-
         loadBusySlots();
         renderCalendar();
     }
@@ -660,26 +652,16 @@
     function generateTimeSlots() {
         let start = 9, end = 20;
         const match = WORKING_HOURS.match(/(\d{1,2}):\d{2}\s*-\s*(\d{1,2}):\d{2}/);
-        if (match) {
-            start = parseInt(match[1]);
-            end = parseInt(match[2]);
-        }
-
+        if (match) { start = parseInt(match[1]); end = parseInt(match[2]); }
         timeSlotsEl.innerHTML = '';
         timeSlotsWrapper.style.display = 'block';
-
         for (let h = start; h < end; h++) {
             const timeStr = String(h).padStart(2, '0') + ':00';
             const slot = document.createElement('div');
             slot.className = 'time-slot';
             slot.textContent = timeStr;
-
-            if (isSlotBusy(selectedDate, timeStr)) {
-                slot.classList.add('busy');
-            } else {
-                slot.onclick = () => selectTime(slot, timeStr);
-            }
-
+            if (isSlotBusy(selectedDate, timeStr)) slot.classList.add('busy');
+            else slot.onclick = () => selectTime(slot, timeStr);
             timeSlotsEl.appendChild(slot);
         }
     }
@@ -694,9 +676,7 @@
     }
 
     function resetBooking() {
-        selectedMaster = null;
-        selectedDate = null;
-        selectedTime = null;
+        selectedMaster = null; selectedDate = null; selectedTime = null;
         stepMaster.style.display = 'block';
         stepCalendar.style.display = 'none';
         timeSlotsWrapper.style.display = 'none';
@@ -719,30 +699,18 @@
             const phone = document.getElementById('phone').value.trim();
             const email = document.getElementById('email').value.trim();
             const comment = document.getElementById('comment').value.trim();
-
             if (!selectedMaster || !selectedDate || !selectedTime || !service || !name || !phone) {
                 alert('Выберите мастера, дату, время, услугу и заполните поля');
                 return;
             }
-
             const submitBtn = formEl.querySelector('.submit-btn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Отправляю...';
-
             try {
                 const response = await fetch(`${SERVER_URL}/api/book/${SITE_ID}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        master: selectedMaster.name,
-                        date: selectedDate,
-                        time: selectedTime,
-                        service,
-                        name,
-                        phone,
-                        email,
-                        comment
-                    }),
+                    body: JSON.stringify({ master: selectedMaster.name, date: selectedDate, time: selectedTime, service, name, phone, email, comment }),
                 });
                 const result = await response.json();
                 if (!response.ok || !result.ok) throw new Error(result.error || 'Ошибка сервера');
