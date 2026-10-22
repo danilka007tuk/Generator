@@ -1,8 +1,12 @@
 from pathlib import Path
-import urllib.parse
+import os
 import bleach
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from openai import OpenAI
+from dotenv import load_dotenv
 from schemas import SiteContent
+
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -28,6 +32,38 @@ DEFAULT_SIDEBAR_ITEMS = [
     {"label": "Контакты", "anchor": "#contacts", "icon": "📞"},
 ]
 
+# === КЛИЕНТ PROVOD.AI (совместим с OpenAI) ===
+provod_client = OpenAI(
+    api_key=os.getenv("PROVOD_API_KEY"),
+    base_url="https://api.provod.ai/v1",
+)
+
+
+def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) -> str:
+    """Генерирует картинку через provod.ai. Возвращает data URI (base64) или пустую строку."""
+    if not prompt or not isinstance(prompt, str):
+        return ""
+
+    prompt = prompt.strip()[:300]
+    if not prompt:
+        return ""
+
+    try:
+        response = provod_client.images.generate(
+            model="openai/gpt-image-2",
+            prompt=prompt,
+            size=f"{width}x{height}",
+            n=1,
+            response_format="b64_json",
+        )
+        b64 = response.data[0].b64_json
+        if b64:
+            return f"data:image/png;base64,{b64}"
+    except Exception as e:
+        print(f"[provod.ai] Ошибка генерации картинки: {e}")
+
+    return ""
+
 
 def get_sidebar_items(content: SiteContent) -> list[dict]:
     items = content.sidebar_items or []
@@ -50,13 +86,8 @@ def get_sidebar_items(content: SiteContent) -> list[dict]:
 
 
 def generate_image_url(prompt: str, width: int = 1200, height: int = 800) -> str:
-    """Генерирует URL картинки через Lorem Picsum (бесплатно, без ключа)."""
-    if not prompt or not isinstance(prompt, str):
-        seed = "default"
-    else:
-        seed = urllib.parse.quote(prompt[:30])
-
-    return f"https://picsum.photos/seed/{seed}/{width}/{height}"
+    """Обёртка для совместимости. Использует provod.ai."""
+    return generate_image_provod(prompt, width=width, height=height)
 
 
 def clean(text: str) -> str:
@@ -116,12 +147,12 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         service["description"] = clean(service.get("description", ""))
         service["price"] = clean(service.get("price", ""))
 
-    # --- Gallery + картинки (Picsum) ---
+    # --- Gallery + картинки (provod.ai) ---
     for item in data.get("gallery", []):
         item["title"] = clean(item.get("title", ""))
         item["description"] = clean(item.get("description", ""))
         prompt = item.get("image_prompt", "") or item.get("title", "")
-        item["image_url"] = generate_image_url(prompt, width=600, height=400)
+        item["image_url"] = generate_image_provod(prompt, width=1024, height=768)
 
     # --- Pricing ---
     for item in data.get("pricing", []):
@@ -148,9 +179,9 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     # --- Sidebar ---
     data["sidebar_items"] = get_sidebar_items(content)
 
-    # --- Hero image (Picsum) ---
+    # --- Hero image (provod.ai) ---
     hero_prompt = data.get("hero_image_prompt", "")
-    data["hero_image_url"] = generate_image_url(hero_prompt, width=1920, height=1080)
+    data["hero_image_url"] = generate_image_provod(hero_prompt, width=1792, height=1024)
 
     # --- Цвета ---
     data["color_primary"] = clean_color(data.get("color_primary", ""), "#667eea")
