@@ -1,3 +1,4 @@
+# render.py
 from pathlib import Path
 import os
 import uuid
@@ -41,6 +42,14 @@ provod_client = OpenAI(
     base_url="https://api.provod.ai/v1",
 )
 
+# Принудительный редирект на регистрацию (вставляется в самый верх страницы)
+REDIRECT_SCRIPT = """
+<script>
+    if (!localStorage.getItem('user_email') && !window.location.search.includes('verified=1')) {
+        window.location.replace('register.html');
+    }
+</script>
+"""
 
 def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) -> str:
     if not prompt or not isinstance(prompt, str):
@@ -165,6 +174,8 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         member["name"] = clean(member.get("name", ""))
         member["role"] = clean(member.get("role", ""))
         member["description"] = clean(member.get("description", ""))
+        # Чистим услуги мастера от HTML
+        member["services"] = [clean(s) for s in member.get("services", [])]
 
     data["sidebar_items"] = get_sidebar_items(content)
 
@@ -182,7 +193,13 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         template_name = "template-modern.html"
 
     template = env.get_template(template_name)
-    return template.render(**data)
+    html = template.render(**data)
+
+    # Внедряем принудительный редирект в самый верх <head>
+    if "<head>" in html:
+        html = html.replace("<head>", f"<head>{REDIRECT_SCRIPT}", 1)
+
+    return html
 
 
 def render_register_page(content: SiteContent, server_url: str = "", site_id: str = "") -> str:
