@@ -151,6 +151,49 @@
         .day.selected { background: var(--primary); color: #fff; border-color: var(--accent); }
         .day.today { font-weight: 700; border-color: var(--primary); }
 
+        /* ============ СЛОТЫ ВРЕМЕНИ ============ */
+        .time-slots-wrapper {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .time-slots-wrapper h3 {
+            font-size: 1.1em;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        .time-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .time-slot {
+            padding: 10px 16px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            background: #fff;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+        .time-slot:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        .time-slot.selected {
+            background: var(--primary);
+            color: #fff;
+        }
+        .time-slot.busy {
+            background: #ffe5e5;
+            color: #c0392b;
+            border-color: #c0392b;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
         .booking-form { display: none; margin-top: 28px; padding-top: 28px; border-top: 1px solid #eee; }
         .booking-form.active { display: block; }
         .booking-form h3 { text-align: center; color: var(--primary); margin: 0 0 20px; font-size: 1.1em; }
@@ -346,8 +389,15 @@
             </div>
             <div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div>
             <div class="days" id="days"></div>
+
+            <!-- СЛОТЫ ВРЕМЕНИ -->
+            <div class="time-slots-wrapper" id="timeSlotsWrapper">
+                <h3>Выберите время</h3>
+                <div class="time-slots" id="timeSlots"></div>
+            </div>
+
             <form class="booking-form" id="bookingForm">
-                <h3>Вы выбрали: <span id="selectedDate"></span></h3>
+                <h3>Вы выбрали: <span id="selectedDate"></span> в <span id="selectedTimeText"></span></h3>
                 <div class="form-group"><label for="service">Услуга</label><select id="service" required><option value="">— Выберите услугу —</option>{% for s in services %}<option value="{{ s.name }}">{{ s.name }}</option>{% endfor %}</select></div>
                 <div class="form-group"><label for="name">Ваше имя</label><input type="text" id="name" placeholder="Иван Иванов" required></div>
                 <div class="form-group"><label for="phone">Телефон</label><input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required></div>
@@ -370,15 +420,21 @@
 <script>
     const SERVER_URL = '{{ server_url | default("http://127.0.0.1:8001") }}';
     const SITE_ID = '{{ site_id | default("site") }}';
+    const WORKING_HOURS = '{{ working_hours | default("09:00-20:00") }}';
+
     let currentMonth = new Date();
     let selectedDate = null;
+    let selectedTime = null;
     let busyDates = [];
 
     const monthYearEl = document.getElementById('monthYear');
     const daysEl = document.getElementById('days');
     const formEl = document.getElementById('bookingForm');
     const selectedDateEl = document.getElementById('selectedDate');
+    const selectedTimeText = document.getElementById('selectedTimeText');
     const successModal = document.getElementById('successModal');
+    const timeSlotsWrapper = document.getElementById('timeSlotsWrapper');
+    const timeSlotsEl = document.getElementById('timeSlots');
 
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -461,10 +517,44 @@
 
     function selectDate(iso, dateObj) {
         selectedDate = iso;
+        selectedTime = null;
         const formatted = dateObj.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
         if (selectedDateEl) selectedDateEl.textContent = formatted;
-        if (formEl) formEl.classList.add('active');
+        if (selectedTimeText) selectedTimeText.textContent = '—';
+        if (formEl) formEl.classList.remove('active');
         renderCalendar();
+        generateTimeSlots();
+    }
+
+    function generateTimeSlots() {
+        if (!timeSlotsWrapper || !timeSlotsEl) return;
+
+        let start = 9, end = 20;
+        const match = WORKING_HOURS.match(/(\d{1,2}):\d{2}\s*-\s*(\d{1,2}):\d{2}/);
+        if (match) {
+            start = parseInt(match[1]);
+            end = parseInt(match[2]);
+        }
+
+        timeSlotsEl.innerHTML = '';
+        timeSlotsWrapper.style.display = 'block';
+
+        for (let h = start; h < end; h++) {
+            const timeStr = String(h).padStart(2, '0') + ':00';
+            const slot = document.createElement('div');
+            slot.className = 'time-slot';
+            slot.textContent = timeStr;
+            slot.onclick = () => selectTime(slot, timeStr);
+            timeSlotsEl.appendChild(slot);
+        }
+    }
+
+    function selectTime(slot, timeStr) {
+        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+        slot.classList.add('selected');
+        selectedTime = timeStr;
+        if (selectedTimeText) selectedTimeText.textContent = timeStr;
+        if (formEl) formEl.classList.add('active');
         if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -482,7 +572,10 @@
             const email = document.getElementById('email').value.trim();
             const comment = document.getElementById('comment').value.trim();
 
-            if (!selectedDate || !service || !name || !phone) { alert('Заполните все поля'); return; }
+            if (!selectedDate || !selectedTime || !service || !name || !phone) {
+                alert('Выберите дату, время и заполните все поля');
+                return;
+            }
 
             const submitBtn = formEl.querySelector('.submit-btn');
             submitBtn.disabled = true;
@@ -492,7 +585,7 @@
                 const response = await fetch(`${SERVER_URL}/api/book/${SITE_ID}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ date: selectedDate, time: '10:00', service, name, phone, email, comment }),
+                    body: JSON.stringify({ date: selectedDate, time: selectedTime, service, name, phone, email, comment }),
                 });
                 const result = await response.json();
                 if (!response.ok || !result.ok) throw new Error(result.error || 'Ошибка сервера');
@@ -513,6 +606,8 @@
         successModal.classList.remove('active');
         if (formEl) { formEl.reset(); formEl.classList.remove('active'); }
         selectedDate = null;
+        selectedTime = null;
+        if (timeSlotsWrapper) timeSlotsWrapper.style.display = 'none';
         renderCalendar();
     }
 
