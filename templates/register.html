@@ -162,8 +162,9 @@
 </div>
 
 <script>
-    const SERVER_URL = '{{ server_url | default("http://127.0.0.1:8001") }}';
-    const SITE_ID = '{{ site_id | default("site") }}';
+    // ИСПРАВЛЕНО: используем безопасный tojson для JS
+    const SERVER_URL = {{ server_url | default("http://127.0.0.1:8001") | tojson }};
+    const SITE_ID = {{ site_id | default("site") | tojson }};
 
     function switchTab(name) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));

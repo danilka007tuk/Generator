@@ -266,8 +266,16 @@
         const email = localStorage.getItem('user_email');
         const urlParams = new URLSearchParams(window.location.search);
         const verified = urlParams.get('verified');
-        if (!email && !verified) { window.location.href = 'register.html'; return; }
-        if (verified) { window.history.replaceState({}, '', 'index.html'); }
+
+        if (!email && !verified) {
+            window.location.href = 'register.html';
+            return;
+        }
+
+        if (verified) {
+            window.history.replaceState({}, '', 'index.html');
+            setTimeout(() => { openModal('booking'); }, 500);
+        }
     })();
 </script>
 
@@ -433,7 +441,7 @@
                 <div class="form-group"><label for="service">Услуга</label><select id="service" required><option value="">— Выберите услугу —</option></select></div>
                 <div class="form-group"><label for="name">Ваше имя</label><input type="text" id="name" placeholder="Иван Иванов" required></div>
                 <div class="form-group"><label for="phone">Телефон</label><input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required></div>
-                <div class="form-group"><label for="email">Email (для подтверждения)</label><input type="email" id="email" placeholder="mail@example.com"></div>
+                <div class="form-group"><label for="email">Email (для подтверждения)</label><input type="email" id="email" placeholder="mail@example.com" required></div>
                 <div class="form-group"><label for="comment">Комментарий</label><textarea id="comment" rows="3" placeholder="Пожелания..."></textarea></div>
                 <button type="submit" class="submit-btn">Отправить заявку</button>
             </form>
@@ -450,9 +458,9 @@
 </div>
 
 <script>
-    const SERVER_URL = '{{ server_url | default("http://127.0.0.1:8001") }}';
-    const SITE_ID = '{{ site_id | default("site") }}';
-    const WORKING_HOURS = '{{ working_hours | default("09:00-20:00") }}';
+    const SERVER_URL = {{ server_url | default("http://127.0.0.1:8001") | tojson }};
+    const SITE_ID = {{ site_id | default("site") | tojson }};
+    const WORKING_HOURS = {{ working_hours | default("09:00-20:00") | tojson }};
     const TEAM = {{ team | tojson if team else '[]' }};
 
     let currentMonth = new Date();
@@ -526,12 +534,12 @@
                 <h3>${master.name}</h3>
                 <div class="role">${master.role || ''}</div>
             `;
-            card.onclick = () => selectMaster(master, card);
+            card.onclick = async () => await selectMaster(master, card);
             masterSelectionEl.appendChild(card);
         });
     }
 
-    function selectMaster(master, card) {
+    async function selectMaster(master, card) {
         document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         selectedMaster = master;
@@ -547,7 +555,8 @@
         stepCalendar.style.display = 'block';
         timeSlotsWrapper.style.display = 'none';
         formEl.classList.remove('active');
-        loadBusySlots();
+
+        await loadBusySlots();
         renderCalendar();
     }
 

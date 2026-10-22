@@ -28,7 +28,6 @@
         }
         h1, h2, h3 { font-weight: 200; letter-spacing: -0.01em; }
 
-        /* КНОПКА-БУРГЕР */
         .sidebar-toggle {
             display: flex; align-items: center; justify-content: center;
             position: fixed; top: 16px; left: 16px;
@@ -38,7 +37,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
-        /* САЙДБАР */
         .sidebar {
             position: fixed; left: 0; top: 0;
             width: var(--sidebar-width); height: 100vh;
@@ -84,11 +82,9 @@
         }
         .sidebar-contacts div { margin-bottom: 4px; }
 
-        /* ОСНОВНОЙ КОНТЕНТ */
         .main-content { margin-left: 0; min-height: 100vh; }
         .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
 
-        /* HERO */
         .hero {
             position: relative;
             background-color: #f5f5f5;
@@ -158,7 +154,6 @@
         .hero-btn.secondary { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
         .hero-btn.secondary:hover { background: var(--primary); color: #fff; }
 
-        /* ОБЩИЕ БЛОКИ */
         .features-grid, .services-grid, .gallery-grid, .pricing-grid, .testimonials-grid, .team-grid { display: grid; gap: 20px; }
         .features-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
         .services-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
@@ -207,7 +202,6 @@
 
         .booking { background: #fafafa; padding: 40px 32px; border-radius: 8px; }
 
-        /* ВЫБОР МАСТЕРА */
         .master-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .master-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; }
         .master-card:hover { border-color: var(--primary); }
@@ -232,7 +226,6 @@
         .day.selected { background: var(--primary); color: #fff; }
         .day.today { border-color: var(--text); }
 
-        /* СЛОТЫ ВРЕМЕНИ */
         .time-slots-wrapper { display: none; margin: 20px 0; text-align: center; }
         .time-slots-wrapper h3 { font-size: 1em; color: var(--primary); margin-bottom: 16px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; }
         .time-slots { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
@@ -260,7 +253,6 @@
 
         footer { background: #fff; color: #aaa; padding: 32px; text-align: center; font-size: 0.82em; border-top: 1px solid #f0f0f0; letter-spacing: 0.05em; }
 
-        /* МОДАЛЬНЫЕ ОКНА */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; padding: 40px 20px; overflow-y: auto; }
         .modal.open { display: flex; align-items: flex-start; justify-content: center; }
         .modal-box { background: #fff; border-radius: 8px; max-width: 1000px; width: 100%; padding: 40px 32px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: fadeIn 0.3s ease-in; }
@@ -297,8 +289,16 @@
         const email = localStorage.getItem('user_email');
         const urlParams = new URLSearchParams(window.location.search);
         const verified = urlParams.get('verified');
-        if (!email && !verified) { window.location.href = 'register.html'; return; }
-        if (verified) { window.history.replaceState({}, '', 'index.html'); }
+
+        if (!email && !verified) {
+            window.location.href = 'register.html';
+            return;
+        }
+
+        if (verified) {
+            window.history.replaceState({}, '', 'index.html');
+            setTimeout(() => { openModal('booking'); }, 500);
+        }
     })();
 </script>
 
@@ -464,7 +464,7 @@
                 <div class="form-group"><label for="service">Услуга</label><select id="service" required><option value="">— Выберите услугу —</option></select></div>
                 <div class="form-group"><label for="name">Ваше имя</label><input type="text" id="name" placeholder="Иван Иванов" required></div>
                 <div class="form-group"><label for="phone">Телефон</label><input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required></div>
-                <div class="form-group"><label for="email">Email (для подтверждения)</label><input type="email" id="email" placeholder="mail@example.com"></div>
+                <div class="form-group"><label for="email">Email (для подтверждения)</label><input type="email" id="email" placeholder="mail@example.com" required></div>
                 <div class="form-group"><label for="comment">Комментарий</label><textarea id="comment" rows="3" placeholder="Пожелания..."></textarea></div>
                 <button type="submit" class="submit-btn">Отправить заявку</button>
             </form>
@@ -481,9 +481,9 @@
 </div>
 
 <script>
-    const SERVER_URL = '{{ server_url | default("http://127.0.0.1:8001") }}';
-    const SITE_ID = '{{ site_id | default("site") }}';
-    const WORKING_HOURS = '{{ working_hours | default("09:00-20:00") }}';
+    const SERVER_URL = {{ server_url | default("http://127.0.0.1:8001") | tojson }};
+    const SITE_ID = {{ site_id | default("site") | tojson }};
+    const WORKING_HOURS = {{ working_hours | default("09:00-20:00") | tojson }};
     const TEAM = {{ team | tojson if team else '[]' }};
 
     let currentMonth = new Date();
@@ -557,12 +557,12 @@
                 <h3>${master.name}</h3>
                 <div class="role">${master.role || ''}</div>
             `;
-            card.onclick = () => selectMaster(master, card);
+            card.onclick = async () => await selectMaster(master, card);
             masterSelectionEl.appendChild(card);
         });
     }
 
-    function selectMaster(master, card) {
+    async function selectMaster(master, card) {
         document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         selectedMaster = master;
@@ -578,7 +578,8 @@
         stepCalendar.style.display = 'block';
         timeSlotsWrapper.style.display = 'none';
         formEl.classList.remove('active');
-        loadBusySlots();
+
+        await loadBusySlots();
         renderCalendar();
     }
 
