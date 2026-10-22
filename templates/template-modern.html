@@ -19,10 +19,8 @@
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0; padding: 0;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
+            background: var(--bg); color: var(--text);
+            line-height: 1.6; overflow-x: hidden;
         }
 
         /* КНОПКА-БУРГЕР */
@@ -137,6 +135,47 @@
         .faq-item p { margin: 0; color: #555; line-height: 1.6; font-size: 0.95em; }
 
         .booking { background: #fff; border-radius: 16px; padding: 32px 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+
+        /* ============ ВЫБОР МАСТЕРА ============ */
+        .master-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .master-card {
+            background: var(--bg);
+            border: 2px solid var(--text);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .master-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .master-card.selected {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #fff;
+        }
+        .master-card .master-avatar {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            margin: 0 auto 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1.5em; font-weight: 700;
+        }
+        .master-card.selected .master-avatar {
+            background: #fff;
+            color: var(--primary);
+        }
+        .master-card h3 { margin: 0 0 4px; font-size: 1em; }
+        .master-card .role { font-size: 0.8em; opacity: 0.8; }
+
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .calendar-header button { background: var(--primary); border: none; width: 40px; height: 40px; border-radius: 10px; font-size: 1.2em; cursor: pointer; color: #fff; }
         .month-year { font-size: 1.15em; font-weight: 700; }
@@ -151,23 +190,10 @@
         .day.selected { background: var(--primary); color: #fff; border-color: var(--accent); }
         .day.today { font-weight: 700; border-color: var(--primary); }
 
-        /* ============ СЛОТЫ ВРЕМЕНИ ============ */
-        .time-slots-wrapper {
-            display: none;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .time-slots-wrapper h3 {
-            font-size: 1.1em;
-            color: var(--primary);
-            margin-bottom: 12px;
-        }
-        .time-slots {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-        }
+        /* СЛОТЫ ВРЕМЕНИ */
+        .time-slots-wrapper { display: none; margin: 20px 0; text-align: center; }
+        .time-slots-wrapper h3 { font-size: 1.1em; color: var(--primary); margin-bottom: 12px; }
+        .time-slots { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
         .time-slot {
             padding: 10px 16px;
             border: 2px solid var(--primary);
@@ -178,14 +204,8 @@
             color: var(--text);
             transition: all 0.2s;
         }
-        .time-slot:hover {
-            background: var(--primary);
-            color: #fff;
-        }
-        .time-slot.selected {
-            background: var(--primary);
-            color: #fff;
-        }
+        .time-slot:hover:not(.busy) { background: var(--primary); color: #fff; }
+        .time-slot.selected { background: var(--primary); color: #fff; }
         .time-slot.busy {
             background: #ffe5e5;
             color: #c0392b;
@@ -382,23 +402,34 @@
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Забронировать</h2><button class="modal-close" onclick="closeModal('booking')">×</button></div>
         <div class="booking">
-            <div class="calendar-header">
-                <button id="prevMonth" type="button">‹</button>
-                <div class="month-year" id="monthYear">—</div>
-                <button id="nextMonth" type="button">›</button>
-            </div>
-            <div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div>
-            <div class="days" id="days"></div>
 
-            <!-- СЛОТЫ ВРЕМЕНИ -->
+            <!-- ШАГ 1: ВЫБОР МАСТЕРА -->
+            <div id="stepMaster">
+                <h3 style="text-align:center; margin-bottom:16px;">Выберите мастера</h3>
+                <div class="master-selection" id="masterSelection"></div>
+            </div>
+
+            <!-- ШАГ 2: КАЛЕНДАРЬ (скрыт, пока не выбран мастер) -->
+            <div id="stepCalendar" style="display:none;">
+                <div class="calendar-header">
+                    <button id="prevMonth" type="button">‹</button>
+                    <div class="month-year" id="monthYear">—</div>
+                    <button id="nextMonth" type="button">›</button>
+                </div>
+                <div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div>
+                <div class="days" id="days"></div>
+            </div>
+
+            <!-- ШАГ 3: СЛОТЫ ВРЕМЕНИ (скрыты) -->
             <div class="time-slots-wrapper" id="timeSlotsWrapper">
                 <h3>Выберите время</h3>
                 <div class="time-slots" id="timeSlots"></div>
             </div>
 
+            <!-- ШАГ 4: ФОРМА (скрыта) -->
             <form class="booking-form" id="bookingForm">
                 <h3>Вы выбрали: <span id="selectedDate"></span> в <span id="selectedTimeText"></span></h3>
-                <div class="form-group"><label for="service">Услуга</label><select id="service" required><option value="">— Выберите услугу —</option>{% for s in services %}<option value="{{ s.name }}">{{ s.name }}</option>{% endfor %}</select></div>
+                <div class="form-group"><label for="service">Услуга</label><select id="service" required><option value="">— Выберите услугу —</option></select></div>
                 <div class="form-group"><label for="name">Ваше имя</label><input type="text" id="name" placeholder="Иван Иванов" required></div>
                 <div class="form-group"><label for="phone">Телефон</label><input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required></div>
                 <div class="form-group"><label for="email">Email (для подтверждения)</label><input type="email" id="email" placeholder="mail@example.com"></div>
@@ -421,11 +452,14 @@
     const SERVER_URL = '{{ server_url | default("http://127.0.0.1:8001") }}';
     const SITE_ID = '{{ site_id | default("site") }}';
     const WORKING_HOURS = '{{ working_hours | default("09:00-20:00") }}';
+    const TEAM = {{ team | tojson if team else '[]' }};
+    const ALL_SERVICES = {{ services | tojson if services else '[]' }};
 
     let currentMonth = new Date();
+    let selectedMaster = null;
     let selectedDate = null;
     let selectedTime = null;
-    let busyDates = [];
+    let busySlots = [];  // {date, time, master, service}
 
     const monthYearEl = document.getElementById('monthYear');
     const daysEl = document.getElementById('days');
@@ -435,6 +469,10 @@
     const successModal = document.getElementById('successModal');
     const timeSlotsWrapper = document.getElementById('timeSlotsWrapper');
     const timeSlotsEl = document.getElementById('timeSlots');
+    const masterSelectionEl = document.getElementById('masterSelection');
+    const stepMaster = document.getElementById('stepMaster');
+    const stepCalendar = document.getElementById('stepCalendar');
+    const serviceSelect = document.getElementById('service');
 
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -455,7 +493,10 @@
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
         closeSidebar();
-        if (name === 'booking') renderCalendar();
+        if (name === 'booking') {
+            resetBooking();
+            renderMasters();
+        }
     }
     function closeModal(name) {
         const modal = document.getElementById('modal-' + name);
@@ -474,6 +515,70 @@
         }
     });
 
+    // ============ ШАГ 1: МАСТЕРА ============
+    function renderMasters() {
+        masterSelectionEl.innerHTML = '';
+        if (!TEAM || TEAM.length === 0) {
+            masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Мастера не указаны.</p>';
+            return;
+        }
+        TEAM.forEach(master => {
+            const card = document.createElement('div');
+            card.className = 'master-card';
+            card.innerHTML = `
+                <div class="master-avatar">${master.name ? master.name[0] : '?'}</div>
+                <h3>${master.name}</h3>
+                <div class="role">${master.role || ''}</div>
+            `;
+            card.onclick = () => selectMaster(master, card);
+            masterSelectionEl.appendChild(card);
+        });
+    }
+
+    function selectMaster(master, card) {
+        document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedMaster = master;
+
+        // Заполняем услуги этого мастера
+        serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>';
+        const services = master.services && master.services.length > 0 ? master.services : [];
+        services.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            serviceSelect.appendChild(opt);
+        });
+
+        // Показываем календарь
+        stepMaster.style.display = 'none';
+        stepCalendar.style.display = 'block';
+        timeSlotsWrapper.style.display = 'none';
+        formEl.classList.remove('active');
+
+        // Загружаем занятые слоты
+        loadBusySlots();
+        renderCalendar();
+    }
+
+    // ============ ЗАНЯТЫЕ СЛОТЫ ============
+    async function loadBusySlots() {
+        try {
+            const res = await fetch(`${SERVER_URL}/api/busy/${SITE_ID}`);
+            const data = await res.json();
+            busySlots = data.busy || [];
+        } catch (e) {
+            console.error('Не удалось загрузить занятые слоты', e);
+            busySlots = [];
+        }
+    }
+
+    function isSlotBusy(date, time) {
+        if (!selectedMaster) return false;
+        return busySlots.some(b => b.date === date && b.time === time && b.master === selectedMaster.name);
+    }
+
+    // ============ ШАГ 2: КАЛЕНДАРЬ ============
     function renderCalendar() {
         if (!daysEl) return;
         const year = currentMonth.getFullYear();
@@ -498,7 +603,6 @@
             dayEl.className = 'day';
             dayEl.textContent = d;
             if (dateObj < today) dayEl.classList.add('disabled');
-            else if (busyDates.includes(iso)) dayEl.classList.add('busy');
             else {
                 if (iso === formatISO(today)) dayEl.classList.add('today');
                 if (iso === selectedDate) dayEl.classList.add('selected');
@@ -521,14 +625,13 @@
         const formatted = dateObj.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
         if (selectedDateEl) selectedDateEl.textContent = formatted;
         if (selectedTimeText) selectedTimeText.textContent = '—';
-        if (formEl) formEl.classList.remove('active');
+        formEl.classList.remove('active');
         renderCalendar();
         generateTimeSlots();
     }
 
+    // ============ ШАГ 3: СЛОТЫ ВРЕМЕНИ ============
     function generateTimeSlots() {
-        if (!timeSlotsWrapper || !timeSlotsEl) return;
-
         let start = 9, end = 20;
         const match = WORKING_HOURS.match(/(\d{1,2}):\d{2}\s*-\s*(\d{1,2}):\d{2}/);
         if (match) {
@@ -544,7 +647,13 @@
             const slot = document.createElement('div');
             slot.className = 'time-slot';
             slot.textContent = timeStr;
-            slot.onclick = () => selectTime(slot, timeStr);
+
+            if (isSlotBusy(selectedDate, timeStr)) {
+                slot.classList.add('busy');
+            } else {
+                slot.onclick = () => selectTime(slot, timeStr);
+            }
+
             timeSlotsEl.appendChild(slot);
         }
     }
@@ -554,8 +663,22 @@
         slot.classList.add('selected');
         selectedTime = timeStr;
         if (selectedTimeText) selectedTimeText.textContent = timeStr;
-        if (formEl) formEl.classList.add('active');
-        if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        formEl.classList.add('active');
+        formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // ============ СБРОС ============
+    function resetBooking() {
+        selectedMaster = null;
+        selectedDate = null;
+        selectedTime = null;
+        stepMaster.style.display = 'block';
+        stepCalendar.style.display = 'none';
+        timeSlotsWrapper.style.display = 'none';
+        formEl.classList.remove('active');
+        serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>';
+        if (selectedDateEl) selectedDateEl.textContent = '—';
+        if (selectedTimeText) selectedTimeText.textContent = '—';
     }
 
     const prevBtn = document.getElementById('prevMonth');
@@ -566,14 +689,14 @@
     if (formEl) {
         formEl.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const service = document.getElementById('service').value;
+            const service = serviceSelect.value;
             const name = document.getElementById('name').value.trim();
             const phone = document.getElementById('phone').value.trim();
             const email = document.getElementById('email').value.trim();
             const comment = document.getElementById('comment').value.trim();
 
-            if (!selectedDate || !selectedTime || !service || !name || !phone) {
-                alert('Выберите дату, время и заполните все поля');
+            if (!selectedMaster || !selectedDate || !selectedTime || !service || !name || !phone) {
+                alert('Выберите мастера, дату, время, услугу и заполните поля');
                 return;
             }
 
@@ -585,11 +708,19 @@
                 const response = await fetch(`${SERVER_URL}/api/book/${SITE_ID}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ date: selectedDate, time: selectedTime, service, name, phone, email, comment }),
+                    body: JSON.stringify({
+                        master: selectedMaster.name,
+                        date: selectedDate,
+                        time: selectedTime,
+                        service,
+                        name,
+                        phone,
+                        email,
+                        comment
+                    }),
                 });
                 const result = await response.json();
                 if (!response.ok || !result.ok) throw new Error(result.error || 'Ошибка сервера');
-                busyDates.push(selectedDate);
                 closeModal('booking');
                 successModal.classList.add('active');
             } catch (error) {
@@ -604,10 +735,8 @@
 
     function closeSuccessModal() {
         successModal.classList.remove('active');
-        if (formEl) { formEl.reset(); formEl.classList.remove('active'); }
-        selectedDate = null;
-        selectedTime = null;
-        if (timeSlotsWrapper) timeSlotsWrapper.style.display = 'none';
+        formEl.reset();
+        resetBooking();
         renderCalendar();
     }
 
