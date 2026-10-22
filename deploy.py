@@ -4,7 +4,6 @@ from pathlib import Path
 from github import Github
 from github import GithubException
 
-
 g = Github(os.getenv("GITHUB_TOKEN"))
 USER = os.getenv("GITHUB_USERNAME")
 
@@ -16,10 +15,10 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
         repo = user.get_repo(repo_name)
     except Exception:
         repo = user.create_repo(repo_name, auto_init=True)
-        time.sleep(3)  # даём GitHub время инициализировать репозиторий
+        time.sleep(3)
 
-    with open(html_path, "r", encoding="utf-8") as f:
-        content = f.read()
+    # === 1. Заливаем index.html ===
+    content = html_path.read_text(encoding="utf-8")
 
     try:
         existing = repo.get_contents("index.html")
@@ -27,7 +26,35 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
     except Exception:
         repo.create_file("index.html", "Initial site", content)
 
-    # Включаем GitHub Pages через прямой вызов API
+    # === 2. Заливаем картинки из output/images/ ===
+    images_dir = html_path.parent / "images"
+    if images_dir.exists() and images_dir.is_dir():
+        for img_file in images_dir.iterdir():
+            if not img_file.is_file():
+                continue
+
+            img_bytes = img_file.read_bytes()
+            img_path_in_repo = f"images/{img_file.name}"
+
+            try:
+                existing = repo.get_contents(img_path_in_repo)
+                repo.update_file(
+                    img_path_in_repo,
+                    f"Update {img_file.name}",
+                    img_bytes,
+                    existing.sha,
+                )
+            except Exception:
+                try:
+                    repo.create_file(
+                        img_path_in_repo,
+                        f"Add {img_file.name}",
+                        img_bytes,
+                    )
+                except Exception as e:
+                    print(f"Не удалось залить {img_file.name}: {e}")
+
+    # === 3. Включаем GitHub Pages ===
     try:
         repo.requester.requestJsonAndCheck(
             "POST",
@@ -36,11 +63,9 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
         )
     except GithubException as e:
         if e.status == 409:
-            pass  # Pages уже включён — это нормально, игнорируем
+            pass
         else:
-            raise  # все остальные ошибки пробрасываем наверх
+            raise
 
-    time.sleep(10)  # GitHub Pages собирается не мгновенно
+    time.sleep(10)
     return f"https://{USER}.github.io/{repo_name}/"
-
-
