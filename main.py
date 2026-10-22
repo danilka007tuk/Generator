@@ -171,7 +171,6 @@ async def check_email(
         email: str,
         session: AsyncSession = Depends(get_session),
 ):
-    """Проверяет, есть ли email в БД и подтверждён ли он."""
     email = email.strip().lower()
     result = await session.execute(
         select(ClientContact).where(
@@ -239,7 +238,7 @@ async def send_verification_email(site_id: str, email: str, token: str):
 
     try:
         params = {
-            "from": "onboarding@resend.dev",  # ⚠️ Важно: тестовый домен
+            "from": "onboarding@resend.dev",  # ВАЖНО: тестовый домен, отправляет только на ваш email
             "to": [email],
             "subject": "Подтверждение email",
             "html": html,
@@ -334,7 +333,6 @@ async def create_booking(
         f"💬 {data.comment or '—'}"
     )
 
-    # Передаем только текст и site_id, сессию не передаем
     background_tasks.add_task(send_notifications, text, site_id)
     background_tasks.add_task(send_email_resend, site_id, data)
 
