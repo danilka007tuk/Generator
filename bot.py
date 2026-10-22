@@ -11,7 +11,7 @@ from obabot.types import Message
 from obabot.fsm import State, StatesGroup, FSMContext
 
 from ai import generate_content
-from render import render_site, save_site
+from render import render_site, save_site, render_register_page
 from deploy import deploy_to_github
 
 
@@ -35,8 +35,6 @@ class Form(StatesGroup):
     waiting_palette = State()
     waiting_repo = State()
 
-
-# ============ ШАГ 0: /start ============
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
@@ -338,7 +336,10 @@ async def handle_repo(message: Message, state: FSMContext):
         content.template_name = data.get('template_name', 'template-modern.html')
         content.palette_name = data.get('palette_name', 'auto')
         html = render_site(content, server_url=SERVER_URL, site_id=repo_name)
-        path = save_site(html)
+        path = save_site(html, filename="index.html")
+
+        register_html = render_register_page(content, server_url=SERVER_URL, site_id=repo_name)
+        register_path = save_site(register_html, filename="register.html")
     except Exception as error:
         logger.exception("Ошибка генерации")
         await message.answer(
@@ -371,7 +372,6 @@ async def handle_repo(message: Message, state: FSMContext):
         await state.clear()
         return
 
-    # Автоматически подписываем создателя на уведомления его сайта
     try:
         async with httpx.AsyncClient() as client:
             await client.post(
@@ -411,5 +411,3 @@ async def run_bot():
 
 if __name__ == "__main__":
     asyncio.run(run_bot())
-
-

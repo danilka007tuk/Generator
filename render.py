@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import uuid
+import base64
 import bleach
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from openai import OpenAI
@@ -42,16 +43,11 @@ provod_client = OpenAI(
 
 
 def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) -> str:
-    """Генерирует картинку через provod.ai и сохраняет в файл.
-    Возвращает имя файла (например, 'hero.png') или пустую строку.
-    """
     if not prompt or not isinstance(prompt, str):
         return ""
-
     prompt = prompt.strip()[:300]
     if not prompt:
         return ""
-
     try:
         response = provod_client.images.generate(
             model="openai/gpt-image-2",
@@ -63,19 +59,12 @@ def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) ->
         b64 = response.data[0].b64_json
         if not b64:
             return ""
-
-        # Сохраняем в файл
         IMAGES_DIR.mkdir(parents=True, exist_ok=True)
         filename = f"{uuid.uuid4().hex}.png"
         filepath = IMAGES_DIR / filename
-
-        import base64
         with open(filepath, "wb") as f:
             f.write(base64.b64decode(b64))
-
-        # Возвращаем относительный путь (для HTML)
         return f"images/{filename}"
-
     except Exception as e:
         print(f"[provod.ai] Ошибка генерации картинки: {e}")
         return ""
@@ -94,10 +83,8 @@ def get_sidebar_items(content: SiteContent) -> list[dict]:
         if not anchor.startswith("#"):
             anchor = "#" + anchor
         result.append({"label": label, "anchor": anchor, "icon": icon})
-
     if not result:
         result = [dict(x) for x in DEFAULT_SIDEBAR_ITEMS]
-
     return result
 
 
@@ -137,7 +124,6 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     data["server_url"] = server_url or "http://127.0.0.1:8001"
     data["site_id"] = site_id or "site"
 
-    # --- Текстовые поля ---
     for key in [
         "site_title", "meta_description", "hero_heading", "hero_subheading",
         "company_name", "company_address", "company_phone",
@@ -147,61 +133,50 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         if key in data:
             data[key] = clean(data[key])
 
-    # --- Features ---
     for feature in data.get("features", []):
         feature["title"] = clean(feature.get("title", ""))
         feature["description"] = clean(feature.get("description", ""))
 
-    # --- Services ---
     for service in data.get("services", []):
         service["name"] = clean(service.get("name", ""))
         service["description"] = clean(service.get("description", ""))
         service["price"] = clean(service.get("price", ""))
 
-    # --- Gallery + картинки (provod.ai → файлы) ---
     for item in data.get("gallery", []):
         item["title"] = clean(item.get("title", ""))
         item["description"] = clean(item.get("description", ""))
         prompt = item.get("image_prompt", "") or item.get("title", "")
         item["image_url"] = generate_image_provod(prompt, width=1024, height=768)
 
-    # --- Pricing ---
     for item in data.get("pricing", []):
         item["name"] = clean(item.get("name", ""))
         item["description"] = clean(item.get("description", ""))
         item["price"] = clean(item.get("price", ""))
 
-    # --- Testimonials ---
     for testimonial in data.get("testimonials", []):
         testimonial["author"] = clean(testimonial.get("author", ""))
         testimonial["text"] = clean(testimonial.get("text", ""))
 
-    # --- FAQ ---
     for faq in data.get("faq", []):
         faq["question"] = clean(faq.get("question", ""))
         faq["answer"] = clean(faq.get("answer", ""))
 
-    # --- Team ---
     for member in data.get("team", []):
         member["name"] = clean(member.get("name", ""))
         member["role"] = clean(member.get("role", ""))
         member["description"] = clean(member.get("description", ""))
 
-    # --- Sidebar ---
     data["sidebar_items"] = get_sidebar_items(content)
 
-    # --- Hero image (provod.ai → файл) ---
     hero_prompt = data.get("hero_image_prompt", "")
     data["hero_image_url"] = generate_image_provod(hero_prompt, width=1792, height=1024)
 
-    # --- Цвета ---
     data["color_primary"] = clean_color(data.get("color_primary", ""), "#667eea")
     data["color_secondary"] = clean_color(data.get("color_secondary", ""), "#764ba2")
     data["color_bg"] = clean_color(data.get("color_bg", ""), "#f4f6fa")
     data["color_text"] = clean_color(data.get("color_text", ""), "#2c3e50")
     data["color_accent"] = clean_color(data.get("color_accent", ""), "#667eea")
 
-    # --- Шаблон ---
     template_name = data.get("template_name", "template-modern.html")
     if template_name not in ALLOWED_TEMPLATES:
         template_name = "template-modern.html"
@@ -210,9 +185,29 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     return template.render(**data)
 
 
-def save_site(html: str, output_dir: str = "output") -> Path:
+def render_register_page(content: SiteContent, server_url: str = "", site_id: str = "") -> str:
+    """Рендерит страницу регистрации (register.html)."""
+    data = content.model_dump()
+    data["server_url"] = server_url or "http://127.0.0.1:8001"
+    data["site_id"] = site_id or "site"
+
+    for key in ["site_title", "company_name"]:
+        if key in data:
+            data[key] = clean(data[key])
+
+    data["color_primary"] = clean_color(data.get("color_primary", ""), "#667eea")
+    data["color_secondary"] = clean_color(data.get("color_secondary", ""), "#764ba2")
+    data["color_bg"] = clean_color(data.get("color_bg", ""), "#f4f6fa")
+    data["color_text"] = clean_color(data.get("color_text", ""), "#2c3e50")
+    data["color_accent"] = clean_color(data.get("color_accent", ""), "#667eea")
+
+    template = env.get_template("register.html")
+    return template.render(**data)
+
+
+def save_site(html: str, filename: str = "index.html", output_dir: str = "output") -> Path:
     out = Path(output_dir)
     out.mkdir(exist_ok=True)
-    index = out / "index.html"
+    index = out / filename
     index.write_text(html, encoding="utf-8")
     return index
