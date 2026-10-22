@@ -1,5 +1,5 @@
 # models.py
-from sqlalchemy import String, DateTime, UniqueConstraint
+from sqlalchemy import String, DateTime, Boolean, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime, timezone
 from database import Base
@@ -31,6 +31,21 @@ class Subscriber(Base):
 
     user_id: Mapped[int] = mapped_column(primary_key=True)
     site_id: Mapped[str] = mapped_column(String(100), primary_key=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class ClientContact(Base):
+    """Контакты клиентов сайта (email + верификация)."""
+    __tablename__ = "client_contacts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[str] = mapped_column(String(100), index=True)
+    email: Mapped[str] = mapped_column(String(200), index=True)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    verification_token: Mapped[str] = mapped_column(String(200), nullable=True)
+    token_expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
