@@ -77,30 +77,20 @@ async def index(request: Request):
 
 @app.get("/api/analytics/{site_id}")
 async def get_analytics(site_id: str, session: AsyncSession = Depends(get_session)):
-    """Возвращает статистику по сайту."""
-    # Всего зарегистрировано
     total_contacts = await session.scalar(
         select(func.count()).select_from(ClientContact).where(ClientContact.site_id == site_id)
     ) or 0
-
-    # Подтверждено
     verified_contacts = await session.scalar(
         select(func.count()).select_from(ClientContact).where(
-            ClientContact.site_id == site_id,
-            ClientContact.is_verified == True,
+            ClientContact.site_id == site_id, ClientContact.is_verified == True
         )
     ) or 0
-
-    # Всего броней
     total_bookings = await session.scalar(
         select(func.count()).select_from(Booking).where(Booking.site_id == site_id)
     ) or 0
-
-    # Подписчиков MAX
     total_subscribers = await session.scalar(
         select(func.count()).select_from(Subscriber).where(Subscriber.site_id == site_id)
     ) or 0
-
     return {
         "site_id": site_id,
         "total_contacts": total_contacts,
@@ -121,7 +111,6 @@ async def subscribe(sub: SubscriberRequest, session: AsyncSession = Depends(get_
         await session.commit()
     result = await session.execute(select(Subscriber).where(Subscriber.site_id == sub.site_id))
     total = len(result.scalars().all())
-    logger.info(f"Подписчик {sub.user_id} → {sub.site_id}. Всего: {total}")
     return {"ok": True, "total": total}
 
 
@@ -177,6 +166,26 @@ async def register_client(
     return {"ok": True, "message": "Письмо отправлено"}
 
 
+@app.get("/api/check-email/{site_id}")
+async def check_email(
+    site_id: str,
+    email: str,
+    session: AsyncSession = Depends(get_session),
+):
+    """Проверяет, есть ли email в БД и подтверждён ли он."""
+    email = email.strip().lower()
+    result = await session.execute(
+        select(ClientContact).where(
+            ClientContact.site_id == site_id,
+            ClientContact.email == email,
+        )
+    )
+    contact = result.scalar_one_or_none()
+    if not contact:
+        return {"exists": False, "is_verified": False}
+    return {"exists": True, "is_verified": bool(contact.is_verified)}
+
+
 @app.get("/api/verify-client")
 async def verify_client(token: str, session: AsyncSession = Depends(get_session)):
     result = await session.execute(
@@ -195,10 +204,13 @@ async def verify_client(token: str, session: AsyncSession = Depends(get_session)
     contact.token_expires_at = None
     await session.commit()
 
+    # Редирект на главную с параметром verified=1
     return HTMLResponse("""
-        <html><body style="font-family: Arial; text-align: center; padding: 50px;">
-        <h2>✅ Email подтверждён!</h2>
-        <p>Теперь вы можете вернуться на сайт и забронировать услугу.</p>
+        <html><body style="font-family: Inter, Arial; text-align: center; padding: 50px; background: #f5f9ff;">
+        <h2 style="color: #1976d2;">✅ Email подтверждён!</h2>
+        <p>Сейчас вы будете перенаправлены на сайт.</p>
+        <script>setTimeout(() => { window.location.href = 'index.html?verified=1'; }, 2000);</script>
+        <p><a href="index.html?verified=1">Перейти на сайт</a></p>
         </body></html>
     """)
 
@@ -216,10 +228,9 @@ async def send_verification_email(site_id: str, email: str, token: str):
     <h2>Здравствуйте!</h2>
     <p>Вы зарегистрировались на сайте <strong>{site_id}</strong>.</p>
     <p>Чтобы подтвердить email, перейдите по ссылке:</p>
-    <p><a href="{verify_url}" style="display:inline-block; padding:12px 24px; background:#1976d2; color:#fff; text-decoration:none; border-radius:6px;">Подтвердить email</a></p>
-    <p>Или скопируйте ссылку: {verify_url}</p>
+    <p><a href="{verify_url}">Подтвердить email</a></p>
+    <p>Или скопируйте: {verify_url}</p>
     <p>Ссылка действует 24 часа.</p>
-    <p>Если вы не регистрировались — просто проигнорируйте это письмо.</p>
     """
 
     try:
@@ -240,7 +251,7 @@ async def send_verification_email(site_id: str, email: str, token: str):
             if response.status_code == 200:
                 logger.info(f"Email отправлен {email}")
             else:
-                logger.warning(f"provod.ai ответ {response.status_code}: {response.text[:200]}")
+                logger.warning(f"provod.ai ответ {response.status_code}")
     except Exception as e:
         logger.error(f"Ошибка отправки email: {e}")
 
@@ -263,8 +274,7 @@ async def get_busy(site_id: str, session: AsyncSession = Depends(get_session)):
     today = date_type.today().isoformat()
     result = await session.execute(
         select(Booking.date, Booking.time, Booking.master, Booking.service).where(
-            Booking.site_id == site_id,
-            Booking.date >= today,
+            Booking.site_id == site_id, Booking.date >= today,
         )
     )
     busy = [
@@ -307,14 +317,8 @@ async def create_booking(
         return {"ok": False, "error": "Это время у мастера уже занято"}
 
     booking = Booking(
-        site_id=site_id,
-        master=data.master,
-        date=data.date,
-        time=data.time,
-        service=data.service,
-        name=data.name,
-        phone=data.phone,
-        comment=data.comment,
+        site_id=site_id, master=data.master, date=data.date, time=data.time,
+        service=data.service, name=data.name, phone=data.phone, comment=data.comment,
     )
     session.add(booking)
     await session.commit()
@@ -352,36 +356,23 @@ async def send_notifications(text: str, site_id: str, session: AsyncSession):
             logger.warning(f"MAX_ADMIN_ID не число: {admin_id}")
 
     if not recipients:
-        logger.warning(f"Нет получателей для {site_id}")
         return
-
-    logger.info(f"Рассылка [{site_id}] → {len(recipients)} получателям")
 
     async with httpx.AsyncClient(verify=False, timeout=15) as client:
         for user_id in recipients:
             try:
-                response = await client.post(
-                    url,
-                    params={"user_id": user_id},
+                await client.post(
+                    url, params={"user_id": user_id},
                     headers={"Authorization": token},
-                    json={"text": text},
-                    timeout=15,
+                    json={"text": text}, timeout=15,
                 )
-                if response.status_code != 200:
-                    logger.warning(f"MAX {response.status_code} для {user_id}: {response.text[:200]}")
-                else:
-                    logger.info(f"Уведомление отправлено {user_id}")
             except Exception as e:
                 logger.error(f"Не удалось отправить {user_id}: {e}")
 
 
 async def send_email_resend(site_id: str, data: BookingRequest):
     resend.api_key = os.getenv("RESEND_API_KEY")
-    if not resend.api_key:
-        logger.warning("RESEND_API_KEY не задан — email не отправлен")
-        return
-
-    if not data.email:
+    if not resend.api_key or not data.email:
         return
 
     try:
@@ -397,7 +388,6 @@ async def send_email_resend(site_id: str, data: BookingRequest):
             <p><strong>Дата:</strong> {data.date} в {data.time}</p>
             <p><strong>Имя:</strong> {data.name}</p>
             <p><strong>Телефон:</strong> {data.phone}</p>
-            <p>Спасибо! Мы свяжемся с вами для подтверждения.</p>
             """
         }
         response = resend.Emails.send(params)
