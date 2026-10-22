@@ -2,12 +2,10 @@
 import os
 import logging
 import secrets
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import date as date_type, datetime, timedelta, timezone
-
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 import httpx
 import resend
@@ -19,8 +17,9 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
-from database import init_db, get_session
+from database import init_db, get_session, async_session
 from models import Booking, Subscriber, ClientContact
 from schemas import SiteContent
 
@@ -125,10 +124,10 @@ async def health(session: AsyncSession = Depends(get_session)):
 
 @app.post("/api/register-client/{site_id}")
 async def register_client(
-    site_id: str,
-    data: ClientRegisterRequest,
-    background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_session),
+        site_id: str,
+        data: ClientRegisterRequest,
+        background_tasks: BackgroundTasks,
+        session: AsyncSession = Depends(get_session),
 ):
     email = data.email.strip().lower()
     if not email or "@" not in email:
@@ -168,9 +167,9 @@ async def register_client(
 
 @app.get("/api/check-email/{site_id}")
 async def check_email(
-    site_id: str,
-    email: str,
-    session: AsyncSession = Depends(get_session),
+        site_id: str,
+        email: str,
+        session: AsyncSession = Depends(get_session),
 ):
     """Проверяет, есть ли email в БД и подтверждён ли он."""
     email = email.strip().lower()
@@ -196,15 +195,19 @@ async def verify_client(token: str, session: AsyncSession = Depends(get_session)
     if not contact:
         return HTMLResponse("<h2>❌ Неверная или устаревшая ссылка</h2>", status_code=400)
 
-    if contact.token_expires_at and contact.token_expires_at < datetime.now(timezone.utc):
-        return HTMLResponse("<h2>❌ Ссылка истекла. Зарегистрируйтесь заново.</h2>", status_code=400)
+    # Фикс naive/aware datetime
+    if contact.token_expires_at:
+        expires = contact.token_expires_at
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        if expires < datetime.now(timezone.utc):
+            return HTMLResponse("<h2>❌ Ссылка истекла. Зарегистрируйтесь заново.</h2>", status_code=400)
 
     contact.is_verified = True
     contact.verification_token = None
     contact.token_expires_at = None
     await session.commit()
 
-    # Редирект на главную с параметром verified=1
     return HTMLResponse("""
         <html><body style="font-family: Inter, Arial; text-align: center; padding: 50px; background: #f5f9ff;">
         <h2 style="color: #1976d2;">✅ Email подтверждён!</h2>
@@ -216,12 +219,13 @@ async def verify_client(token: str, session: AsyncSession = Depends(get_session)
 
 
 async def send_verification_email(site_id: str, email: str, token: str):
-    api_key = os.getenv("PROVOD_API_KEY")
-    server_url = os.getenv("SERVER_URL", "http://127.0.0.1:8001")
-    if not api_key:
-        logger.warning("PROVOD_API_KEY не задан — письмо не отправлено")
+    """Отправляет письмо для подтверждения email через Resend."""
+    resend.api_key = os.getenv("RESEND_API_KEY")
+    if not resend.api_key:
+        logger.warning("RESEND_API_KEY не задан — письмо не отправлено")
         return
 
+    server_url = os.getenv("SERVER_URL", "http://127.0.0.1:8001")
     verify_url = f"{server_url}/api/verify-client?token={token}"
 
     html = f"""
@@ -234,26 +238,16 @@ async def send_verification_email(site_id: str, email: str, token: str):
     """
 
     try:
-        async with httpx.AsyncClient(verify=False, timeout=30) as client:
-            response = await client.post(
-                "https://api.provod.ai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "openai/gpt-4o-mini",
-                    "messages": [
-                        {"role": "user", "content": f"Отправь email на {email} с темой 'Подтверждение email' и HTML: {html}"}
-                    ],
-                },
-            )
-            if response.status_code == 200:
-                logger.info(f"Email отправлен {email}")
-            else:
-                logger.warning(f"provod.ai ответ {response.status_code}")
+        params = {
+            "from": "onboarding@resend.dev",  # ⚠️ Важно: тестовый домен
+            "to": [email],
+            "subject": "Подтверждение email",
+            "html": html,
+        }
+        response = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Email через Resend отправлен {email}. ID: {response.get('id')}")
     except Exception as e:
-        logger.error(f"Ошибка отправки email: {e}")
+        logger.error(f"Ошибка отправки email через Resend: {e}")
 
 
 # ============ БРОНИРОВАНИЕ ============
@@ -286,10 +280,10 @@ async def get_busy(site_id: str, session: AsyncSession = Depends(get_session)):
 
 @app.post("/api/book/{site_id}")
 async def create_booking(
-    site_id: str,
-    data: BookingRequest,
-    background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_session),
+        site_id: str,
+        data: BookingRequest,
+        background_tasks: BackgroundTasks,
+        session: AsyncSession = Depends(get_session),
 ):
     if not data.email:
         return {"ok": False, "error": "Укажите email"}
@@ -321,7 +315,12 @@ async def create_booking(
         service=data.service, name=data.name, phone=data.phone, comment=data.comment,
     )
     session.add(booking)
-    await session.commit()
+
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        return {"ok": False, "error": "Это время у мастера только что заняли. Выберите другое."}
 
     text = (
         f"🔔 Новая бронь!\n\n"
@@ -335,19 +334,22 @@ async def create_booking(
         f"💬 {data.comment or '—'}"
     )
 
-    background_tasks.add_task(send_notifications, text, site_id, session)
+    # Передаем только текст и site_id, сессию не передаем
+    background_tasks.add_task(send_notifications, text, site_id)
     background_tasks.add_task(send_email_resend, site_id, data)
 
     return {"ok": True}
 
 
-async def send_notifications(text: str, site_id: str, session: AsyncSession):
+async def send_notifications(text: str, site_id: str):
     token = os.getenv("MAX_BOT_TOKEN")
     admin_id = os.getenv("MAX_ADMIN_ID")
     url = "https://platform-api2.max.ru/messages"
 
-    result = await session.execute(select(Subscriber.user_id).where(Subscriber.site_id == site_id))
-    recipients = {row.user_id for row in result.all()}
+    # Открываем НОВУЮ сессию для background task
+    async with async_session() as session:
+        result = await session.execute(select(Subscriber.user_id).where(Subscriber.site_id == site_id))
+        recipients = {row.user_id for row in result.all()}
 
     if admin_id:
         try:
@@ -358,7 +360,7 @@ async def send_notifications(text: str, site_id: str, session: AsyncSession):
     if not recipients:
         return
 
-    async with httpx.AsyncClient(verify=False, timeout=15) as client:
+    async with httpx.AsyncClient(timeout=15) as client:
         for user_id in recipients:
             try:
                 await client.post(
@@ -390,7 +392,7 @@ async def send_email_resend(site_id: str, data: BookingRequest):
             <p><strong>Телефон:</strong> {data.phone}</p>
             """
         }
-        response = resend.Emails.send(params)
+        response = await asyncio.to_thread(resend.Emails.send, params)
         logger.info(f"Email отправлен {data.email}. ID: {response.get('id')}")
     except Exception as e:
         logger.error(f"Ошибка отправки email: {e}")
