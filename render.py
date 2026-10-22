@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import uuid
 import bleach
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from openai import OpenAI
@@ -9,6 +10,8 @@ from schemas import SiteContent
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+OUTPUT_DIR = Path(__file__).parent / "output"
+IMAGES_DIR = OUTPUT_DIR / "images"
 
 env = Environment(
     loader=FileSystemLoader(str(TEMPLATES_DIR)),
@@ -32,7 +35,6 @@ DEFAULT_SIDEBAR_ITEMS = [
     {"label": "Контакты", "anchor": "#contacts", "icon": "📞"},
 ]
 
-# === КЛИЕНТ PROVOD.AI (совместим с OpenAI) ===
 provod_client = OpenAI(
     api_key=os.getenv("PROVOD_API_KEY"),
     base_url="https://api.provod.ai/v1",
@@ -40,7 +42,9 @@ provod_client = OpenAI(
 
 
 def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) -> str:
-    """Генерирует картинку через provod.ai. Возвращает data URI (base64) или пустую строку."""
+    """Генерирует картинку через provod.ai и сохраняет в файл.
+    Возвращает имя файла (например, 'hero.png') или пустую строку.
+    """
     if not prompt or not isinstance(prompt, str):
         return ""
 
@@ -57,12 +61,24 @@ def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) ->
             response_format="b64_json",
         )
         b64 = response.data[0].b64_json
-        if b64:
-            return f"data:image/png;base64,{b64}"
+        if not b64:
+            return ""
+
+        # Сохраняем в файл
+        IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+        filename = f"{uuid.uuid4().hex}.png"
+        filepath = IMAGES_DIR / filename
+
+        import base64
+        with open(filepath, "wb") as f:
+            f.write(base64.b64decode(b64))
+
+        # Возвращаем относительный путь (для HTML)
+        return f"images/{filename}"
+
     except Exception as e:
         print(f"[provod.ai] Ошибка генерации картинки: {e}")
-
-    return ""
+        return ""
 
 
 def get_sidebar_items(content: SiteContent) -> list[dict]:
@@ -83,11 +99,6 @@ def get_sidebar_items(content: SiteContent) -> list[dict]:
         result = [dict(x) for x in DEFAULT_SIDEBAR_ITEMS]
 
     return result
-
-
-def generate_image_url(prompt: str, width: int = 1200, height: int = 800) -> str:
-    """Обёртка для совместимости. Использует provod.ai."""
-    return generate_image_provod(prompt, width=width, height=height)
 
 
 def clean(text: str) -> str:
@@ -147,7 +158,7 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         service["description"] = clean(service.get("description", ""))
         service["price"] = clean(service.get("price", ""))
 
-    # --- Gallery + картинки (provod.ai) ---
+    # --- Gallery + картинки (provod.ai → файлы) ---
     for item in data.get("gallery", []):
         item["title"] = clean(item.get("title", ""))
         item["description"] = clean(item.get("description", ""))
@@ -179,7 +190,7 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     # --- Sidebar ---
     data["sidebar_items"] = get_sidebar_items(content)
 
-    # --- Hero image (provod.ai) ---
+    # --- Hero image (provod.ai → файл) ---
     hero_prompt = data.get("hero_image_prompt", "")
     data["hero_image_url"] = generate_image_provod(hero_prompt, width=1792, height=1024)
 
