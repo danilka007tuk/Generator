@@ -9,9 +9,10 @@ class Booking(Base):
     __tablename__ = "bookings"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    site_id: Mapped[str] = mapped_column(String(100), index=True)   # репозиторий
-    date: Mapped[str] = mapped_column(String(10), index=True)       # YYYY-MM-DD
-    time: Mapped[str] = mapped_column(String(5))                     # HH:MM
+    site_id: Mapped[str] = mapped_column(String(100), index=True)
+    master: Mapped[str] = mapped_column(String(100), default="")
+    date: Mapped[str] = mapped_column(String(10), index=True)
+    time: Mapped[str] = mapped_column(String(5))
     service: Mapped[str] = mapped_column(String(100))
     name: Mapped[str] = mapped_column(String(100))
     phone: Mapped[str] = mapped_column(String(30))
@@ -21,7 +22,7 @@ class Booking(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("site_id", "date", "time", name="uq_booking_site_datetime"),
+        UniqueConstraint("site_id", "master", "date", "time", name="uq_booking_site_master_datetime"),
     )
 
 

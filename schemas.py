@@ -46,6 +46,7 @@ class TeamMember(BaseModel):
     name: str = Field(max_length=80)
     role: str = Field(max_length=80)
     description: str = Field(default="", max_length=200)
+    services: list[str] = Field(default_factory=list)
 
 
 class SiteContent(BaseModel):
@@ -81,15 +82,9 @@ class SiteContent(BaseModel):
         description="Описание для генерации фоновой картинки hero-блока"
     )
 
-    # === О компании (новое) ===
-    about_short: str = Field(
-        default="", max_length=300,
-        description="Короткое описание компании (2-3 предложения)"
-    )
-    about_full: str = Field(
-        default="", max_length=1000,
-        description="Полное описание компании для блока 'О нас'"
-    )
+    # === О компании ===
+    about_short: str = Field(default="", max_length=300)
+    about_full: str = Field(default="", max_length=1000)
 
     # === Features ===
     features: list[Feature] = Field(default_factory=list)
@@ -103,28 +98,19 @@ class SiteContent(BaseModel):
     # === Pricing ===
     pricing: list[ServiceItem] = Field(default_factory=list)
 
-    # === Testimonials (новое) ===
+    # === Testimonials ===
     testimonials: list[Testimonial] = Field(default_factory=list)
 
-    # === FAQ (новое) ===
+    # === FAQ ===
     faq: list[FAQItem] = Field(default_factory=list)
 
-    # === Team (новое) ===
+    # === Team ===
     team: list[TeamMember] = Field(default_factory=list)
 
-    # === Sidebar (новое) ===
-    sidebar_enabled: bool = Field(
-        default=True,
-        description="Показывать ли сайдбар"
-    )
-    sidebar_items: list[SidebarItem] = Field(
-        default_factory=list,
-        description="Пункты меню в сайдбаре"
-    )
-    sidebar_cta_text: str = Field(
-        default="Забронировать", max_length=40,
-        description="Текст главной кнопки в сайдбаре"
-    )
+    # === Sidebar ===
+    sidebar_enabled: bool = Field(default=True)
+    sidebar_items: list[SidebarItem] = Field(default_factory=list)
+    sidebar_cta_text: str = Field(default="Забронировать", max_length=40)
 
     # === Contacts ===
     company_name: str = Field(max_length=100)

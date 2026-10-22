@@ -29,6 +29,7 @@ SYSTEM_PROMPT = """
 6. НЕ добавляй пояснений, markdown-обёрток и комментариев. Только валидный JSON.
 7. Если пользователь указал название, адрес, телефон, услуги, часы — используй ИХ.
 8. ВСЕГДА заполняй sidebar_items — минимум 4 пункта. НЕ оставляй пустым.
+9. ВСЕГДА заполняй team — минимум 3 мастера. У КАЖДОГО мастера — СВОЙ набор услуг (2-4 услуги).
 
 РЕШЕНИЕ О БЛОКАХ:
 Поле "blocks" — это список блоков в нужном порядке. Выбирай из:
@@ -80,41 +81,11 @@ SYSTEM_PROMPT = """
 
 Также придумай текст главной кнопки в сайдбаре (sidebar_cta_text, до 40 символов) — обычно "Забронировать", "Записаться", "Оставить заявку".
 
-Примеры sidebar_items:
-- Фотостудия: [
-    {"label": "Услуги", "anchor": "#services", "icon": "💼"},
-    {"label": "Галерея", "anchor": "#gallery", "icon": "🖼"},
-    {"label": "Отзывы", "anchor": "#testimonials", "icon": "⭐"},
-    {"label": "Контакты", "anchor": "#contacts", "icon": "📞"}
-  ]
-- Клиника: [
-    {"label": "Услуги", "anchor": "#services", "icon": "💊"},
-    {"label": "Врачи", "anchor": "#team", "icon": "👨‍⚕️"},
-    {"label": "Цены", "anchor": "#pricing", "icon": "💰"},
-    {"label": "Записаться", "anchor": "#booking", "icon": "📅"},
-    {"label": "Контакты", "anchor": "#contacts", "icon": "📞"}
-  ]
-- Кафе: [
-    {"label": "О нас", "anchor": "#about", "icon": "☕"},
-    {"label": "Меню", "anchor": "#services", "icon": "🍰"},
-    {"label": "Галерея", "anchor": "#gallery", "icon": "🖼"},
-    {"label": "Контакты", "anchor": "#contacts", "icon": "📞"}
-  ]
-
 ОПИСАНИЯ ДЛЯ КАРТИНОК:
 Поле hero_image_prompt — текстовое описание для генерации фоновой картинки hero-блока (до 300 символов, на английском).
 Опиши сцену, которую ИИ сможет нарисовать: стиль, освещение, объекты.
 
-Примеры:
-- Фотостудия: "Modern photo studio interior with soft light, professional cameras, minimalistic design, warm atmosphere"
-- Кафе: "Cozy coffee shop interior with wooden tables, warm lighting, coffee cups, plants, inviting atmosphere"
-- Клиника: "Modern medical clinic reception, clean white interior, soft blue accents, professional atmosphere"
-
 Поле gallery[].image_prompt — описание для каждой картинки галереи (до 300 символов, на английском).
-
-Примеры:
-- "Portrait of young woman in natural light, professional photography, soft focus"
-- "Wedding couple holding hands, outdoor ceremony, golden hour, romantic"
 
 О КОМПАНИИ:
 - about_short — короткое описание (2–3 предложения, до 300 символов).
@@ -131,11 +102,14 @@ SYSTEM_PROMPT = """
 - question — вопрос (до 200 символов).
 - answer — ответ (до 500 символов).
 
-КОМАНДА:
-Поле team — список из 3–5 членов команды. Каждый содержит:
+КОМАНДА (ОБЯЗАТЕЛЬНО):
+Поле team — список из 3–5 мастеров. Каждый содержит:
 - name — имя (до 80 символов).
 - role — роль/должность (до 80 символов).
 - description — короткое описание (до 200 символов).
+- services — список услуг, которые делает ЭТОТ мастер (2-4 услуги, на русском).
+  Например: ["Стрижка", "Укладка"] или ["Маникюр", "Педикюр"].
+  Каждый мастер ДОЛЖЕН иметь свой набор услуг.
 
 СХЕМА ОТВЕТА:
 {
@@ -173,7 +147,7 @@ SYSTEM_PROMPT = """
     {"question": "string", "answer": "string"}
   ],
   "team": [
-    {"name": "string", "role": "string", "description": "string"}
+    {"name": "string", "role": "string", "description": "string", "services": ["string"]}
   ],
   "sidebar_enabled": true,
   "sidebar_items": [

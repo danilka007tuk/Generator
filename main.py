@@ -39,10 +39,11 @@ class SubscriberRequest(BaseModel):
 class BookingRequest(BaseModel):
     date: str
     time: str = "10:00"
+    master: str = ""      # <--- добавили
     service: str
     name: str
     phone: str
-    email: str = ""        # <--- добавили email
+    email: str = ""
     comment: str = ""
 
 
@@ -68,21 +69,14 @@ async def index(request: Request):
 
 
 @app.post("/api/subscribe")
-async def subscribe(
-    sub: SubscriberRequest,
-    session: AsyncSession = Depends(get_session),
-):
-    """Регистрирует подписчика конкретного сайта."""
+async def subscribe(sub: SubscriberRequest, session: AsyncSession = Depends(get_session)):
     existing = await session.get(Subscriber, (sub.user_id, sub.site_id))
     if not existing:
         session.add(Subscriber(user_id=sub.user_id, site_id=sub.site_id))
         await session.commit()
-
-    result = await session.execute(
-        select(Subscriber).where(Subscriber.site_id == sub.site_id)
-    )
+    result = await session.execute(select(Subscriber).where(Subscriber.site_id == sub.site_id))
     total = len(result.scalars().all())
-    logger.info(f"Подписчик {sub.user_id} → {sub.site_id}. Всего на сайте: {total}")
+    logger.info(f"Подписчик {sub.user_id} → {sub.site_id}. Всего: {total}")
     return {"ok": True, "total": total}
 
 
@@ -105,18 +99,19 @@ async def show_site(site_id: str, request: Request):
 
 
 @app.get("/api/busy/{site_id}")
-async def get_busy(
-    site_id: str,
-    session: AsyncSession = Depends(get_session),
-):
+async def get_busy(site_id: str, session: AsyncSession = Depends(get_session)):
+    """Возвращает занятые слоты: date, time, master, service."""
     today = date_type.today().isoformat()
     result = await session.execute(
-        select(Booking.date, Booking.time).where(
+        select(Booking.date, Booking.time, Booking.master, Booking.service).where(
             Booking.site_id == site_id,
             Booking.date >= today,
         )
     )
-    busy = [f"{row.date}T{row.time}" for row in result.all()]
+    busy = [
+        {"date": row.date, "time": row.time, "master": row.master, "service": row.service}
+        for row in result.all()
+    ]
     return {"busy": busy}
 
 
@@ -127,19 +122,21 @@ async def create_booking(
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
 ):
-    """Принимает новую бронь."""
+    # Проверка занятости: по мастеру
     existing = await session.execute(
         select(Booking).where(
             Booking.site_id == site_id,
+            Booking.master == data.master,
             Booking.date == data.date,
             Booking.time == data.time,
         )
     )
     if existing.scalar_one_or_none():
-        return {"ok": False, "error": "Это время уже занято"}
+        return {"ok": False, "error": "Это время у мастера уже занято"}
 
     booking = Booking(
         site_id=site_id,
+        master=data.master,
         date=data.date,
         time=data.time,
         service=data.service,
@@ -150,10 +147,10 @@ async def create_booking(
     session.add(booking)
     await session.commit()
 
-    # Текст для MAX
     text = (
         f"🔔 Новая бронь!\n\n"
         f"🌐 Сайт: {site_id}\n"
+        f"👤 Мастер: {data.master or '—'}\n"
         f"📅 {data.date} в {data.time}\n"
         f"💼 Услуга: {data.service}\n"
         f"👤 {data.name}\n"
@@ -162,24 +159,18 @@ async def create_booking(
         f"💬 {data.comment or '—'}"
     )
 
-    # 1. MAX-уведомление
     background_tasks.add_task(send_notifications, text, site_id, session)
-
-    # 2. Email-уведомление (Resend)
     background_tasks.add_task(send_email_resend, site_id, data)
 
     return {"ok": True}
 
 
 async def send_notifications(text: str, site_id: str, session: AsyncSession):
-    """Отправляет уведомление в MAX: подписчикам сайта + админу."""
     token = os.getenv("MAX_BOT_TOKEN")
     admin_id = os.getenv("MAX_ADMIN_ID")
     url = "https://platform-api2.max.ru/messages"
 
-    result = await session.execute(
-        select(Subscriber.user_id).where(Subscriber.site_id == site_id)
-    )
+    result = await session.execute(select(Subscriber.user_id).where(Subscriber.site_id == site_id))
     recipients = {row.user_id for row in result.all()}
 
     if admin_id:
@@ -213,7 +204,6 @@ async def send_notifications(text: str, site_id: str, session: AsyncSession):
 
 
 async def send_email_resend(site_id: str, data: BookingRequest):
-    """Отправляет email клиенту (если указан email)."""
     resend.api_key = os.getenv("RESEND_API_KEY")
     if not resend.api_key:
         logger.warning("RESEND_API_KEY не задан — email не отправлен")
@@ -231,6 +221,7 @@ async def send_email_resend(site_id: str, data: BookingRequest):
             "html": f"""
             <h2>Ваша заявка принята!</h2>
             <p><strong>Сайт:</strong> {site_id}</p>
+            <p><strong>Мастер:</strong> {data.master or '—'}</p>
             <p><strong>Услуга:</strong> {data.service}</p>
             <p><strong>Дата:</strong> {data.date} в {data.time}</p>
             <p><strong>Имя:</strong> {data.name}</p>
