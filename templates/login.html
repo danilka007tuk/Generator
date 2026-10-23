@@ -164,6 +164,19 @@
     }
 
     async function handleLogin(role, email, password, btn, msg) {
+        if (!email) {
+            msg.className = 'message error';
+            msg.textContent = '❌ Введите email';
+            msg.style.display = 'block';
+            return;
+        }
+        if (role !== 'client' && !password) {
+            msg.className = 'message error';
+            msg.textContent = '❌ Введите пароль';
+            msg.style.display = 'block';
+            return;
+        }
+
         btn.disabled = true;
         const originalText = btn.textContent;
         btn.textContent = 'Проверяю...';
