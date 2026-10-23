@@ -3,6 +3,7 @@ import os
 import logging
 import secrets
 import asyncio
+import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import date as date_type, datetime, timedelta, timezone
@@ -10,7 +11,7 @@ from datetime import date as date_type, datetime, timedelta, timezone
 import httpx
 import resend
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Depends, BackgroundTasks
+from fastapi import FastAPI, Request, Depends, BackgroundTasks, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -20,16 +21,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from database import init_db, get_session, async_session
-from models import Booking, Subscriber, ClientContact
+from models import Booking, Subscriber, ClientContact, Site
+from schemas import SiteContent
 
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 logger = logging.getLogger("uvicorn.error")
 templates = Jinja2Templates(directory="templates")
 
+
 class SubscriberRequest(BaseModel):
     user_id: int
     site_id: str
+
 
 class BookingRequest(BaseModel):
     date: str
@@ -41,13 +45,16 @@ class BookingRequest(BaseModel):
     email: str = ""
     comment: str = ""
 
+
 class ClientRegisterRequest(BaseModel):
     email: str
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     yield
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -58,14 +65,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def index():
     return {"message": "Сервер работает. Бот запущен отдельно."}
 
+
 # ============ ДАШБОРД (ЛИЧНЫЙ КАБИНЕТ) ============
 @app.get("/dashboard/{site_id}", response_class=HTMLResponse)
 async def dashboard(site_id: str, request: Request):
-    # ИСПРАВЛЕНО: правильный вызов TemplateResponse для новых версий FastAPI
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
@@ -75,14 +83,57 @@ async def dashboard(site_id: str, request: Request):
         }
     )
 
+
+# ============ CMS (РЕДАКТИРОВАНИЕ КОНТЕНТА) ============
+@app.get("/api/site-content/{site_id}")
+async def get_site_content(site_id: str, session: AsyncSession = Depends(get_session)):
+    site = await session.get(Site, site_id)
+    if not site:
+        return {"ok": False, "error": "Сайт не найден в базе"}
+    return {"ok": True, "content": json.loads(site.content_json)}
+
+
+@app.post("/api/site-content/{site_id}")
+async def update_site_content(site_id: str, data: dict = Body(...), session: AsyncSession = Depends(get_session)):
+    site = await session.get(Site, site_id)
+    if not site:
+        return {"ok": False, "error": "Сайт не найден"}
+
+    site.content_json = json.dumps(data, ensure_ascii=False)
+    await session.commit()
+
+    # Перегенерация HTML и деплой
+    from render import render_site, save_site
+    from deploy import deploy_to_github
+
+    try:
+        content = SiteContent.model_validate(data)
+        html = render_site(content, server_url=os.getenv("SERVER_URL"), site_id=site_id)
+        path = save_site(html, filename="index.html")
+
+        await asyncio.to_thread(deploy_to_github, site_id, path)
+        return {"ok": True, "message": "Сохранено и опубликовано"}
+    except Exception as e:
+        logger.error(f"Ошибка при обновлении: {e}")
+        return {"ok": False, "error": str(e)}
+
+
 # ============ АНАЛИТИКА ============
 @app.get("/api/analytics/{site_id}")
 async def get_analytics(site_id: str, session: AsyncSession = Depends(get_session)):
-    total_contacts = await session.scalar(select(func.count()).select_from(ClientContact).where(ClientContact.site_id == site_id)) or 0
-    verified_contacts = await session.scalar(select(func.count()).select_from(ClientContact).where(ClientContact.site_id == site_id, ClientContact.is_verified == True)) or 0
-    total_bookings = await session.scalar(select(func.count()).select_from(Booking).where(Booking.site_id == site_id)) or 0
-    total_subscribers = await session.scalar(select(func.count()).select_from(Subscriber).where(Subscriber.site_id == site_id)) or 0
-    return {"site_id": site_id, "total_contacts": total_contacts, "verified_contacts": verified_contacts, "unverified_contacts": total_contacts - verified_contacts, "total_bookings": total_bookings, "total_subscribers": total_subscribers}
+    total_contacts = await session.scalar(
+        select(func.count()).select_from(ClientContact).where(ClientContact.site_id == site_id)) or 0
+    verified_contacts = await session.scalar(
+        select(func.count()).select_from(ClientContact).where(ClientContact.site_id == site_id,
+                                                              ClientContact.is_verified == True)) or 0
+    total_bookings = await session.scalar(
+        select(func.count()).select_from(Booking).where(Booking.site_id == site_id)) or 0
+    total_subscribers = await session.scalar(
+        select(func.count()).select_from(Subscriber).where(Subscriber.site_id == site_id)) or 0
+    return {"site_id": site_id, "total_contacts": total_contacts, "verified_contacts": verified_contacts,
+            "unverified_contacts": total_contacts - verified_contacts, "total_bookings": total_bookings,
+            "total_subscribers": total_subscribers}
+
 
 @app.get("/api/bookings/{site_id}")
 async def get_bookings(site_id: str, session: AsyncSession = Depends(get_session)):
@@ -95,6 +146,7 @@ async def get_bookings(site_id: str, session: AsyncSession = Depends(get_session
         for b in bookings
     ]}
 
+
 # ============ ПОДПИСЧИКИ ============
 @app.post("/api/subscribe")
 async def subscribe(sub: SubscriberRequest, session: AsyncSession = Depends(get_session)):
@@ -102,9 +154,8 @@ async def subscribe(sub: SubscriberRequest, session: AsyncSession = Depends(get_
     if not existing:
         session.add(Subscriber(user_id=sub.user_id, site_id=sub.site_id))
         await session.commit()
-    result = await session.execute(select(Subscriber).where(Subscriber.site_id == sub.site_id))
-    total = len(result.scalars().all())
-    return {"ok": True, "total": total}
+    return {"ok": True}
+
 
 @app.get("/api/health")
 async def health(session: AsyncSession = Depends(get_session)):
@@ -112,13 +163,16 @@ async def health(session: AsyncSession = Depends(get_session)):
     total = len(result.scalars().all())
     return {"status": "ok", "subscribers": total}
 
+
 # ============ РЕГИСТРАЦИЯ КЛИЕНТОВ ============
 @app.post("/api/register-client/{site_id}")
-async def register_client(site_id: str, data: ClientRegisterRequest, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
+async def register_client(site_id: str, data: ClientRegisterRequest, background_tasks: BackgroundTasks,
+                          session: AsyncSession = Depends(get_session)):
     email = data.email.strip().lower()
     if not email or "@" not in email: return {"ok": False, "error": "Неверный email"}
 
-    existing = await session.execute(select(ClientContact).where(ClientContact.site_id == site_id, ClientContact.email == email))
+    existing = await session.execute(
+        select(ClientContact).where(ClientContact.site_id == site_id, ClientContact.email == email))
     contact = existing.scalar_one_or_none()
     if contact and contact.is_verified: return {"ok": True, "message": "Уже зарегистрирован"}
 
@@ -136,13 +190,16 @@ async def register_client(site_id: str, data: ClientRegisterRequest, background_
     background_tasks.add_task(send_verification_email, site_id, email, token)
     return {"ok": True, "message": "Письмо отправлено"}
 
+
 @app.get("/api/check-email/{site_id}")
 async def check_email(site_id: str, email: str, session: AsyncSession = Depends(get_session)):
     email = email.strip().lower()
-    result = await session.execute(select(ClientContact).where(ClientContact.site_id == site_id, ClientContact.email == email))
+    result = await session.execute(
+        select(ClientContact).where(ClientContact.site_id == site_id, ClientContact.email == email))
     contact = result.scalar_one_or_none()
     if not contact: return {"exists": False, "is_verified": False}
     return {"exists": True, "is_verified": bool(contact.is_verified)}
+
 
 @app.get("/api/verify-client")
 async def verify_client(token: str, session: AsyncSession = Depends(get_session)):
@@ -176,6 +233,7 @@ async def verify_client(token: str, session: AsyncSession = Depends(get_session)
         </body></html>
     """)
 
+
 async def send_verification_email(site_id: str, email: str, token: str):
     resend.api_key = os.getenv("RESEND_API_KEY")
     if not resend.api_key: return
@@ -183,32 +241,43 @@ async def send_verification_email(site_id: str, email: str, token: str):
     verify_url = f"{server_url}/api/verify-client?token={token}"
     html = f"<h2>Здравствуйте!</h2><p>Вы зарегистрировались на сайте <strong>{site_id}</strong>.</p><p>Чтобы подтвердить email, перейдите по ссылке:</p><p><a href='{verify_url}'>Подтвердить email</a></p><p>Или скопируйте: {verify_url}</p><p>Ссылка действует 24 часа.</p>"
     try:
-        params = {"from": "noreply@generator-beloretsk.ru", "to": [email], "subject": "Подтверждение email", "html": html}
+        params = {"from": "noreply@generator-beloretsk.ru", "to": [email], "subject": "Подтверждение email",
+                  "html": html}
         response = await asyncio.to_thread(resend.Emails.send, params)
         logger.info(f"Email через Resend отправлен {email}. ID: {response.get('id')}")
     except Exception as e:
         logger.error(f"Ошибка отправки email через Resend: {e}")
 
+
 # ============ БРОНИРОВАНИЕ ============
 @app.get("/api/busy/{site_id}")
 async def get_busy(site_id: str, session: AsyncSession = Depends(get_session)):
     today = date_type.today().isoformat()
-    result = await session.execute(select(Booking.date, Booking.time, Booking.master, Booking.service).where(Booking.site_id == site_id, Booking.date >= today))
+    result = await session.execute(
+        select(Booking.date, Booking.time, Booking.master, Booking.service).where(Booking.site_id == site_id,
+                                                                                  Booking.date >= today))
     busy = [{"date": row.date, "time": row.time, "master": row.master, "service": row.service} for row in result.all()]
     return {"busy": busy}
 
+
 @app.post("/api/book/{site_id}")
-async def create_booking(site_id: str, data: BookingRequest, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
+async def create_booking(site_id: str, data: BookingRequest, background_tasks: BackgroundTasks,
+                         session: AsyncSession = Depends(get_session)):
     if not data.email: return {"ok": False, "error": "Укажите email"}
 
-    contact_result = await session.execute(select(ClientContact).where(ClientContact.site_id == site_id, ClientContact.email == data.email.strip().lower(), ClientContact.is_verified == True))
+    contact_result = await session.execute(
+        select(ClientContact).where(ClientContact.site_id == site_id, ClientContact.email == data.email.strip().lower(),
+                                    ClientContact.is_verified == True))
     contact = contact_result.scalar_one_or_none()
     if not contact: return {"ok": False, "error": "Email не подтверждён. Зарегистрируйтесь на сайте."}
 
-    existing = await session.execute(select(Booking).where(Booking.site_id == site_id, Booking.master == data.master, Booking.date == data.date, Booking.time == data.time))
+    existing = await session.execute(
+        select(Booking).where(Booking.site_id == site_id, Booking.master == data.master, Booking.date == data.date,
+                              Booking.time == data.time))
     if existing.scalar_one_or_none(): return {"ok": False, "error": "Это время у мастера уже занято"}
 
-    booking = Booking(site_id=site_id, master=data.master, date=data.date, time=data.time, service=data.service, name=data.name, phone=data.phone, comment=data.comment)
+    booking = Booking(site_id=site_id, master=data.master, date=data.date, time=data.time, service=data.service,
+                      name=data.name, phone=data.phone, comment=data.comment)
     session.add(booking)
     try:
         await session.commit()
@@ -221,6 +290,7 @@ async def create_booking(site_id: str, data: BookingRequest, background_tasks: B
     background_tasks.add_task(send_email_resend, site_id, data)
     return {"ok": True}
 
+
 async def send_notifications(text: str, site_id: str):
     token = os.getenv("MAX_BOT_TOKEN")
     admin_id = os.getenv("MAX_ADMIN_ID")
@@ -229,13 +299,19 @@ async def send_notifications(text: str, site_id: str):
         result = await session.execute(select(Subscriber.user_id).where(Subscriber.site_id == site_id))
         recipients = {row.user_id for row in result.all()}
     if admin_id:
-        try: recipients.add(int(admin_id))
-        except ValueError: logger.warning(f"MAX_ADMIN_ID не число: {admin_id}")
+        try:
+            recipients.add(int(admin_id))
+        except ValueError:
+            logger.warning(f"MAX_ADMIN_ID не число: {admin_id}")
     if not recipients: return
     async with httpx.AsyncClient(timeout=15) as client:
         for user_id in recipients:
-            try: await client.post(url, params={"user_id": user_id}, headers={"Authorization": token}, json={"text": text}, timeout=15)
-            except Exception as e: logger.error(f"Не удалось отправить {user_id}: {e}")
+            try:
+                await client.post(url, params={"user_id": user_id}, headers={"Authorization": token},
+                                  json={"text": text}, timeout=15)
+            except Exception as e:
+                logger.error(f"Не удалось отправить {user_id}: {e}")
+
 
 async def send_email_resend(site_id: str, data: BookingRequest):
     resend.api_key = os.getenv("RESEND_API_KEY")

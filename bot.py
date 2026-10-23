@@ -13,7 +13,8 @@ from obabot.fsm import State, StatesGroup, FSMContext
 from ai import generate_content
 from render import render_site, save_site, render_register_page
 from deploy import deploy_to_github
-
+from database import async_session
+from models import Site
 
 load_dotenv()
 
@@ -367,6 +368,18 @@ async def handle_repo(message: Message, state: FSMContext):
 
         register_html = render_register_page(content, server_url=SERVER_URL, site_id=repo_name)
         register_path = save_site(register_html, filename="register.html")
+
+        # СОХРАНЯЕМ В БАЗУ (для редактора в дашборде)
+        async with async_session() as db:
+            site = await db.get(Site, repo_name)
+            if not site:
+                site = Site(id=repo_name, content_json=content.model_dump_json(), owner_id=message.from_user.id)
+                db.add(site)
+            else:
+                site.content_json = content.model_dump_json()
+                site.owner_id = message.from_user.id
+            await db.commit()
+
     except Exception as error:
         logger.exception("Ошибка генерации")
         await message.answer(
@@ -410,7 +423,6 @@ async def handle_repo(message: Message, state: FSMContext):
     except Exception as e:
         logger.warning(f"Не удалось подписать создателя: {e}")
 
-    # Генерируем ссылку на дашборд
     dashboard_url = f"{SERVER_URL}/dashboard/{repo_name}"
 
     await message.answer(

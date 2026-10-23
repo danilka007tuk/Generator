@@ -11,17 +11,25 @@
         .header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .header h1 { font-size: 1.2em; font-weight: 600; }
         .header a { color: #1976d2; text-decoration: none; font-weight: 500; background: #e3f2fd; padding: 8px 16px; border-radius: 8px; }
-        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
-        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .tabs { display: flex; background: #fff; border-bottom: 1px solid #eee; padding: 0 40px; }
+        .tab { padding: 16px 24px; cursor: pointer; font-weight: 500; color: #777; border-bottom: 3px solid transparent; }
+        .tab.active { color: #1976d2; border-bottom-color: #1976d2; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 0.85em; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95em; }
-        tr:last-child td { border-bottom: none; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 600; background: #e8f5e9; color: #2e7d32; }
-        .badge.no { background: #ffebee; color: #c62828; }
         .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
-        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9em; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Inter', sans-serif; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #1976d2; }
+        .btn { padding: 12px 24px; background: #1976d2; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 1em; transition: background 0.2s; }
+        .btn:hover { background: #1565c0; }
+        .btn-save { background: #2e7d32; margin-top: 10px; }
+        .btn-save:hover { background: #1b5e20; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -31,40 +39,56 @@
     <a href="https://danilka007tuk.github.io/{{ site_id }}/" target="_blank">Посмотреть сайт ↗</a>
 </div>
 
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('stats')">📊 Статистика</div>
+    <div class="tab" onclick="switchTab('editor')">✏️ Редактор контента</div>
+</div>
+
 <div class="container">
-    <!-- Список броней -->
-    <div class="card">
-        <h2>📅 Последние бронирования</h2>
-        <table id="bookingsTable">
-            <thead>
-                <tr>
-                    <th>Дата</th>
-                    <th>Время</th>
-                    <th>Мастер</th>
-                    <th>Клиент</th>
-                    <th>Телефон</th>
-                </tr>
-            </thead>
-            <tbody id="bookingsBody">
-                <tr><td colspan="5" class="empty">Загрузка данных...</td></tr>
-            </tbody>
-        </table>
+    <!-- Вкладка Статистики -->
+    <div id="tab-stats">
+        <div class="card">
+            <h2>📅 Последние бронирования</h2>
+            <table id="bookingsTable">
+                <thead><tr><th>Дата</th><th>Время</th><th>Мастер</th><th>Клиент</th><th>Телефон</th></tr></thead>
+                <tbody id="bookingsBody"><tr><td colspan="5" class="empty">Загрузка...</td></tr></tbody>
+            </table>
+        </div>
+        <div class="card">
+            <h2>👥 База клиентов</h2>
+            <div id="clientsInfo">Загрузка...</div>
+        </div>
     </div>
 
-    <!-- Список клиентов -->
-    <div class="card">
-        <h2>👥 База клиентов</h2>
-        <table id="clientsTable">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Статус</th>
-                </tr>
-            </thead>
-            <tbody id="clientsBody">
-                <tr><td colspan="2" class="empty">Загрузка данных...</td></tr>
-            </tbody>
-        </table>
+    <!-- Вкладка Редактора -->
+    <div id="tab-editor" class="hidden">
+        <div class="card">
+            <h2>✏️ Редактирование основного контента</h2>
+            <form id="editorForm">
+                <div class="form-group">
+                    <label>Название компании</label>
+                    <input type="text" id="company_name" name="company_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Главный заголовок (Hero)</label>
+                    <input type="text" id="hero_heading" name="hero_heading" required>
+                </div>
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input type="text" id="company_phone" name="company_phone" required>
+                </div>
+                <div class="form-group">
+                    <label>Адрес</label>
+                    <input type="text" id="company_address" name="company_address" required>
+                </div>
+                <div class="form-group">
+                    <label>Услуги (каждая с новой строки в формате: Название | Цена | Описание)</label>
+                    <textarea id="services" name="services" rows="6" placeholder="Стрижка | 1500 ₽ | Женская стрижка"></textarea>
+                </div>
+                <button type="submit" class="btn btn-save">💾 Сохранить и опубликовать</button>
+                <div id="editorMessage" style="margin-top:15px; font-weight:500;"></div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -72,52 +96,114 @@
     const SITE_ID = "{{ site_id }}";
     const SERVER_URL = "{{ server_url }}";
 
-    async function loadDashboard() {
+    // Переключение вкладок
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => {
+            if (t.textContent.includes(tab === 'stats' ? 'Статистика' : 'Редактор')) t.classList.add('active');
+        });
+        document.getElementById('tab-stats').classList.toggle('hidden', tab !== 'stats');
+        document.getElementById('tab-editor').classList.toggle('hidden', tab !== 'editor');
+        if (tab === 'editor') loadEditor();
+    }
+
+    // Загрузка статистики (брони и клиенты)
+    async function loadStats() {
         try {
-            // Загружаем аналитику/клиентов
-            const resClients = await fetch(`${SERVER_URL}/api/analytics/${SITE_ID}`);
-            const dataClients = await resClients.json();
+            const resB = await fetch(`${SERVER_URL}/api/bookings/${SITE_ID}`);
+            const dataB = await resB.json();
+            const bBody = document.getElementById('bookingsBody');
 
-            const clientsBody = document.getElementById('clientsBody');
-            clientsBody.innerHTML = '';
-
-            if (dataClients.total_contacts === 0) {
-                clientsBody.innerHTML = '<tr><td colspan="2" class="empty">Пока нет зарегистрированных клиентов</td></tr>';
+            if (dataB.bookings && dataB.bookings.length > 0) {
+                bBody.innerHTML = dataB.bookings.map(b =>
+                    `<tr><td>${b.date}</td><td>${b.time}</td><td>${b.master || '—'}</td><td>${b.name}</td><td>${b.phone}</td></tr>`
+                ).join('');
             } else {
-                // В будущем тут будет массив клиентов, пока заглушка
-                clientsBody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:20px;">Всего клиентов: <b>${dataClients.total_contacts}</b><br>Подтверждено: <b>${dataClients.verified_contacts}</b></td></tr>`;
+                bBody.innerHTML = '<tr><td colspan="5" class="empty">Пока нет броней</td></tr>';
             }
 
-            // Загружаем брони (нужно добавить эндпоинт в main.py)
-            const resBookings = await fetch(`${SERVER_URL}/api/bookings/${SITE_ID}`);
-            const dataBookings = await resBookings.json();
-
-            const bookingsBody = document.getElementById('bookingsBody');
-            bookingsBody.innerHTML = '';
-
-            if (dataBookings.bookings.length === 0) {
-                bookingsBody.innerHTML = '<tr><td colspan="5" class="empty">Пока нет броней</td></tr>';
-            } else {
-                dataBookings.bookings.forEach(b => {
-                    bookingsBody.innerHTML += `
-                        <tr>
-                            <td>${b.date}</td>
-                            <td>${b.time}</td>
-                            <td>${b.master || '—'}</td>
-                            <td>${b.name}</td>
-                            <td>${b.phone}</td>
-                        </tr>
-                    `;
-                });
-            }
-
+            const resC = await fetch(`${SERVER_URL}/api/analytics/${SITE_ID}`);
+            const dataC = await resC.json();
+            document.getElementById('clientsInfo').innerHTML = `Всего клиентов: <b>${dataC.total_contacts || 0}</b><br>Подтверждено: <b>${dataC.verified_contacts || 0}</b>`;
         } catch (e) {
-            console.error("Ошибка загрузки данных", e);
-            document.getElementById('bookingsBody').innerHTML = '<tr><td colspan="5" class="empty">Ошибка загрузки</td></tr>';
+            console.error(e);
+            document.getElementById('bookingsBody').innerHTML = '<tr><td colspan="5" class="empty">Ошибка загрузки данных</td></tr>';
         }
     }
 
-    loadDashboard();
+    // Загрузка данных для редактора
+    async function loadEditor() {
+        try {
+            const res = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`);
+            const data = await res.json();
+            if (!data.ok) return alert('Ошибка загрузки контента: ' + (data.error || 'Неизвестно'));
+
+            const c = data.content;
+            document.getElementById('company_name').value = c.company_name || '';
+            document.getElementById('hero_heading').value = c.hero_heading || '';
+            document.getElementById('company_phone').value = c.company_phone || '';
+            document.getElementById('company_address').value = c.company_address || '';
+
+            if (c.services) {
+                document.getElementById('services').value = c.services.map(s =>
+                    `${s.name || ''} | ${s.price || ''} | ${s.description || ''}`
+                ).join('\n');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Ошибка загрузки редактора');
+        }
+    }
+
+    // Обработка формы сохранения
+    document.getElementById('editorForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('editorMessage');
+        msg.textContent = '⏳ Сохранение...';
+        msg.style.color = '#2c3e50';
+
+        try {
+            const res = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`);
+            const data = await res.json();
+            if (!data.ok) throw new Error('Не удалось загрузить текущие данные');
+            let content = data.content;
+
+            // Обновляем поля
+            content.company_name = document.getElementById('company_name').value;
+            content.hero_heading = document.getElementById('hero_heading').value;
+            content.company_phone = document.getElementById('company_phone').value;
+            content.company_address = document.getElementById('company_address').value;
+
+            // Парсим услуги
+            const servicesText = document.getElementById('services').value;
+            content.services = servicesText.split('\n').filter(line => line.trim()).map(line => {
+                const parts = line.split('|').map(s => s.trim());
+                return { name: parts[0] || '', price: parts[1] || '', description: parts[2] || '' };
+            });
+
+            // Отправляем на сервер
+            const saveRes = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(content)
+            });
+            const saveData = await saveRes.json();
+
+            if (saveData.ok) {
+                msg.style.color = '#2e7d32';
+                msg.textContent = '✅ Сохранено и опубликовано!';
+                setTimeout(() => { msg.textContent = ''; }, 3000);
+            } else {
+                throw new Error(saveData.error || 'Неизвестная ошибка сервера');
+            }
+        } catch (err) {
+            msg.style.color = '#c62828';
+            msg.textContent = '❌ Ошибка: ' + err.message;
+        }
+    });
+
+    // Инициализация при загрузке
+    loadStats();
 </script>
 </body>
 </html>
