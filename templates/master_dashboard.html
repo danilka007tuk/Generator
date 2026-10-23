@@ -10,7 +10,7 @@
         body { font-family: 'Inter', sans-serif; background: #f4f6fa; color: #2c3e50; line-height: 1.6; }
         .header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .header h1 { font-size: 1.2em; font-weight: 600; }
-        .header a { color: #1976d2; text-decoration: none; font-weight: 500; background: #e3f2fd; padding: 8px 16px; border-radius: 8px; }
+        .header a { color: #1976d2; text-decoration: none; font-weight: 500; background: #e3f2fd; padding: 8px 16px; border-radius: 8px; margin-left: 10px; }
         .header .logout-btn { background: #c62828; color: #fff; }
         .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -33,6 +33,7 @@
 <div class="header">
     <h1>Кабинет мастера ({{ site_id }})</h1>
     <div>
+        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank">Посмотреть сайт ↗</a>
         <a href="/logout" class="logout-btn">Выйти</a>
     </div>
 </div>
@@ -108,13 +109,8 @@
                 return;
             }
 
-            // Создаем массив для всех 7 дней, по умолчанию "выходной"
             const week = Array.from({length: 7}, (_, i) => ({ weekday: i, start_time: null, end_time: null }));
-
-            // Заполняем данными из БД
-            data.schedule.forEach(item => {
-                week[item.weekday] = item;
-            });
+            data.schedule.forEach(item => { week[item.weekday] = item; });
 
             container.innerHTML = week.map(day => {
                 const dayName = WEEKDAYS[day.weekday];
