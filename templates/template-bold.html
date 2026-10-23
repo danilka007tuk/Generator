@@ -119,9 +119,17 @@
 {% if testimonials %}
 <div class="modal" id="modal-testimonials" onclick="modalOutsideClick(event, 'testimonials')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Отзывы</h2><button class="modal-close" onclick="closeModal('testimonials')">×</button></div><div class="testimonials-grid">{% for t in testimonials %}<div class="testimonial"><div class="stars">{% for i in range(t.rating) %}★{% endfor %}{% for i in range(5 - t.rating) %}☆{% endfor %}</div><div class="text">«{{ t.text }}»</div><div class="author">— {{ t.author }}</div></div>{% endfor %}</div></div></div>
 {% endif %}
-{% if team %}
-<div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div><div class="team-grid">{% for m in team %}<div class="team-member"><div class="avatar">{{ m.name[0] }}</div><h3>{{ m.name }}</h3><div class="role">{{ m.role }}</div><p>{{ m.description }}</p></div>{% endfor %}</div></div></div>
-{% endif %}
+
+<!-- Динамическая команда -->
+<div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div>
+        <div class="team-grid" id="teamGrid">
+            <p style="text-align:center; grid-column:1/-1;">Загрузка...</p>
+        </div>
+    </div>
+</div>
+
 {% if faq %}
 <div class="modal" id="modal-faq" onclick="modalOutsideClick(event, 'faq')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Частые вопросы</h2><button class="modal-close" onclick="closeModal('faq')">×</button></div><div class="faq-list">{% for item in faq %}<div class="faq-item"><h3>{{ item.question }}</h3><p>{{ item.answer }}</p></div>{% endfor %}</div></div></div>
 {% endif %}
@@ -161,10 +169,36 @@
 
     function toggleSidebar() { const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebarOverlay'); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('open'); }
     function closeSidebar() { const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebarOverlay'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('open'); }
-    function openModal(name) { const modal = document.getElementById('modal-' + name); if (!modal) return; modal.classList.add('open'); document.body.style.overflow = 'hidden'; closeSidebar(); if (name === 'booking') { resetBooking(); renderMasters(); } }
+    function openModal(name) { const modal = document.getElementById('modal-' + name); if (!modal) return; modal.classList.add('open'); document.body.style.overflow = 'hidden'; closeSidebar(); if (name === 'booking') { resetBooking(); renderMasters(); } if (name === 'team') { loadTeamToModal(); } }
     function closeModal(name) { const modal = document.getElementById('modal-' + name); if (!modal) return; modal.classList.remove('open'); document.body.style.overflow = ''; }
     function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); document.body.style.overflow = ''; closeSidebar(); } });
+
+    // Динамическая загрузка команды
+    async function loadTeamToModal() {
+        const teamGrid = document.getElementById('teamGrid');
+        if (!teamGrid) return;
+        try {
+            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
+            const data = await res.json();
+            const masters = data.masters || [];
+            if (masters.length === 0) {
+                teamGrid.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Пока нет добавленных мастеров.</p>';
+                return;
+            }
+            teamGrid.innerHTML = masters.map(m => `
+                <div class="team-member">
+                    <div class="avatar">${m.name ? m.name[0] : '?'}</div>
+                    <h3>${m.name}</h3>
+                    <div class="role">${m.role || ''}</div>
+                    <p>${m.description || ''}</p>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error("Ошибка загрузки команды", e);
+            teamGrid.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Ошибка загрузки</p>';
+        }
+    }
 
     async function renderMasters() {
         masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Загрузка мастеров...</p>';
@@ -172,13 +206,11 @@
             const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
             const data = await res.json();
             const currentTeam = data.masters && data.masters.length > 0 ? data.masters : STATIC_TEAM;
-
             masterSelectionEl.innerHTML = '';
             if (currentTeam.length === 0) {
                 masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Мастера не указаны.</p>';
                 return;
             }
-
             currentTeam.forEach(master => {
                 const card = document.createElement('div');
                 card.className = 'master-card';
