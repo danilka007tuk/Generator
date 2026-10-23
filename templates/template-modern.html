@@ -123,7 +123,7 @@
 <div class="modal" id="modal-testimonials" onclick="modalOutsideClick(event, 'testimonials')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Отзывы</h2><button class="modal-close" onclick="closeModal('testimonials')">×</button></div><div class="testimonials-grid">{% for t in testimonials %}<div class="testimonial"><div class="stars">{% for i in range(t.rating) %}★{% endfor %}{% for i in range(5 - t.rating) %}☆{% endfor %}</div><div class="text">«{{ t.text }}»</div><div class="author">— {{ t.author }}</div></div>{% endfor %}</div></div></div>
 {% endif %}
 
-<!-- ИЗМЕНЕНО: Динамическая команда -->
+<!-- Динамическая команда -->
 <div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div>
@@ -177,21 +177,17 @@
     function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); document.body.style.overflow = ''; closeSidebar(); } });
 
-    // Загрузка команды в модальное окно "Наша команда"
     async function loadTeamToModal() {
         const teamGrid = document.getElementById('teamGrid');
         if (!teamGrid) return;
-
         try {
             const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
             const data = await res.json();
             const masters = data.masters || [];
-
             if (masters.length === 0) {
                 teamGrid.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Пока нет добавленных мастеров.</p>';
                 return;
             }
-
             teamGrid.innerHTML = masters.map(m => `
                 <div class="team-member">
                     <div class="avatar">${m.name ? m.name[0] : '?'}</div>
@@ -206,16 +202,70 @@
         }
     }
 
-    async function renderMasters() { /* ... (код из предыдущего ответа, без изменений) ... */ }
-    async function selectMaster(master, card) { /* ... (код из предыдущего ответа) ... */ }
-    async function loadBusySlots() { /* ... (код из предыдущего ответа) ... */ }
-    function isSlotBusy(date, time) { /* ... (код из предыдущего ответа) ... */ }
-    function renderCalendar() { /* ... (код из предыдущего ответа) ... */ }
-    function formatISO(date) { /* ... (код из предыдущего ответа) ... */ }
-    function selectDate(iso, dateObj) { /* ... (код из предыдущего ответа) ... */ }
-    function generateTimeSlots() { /* ... (код из предыдущего ответа) ... */ }
-    function selectTime(slot, timeStr) { /* ... (код из предыдущего ответа) ... */ }
-    function resetBooking() { /* ... (код из предыдущего ответа) ... */ }
+    async function renderMasters() {
+        if (!masterSelectionEl) {
+            console.error("Контейнер masterSelection не найден!");
+            return;
+        }
+        masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Загрузка мастеров...</p>';
+        try {
+            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
+            const data = await res.json();
+            const currentTeam = data.masters && data.masters.length > 0 ? data.masters : STATIC_TEAM;
+            masterSelectionEl.innerHTML = '';
+            if (currentTeam.length === 0) {
+                masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Мастера не указаны.</p>';
+                return;
+            }
+            currentTeam.forEach(master => {
+                const card = document.createElement('div');
+                card.className = 'master-card';
+                card.innerHTML = `
+                    <div class="master-avatar">${master.name ? master.name[0] : '?'}</div>
+                    <h3>${master.name}</h3>
+                    <div class="role">${master.role || ''}</div>
+                `;
+                card.onclick = async () => await selectMaster(master, card);
+                masterSelectionEl.appendChild(card);
+            });
+        } catch (e) {
+            console.error("Ошибка загрузки мастеров", e);
+            masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Ошибка загрузки мастеров</p>';
+        }
+    }
+
+    async function selectMaster(master, card) {
+        document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedMaster = master;
+        serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>';
+        const services = master.services && master.services.length > 0 ? master.services : [];
+        services.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            serviceSelect.appendChild(opt);
+        });
+        stepMaster.style.display = 'none';
+        stepCalendar.style.display = 'block';
+        timeSlotsWrapper.style.display = 'none';
+        formEl.classList.remove('active');
+        await loadBusySlots();
+        renderCalendar();
+    }
+
+    async function loadBusySlots() { try { const res = await fetch(`${SERVER_URL}/api/busy/${SITE_ID}`); const data = await res.json(); busySlots = data.busy || []; } catch (e) { console.error('Не удалось загрузить занятые слоты', e); busySlots = []; } }
+    function isSlotBusy(date, time) { if (!selectedMaster) return false; return busySlots.some(b => b.date === date && b.time === time && b.master === selectedMaster.name); }
+
+    function renderCalendar() { if (!daysEl) return; const year = currentMonth.getFullYear(); const month = currentMonth.getMonth(); const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']; monthYearEl.textContent = monthNames[month] + ' ' + year; const firstDay = new Date(year, month, 1); const totalDays = new Date(year, month + 1, 0).getDate(); let startOffset = firstDay.getDay() - 1; if (startOffset < 0) startOffset = 6; daysEl.innerHTML = ''; for (let i = 0; i < startOffset; i++) { const empty = document.createElement('div'); empty.className = 'day empty'; daysEl.appendChild(empty); } const today = new Date(); today.setHours(0,0,0,0); for (let d = 1; d <= totalDays; d++) { const dateObj = new Date(year, month, d); const iso = formatISO(dateObj); const dayEl = document.createElement('div'); dayEl.className = 'day'; dayEl.textContent = d; if (dateObj < today) dayEl.classList.add('disabled'); else { if (iso === formatISO(today)) dayEl.classList.add('today'); if (iso === selectedDate) dayEl.classList.add('selected'); dayEl.addEventListener('click', () => selectDate(iso, dateObj)); } daysEl.appendChild(dayEl); } }
+    function formatISO(date) { const y = date.getFullYear(); const m = String(date.getMonth() + 1).padStart(2, '0'); const d = String(date.getDate()).padStart(2, '0'); return `${y}-${m}-${d}`; }
+    function selectDate(iso, dateObj) { selectedDate = iso; selectedTime = null; const formatted = dateObj.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' }); if (selectedDateEl) selectedDateEl.textContent = formatted; if (selectedTimeText) selectedTimeText.textContent = '—'; formEl.classList.remove('active'); renderCalendar(); generateTimeSlots(); }
+
+    function generateTimeSlots() { let start = 9, end = 20; const match = WORKING_HOURS.match(/(\d{1,2}):\d{2}\s*-\s*(\d{1,2}):\d{2}/); if (match) { start = parseInt(match[1]); end = parseInt(match[2]); } timeSlotsEl.innerHTML = ''; timeSlotsWrapper.style.display = 'block'; for (let h = start; h < end; h++) { const timeStr = String(h).padStart(2, '0') + ':00'; const slot = document.createElement('div'); slot.className = 'time-slot'; slot.textContent = timeStr; if (isSlotBusy(selectedDate, timeStr)) slot.classList.add('busy'); else slot.onclick = () => selectTime(slot, timeStr); timeSlotsEl.appendChild(slot); } }
+
+    function selectTime(slot, timeStr) { document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected')); slot.classList.add('selected'); selectedTime = timeStr; if (selectedTimeText) selectedTimeText.textContent = timeStr; formEl.classList.add('active'); formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+
+    function resetBooking() { selectedMaster = null; selectedDate = null; selectedTime = null; stepMaster.style.display = 'block'; stepCalendar.style.display = 'none'; timeSlotsWrapper.style.display = 'none'; formEl.classList.remove('active'); serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>'; if (selectedDateEl) selectedDateEl.textContent = '—'; if (selectedTimeText) selectedTimeText.textContent = '—'; }
     const prevBtn = document.getElementById('prevMonth'); const nextBtn = document.getElementById('nextMonth'); if (prevBtn) prevBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); }); if (nextBtn) nextBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); });
 
     if (formEl) {

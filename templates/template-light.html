@@ -204,6 +204,7 @@
     }
 
     async function renderMasters() {
+        if (!masterSelectionEl) { console.error("Контейнер masterSelection не найден!"); return; }
         masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Загрузка мастеров...</p>';
         try {
             const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);

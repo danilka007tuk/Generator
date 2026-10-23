@@ -174,7 +174,6 @@
     function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); document.body.style.overflow = ''; closeSidebar(); } });
 
-    // Динамическая загрузка команды
     async function loadTeamToModal() {
         const teamGrid = document.getElementById('teamGrid');
         if (!teamGrid) return;
@@ -201,6 +200,7 @@
     }
 
     async function renderMasters() {
+        if (!masterSelectionEl) { console.error("Контейнер masterSelection не найден!"); return; }
         masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Загрузка мастеров...</p>';
         try {
             const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
