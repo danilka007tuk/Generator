@@ -65,11 +65,15 @@ async def index():
 # ============ ДАШБОРД (ЛИЧНЫЙ КАБИНЕТ) ============
 @app.get("/dashboard/{site_id}", response_class=HTMLResponse)
 async def dashboard(site_id: str, request: Request):
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request,
-        "site_id": site_id,
-        "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")
-    })
+    # ИСПРАВЛЕНО: правильный вызов TemplateResponse для новых версий FastAPI
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard.html",
+        context={
+            "site_id": site_id,
+            "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")
+        }
+    )
 
 # ============ АНАЛИТИКА ============
 @app.get("/api/analytics/{site_id}")
