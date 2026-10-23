@@ -20,16 +20,18 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 0.85em; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95em; }
-        .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9em; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Inter', sans-serif; }
-        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #1976d2; }
-        .btn { padding: 12px 24px; background: #1976d2; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 1em; transition: background 0.2s; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Inter', sans-serif; }
+        .btn { padding: 12px 24px; background: #1976d2; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 1em; }
         .btn:hover { background: #1565c0; }
         .btn-save { background: #2e7d32; margin-top: 10px; }
         .btn-save:hover { background: #1b5e20; }
+        .btn-danger { background: #c62828; padding: 6px 12px; font-size: 0.8em; }
         .hidden { display: none; }
+        .master-card { border: 1px solid #eee; border-radius: 8px; padding: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .master-info h3 { margin: 0 0 4px; font-size: 1.1em; }
+        .master-info p { margin: 0; color: #666; font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -41,7 +43,8 @@
 
 <div class="tabs">
     <div class="tab active" onclick="switchTab('stats')">📊 Статистика</div>
-    <div class="tab" onclick="switchTab('editor')">✏️ Редактор контента</div>
+    <div class="tab" onclick="switchTab('editor')">✏️ Контент</div>
+    <div class="tab" onclick="switchTab('staff')">👥 Персонал</div>
 </div>
 
 <div class="container">
@@ -60,33 +63,35 @@
         </div>
     </div>
 
-    <!-- Вкладка Редактора -->
+    <!-- Вкладка Редактора Контента -->
     <div id="tab-editor" class="hidden">
         <div class="card">
-            <h2>✏️ Редактирование основного контента</h2>
+            <h2>✏️ Редактирование контента</h2>
             <form id="editorForm">
-                <div class="form-group">
-                    <label>Название компании</label>
-                    <input type="text" id="company_name" name="company_name" required>
-                </div>
-                <div class="form-group">
-                    <label>Главный заголовок (Hero)</label>
-                    <input type="text" id="hero_heading" name="hero_heading" required>
-                </div>
-                <div class="form-group">
-                    <label>Телефон</label>
-                    <input type="text" id="company_phone" name="company_phone" required>
-                </div>
-                <div class="form-group">
-                    <label>Адрес</label>
-                    <input type="text" id="company_address" name="company_address" required>
-                </div>
-                <div class="form-group">
-                    <label>Услуги (каждая с новой строки в формате: Название | Цена | Описание)</label>
-                    <textarea id="services" name="services" rows="6" placeholder="Стрижка | 1500 ₽ | Женская стрижка"></textarea>
-                </div>
+                <div class="form-group"><label>Название компании</label><input type="text" id="company_name" required></div>
+                <div class="form-group"><label>Главный заголовок</label><input type="text" id="hero_heading" required></div>
+                <div class="form-group"><label>Телефон</label><input type="text" id="company_phone" required></div>
+                <div class="form-group"><label>Адрес</label><input type="text" id="company_address" required></div>
+                <div class="form-group"><label>Услуги (Название | Цена | Описание)</label><textarea id="services" rows="6"></textarea></div>
                 <button type="submit" class="btn btn-save">💾 Сохранить и опубликовать</button>
                 <div id="editorMessage" style="margin-top:15px; font-weight:500;"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Вкладка Персонала -->
+    <div id="tab-staff" class="hidden">
+        <div class="card">
+            <h2>👥 Сотрудники (Мастера)</h2>
+            <div id="mastersList"></div>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+            <h3>Добавить мастера</h3>
+            <form id="masterForm">
+                <div class="form-group"><label>Имя</label><input type="text" id="m_name" required></div>
+                <div class="form-group"><label>Должность</label><input type="text" id="m_role" placeholder="Например: Парикмахер"></div>
+                <div class="form-group"><label>Описание</label><input type="text" id="m_desc" placeholder="Опыт 5 лет..."></div>
+                <div class="form-group"><label>Услуги (через запятую)</label><input type="text" id="m_services" placeholder="Стрижка, Укладка"></div>
+                <button type="submit" class="btn">➕ Добавить</button>
             </form>
         </div>
     </div>
@@ -96,113 +101,117 @@
     const SITE_ID = "{{ site_id }}";
     const SERVER_URL = "{{ server_url }}";
 
-    // Переключение вкладок
     function switchTab(tab) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => {
-            if (t.textContent.includes(tab === 'stats' ? 'Статистика' : 'Редактор')) t.classList.add('active');
+            if (t.textContent.includes(tab === 'stats' ? 'Статистика' : (tab === 'editor' ? 'Контент' : 'Персонал'))) t.classList.add('active');
         });
         document.getElementById('tab-stats').classList.toggle('hidden', tab !== 'stats');
         document.getElementById('tab-editor').classList.toggle('hidden', tab !== 'editor');
+        document.getElementById('tab-staff').classList.toggle('hidden', tab !== 'staff');
+
         if (tab === 'editor') loadEditor();
+        if (tab === 'staff') loadMasters();
     }
 
-    // Загрузка статистики (брони и клиенты)
+    // --- СТАТИСТИКА ---
     async function loadStats() {
         try {
             const resB = await fetch(`${SERVER_URL}/api/bookings/${SITE_ID}`);
             const dataB = await resB.json();
             const bBody = document.getElementById('bookingsBody');
-
-            if (dataB.bookings && dataB.bookings.length > 0) {
-                bBody.innerHTML = dataB.bookings.map(b =>
-                    `<tr><td>${b.date}</td><td>${b.time}</td><td>${b.master || '—'}</td><td>${b.name}</td><td>${b.phone}</td></tr>`
-                ).join('');
-            } else {
-                bBody.innerHTML = '<tr><td colspan="5" class="empty">Пока нет броней</td></tr>';
-            }
+            bBody.innerHTML = dataB.bookings.length === 0 ? '<tr><td colspan="5" class="empty">Пока нет броней</td></tr>' : dataB.bookings.map(b => `<tr><td>${b.date}</td><td>${b.time}</td><td>${b.master || '—'}</td><td>${b.name}</td><td>${b.phone}</td></tr>`).join('');
 
             const resC = await fetch(`${SERVER_URL}/api/analytics/${SITE_ID}`);
             const dataC = await resC.json();
-            document.getElementById('clientsInfo').innerHTML = `Всего клиентов: <b>${dataC.total_contacts || 0}</b><br>Подтверждено: <b>${dataC.verified_contacts || 0}</b>`;
-        } catch (e) {
-            console.error(e);
-            document.getElementById('bookingsBody').innerHTML = '<tr><td colspan="5" class="empty">Ошибка загрузки данных</td></tr>';
-        }
+            document.getElementById('clientsInfo').innerHTML = `Всего клиентов: <b>${dataC.total_contacts}</b><br>Подтверждено: <b>${dataC.verified_contacts}</b>`;
+        } catch (e) { console.error(e); }
     }
 
-    // Загрузка данных для редактора
+    // --- КОНТЕНТ ---
     async function loadEditor() {
         try {
             const res = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`);
             const data = await res.json();
-            if (!data.ok) return alert('Ошибка загрузки контента: ' + (data.error || 'Неизвестно'));
-
+            if (!data.ok) return alert('Ошибка загрузки контента');
             const c = data.content;
             document.getElementById('company_name').value = c.company_name || '';
             document.getElementById('hero_heading').value = c.hero_heading || '';
             document.getElementById('company_phone').value = c.company_phone || '';
             document.getElementById('company_address').value = c.company_address || '';
-
-            if (c.services) {
-                document.getElementById('services').value = c.services.map(s =>
-                    `${s.name || ''} | ${s.price || ''} | ${s.description || ''}`
-                ).join('\n');
-            }
-        } catch (e) {
-            console.error(e);
-            alert('Ошибка загрузки редактора');
-        }
+            if (c.services) document.getElementById('services').value = c.services.map(s => `${s.name} | ${s.price} | ${s.description}`).join('\n');
+        } catch (e) { console.error(e); }
     }
 
-    // Обработка формы сохранения
     document.getElementById('editorForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const msg = document.getElementById('editorMessage');
         msg.textContent = '⏳ Сохранение...';
-        msg.style.color = '#2c3e50';
-
         try {
             const res = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`);
             const data = await res.json();
-            if (!data.ok) throw new Error('Не удалось загрузить текущие данные');
             let content = data.content;
-
-            // Обновляем поля
             content.company_name = document.getElementById('company_name').value;
             content.hero_heading = document.getElementById('hero_heading').value;
             content.company_phone = document.getElementById('company_phone').value;
             content.company_address = document.getElementById('company_address').value;
 
-            // Парсим услуги
             const servicesText = document.getElementById('services').value;
             content.services = servicesText.split('\n').filter(line => line.trim()).map(line => {
                 const parts = line.split('|').map(s => s.trim());
                 return { name: parts[0] || '', price: parts[1] || '', description: parts[2] || '' };
             });
 
-            // Отправляем на сервер
-            const saveRes = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(content)
-            });
+            const saveRes = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(content) });
             const saveData = await saveRes.json();
-
-            if (saveData.ok) {
-                msg.style.color = '#2e7d32';
-                msg.textContent = '✅ Сохранено и опубликовано!';
-                setTimeout(() => { msg.textContent = ''; }, 3000);
-            } else {
-                throw new Error(saveData.error || 'Неизвестная ошибка сервера');
-            }
-        } catch (err) {
-            msg.style.color = '#c62828';
-            msg.textContent = '❌ Ошибка: ' + err.message;
-        }
+            if (saveData.ok) { msg.style.color = '#2e7d32'; msg.textContent = '✅ Сохранено!'; } else throw new Error(saveData.error);
+        } catch (err) { msg.style.color = '#c62828'; msg.textContent = '❌ ' + err.message; }
     });
 
-    // Инициализация при загрузке
+    // --- ПЕРСОНАЛ ---
+    async function loadMasters() {
+        try {
+            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
+            const data = await res.json();
+            const list = document.getElementById('mastersList');
+            if (data.masters.length === 0) {
+                list.innerHTML = '<p class="empty">Пока нет добавленных мастеров.</p>';
+                return;
+            }
+            list.innerHTML = data.masters.map(m => `
+                <div class="master-card">
+                    <div class="master-info">
+                        <h3>${m.name}</h3>
+                        <p>${m.role || 'Должность не указана'} • Услуги: ${m.services.join(', ') || 'Нет'}</p>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteMaster(${m.id})">Удалить</button>
+                </div>
+            `).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    document.getElementById('masterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('m_name').value;
+        const role = document.getElementById('m_role').value;
+        const desc = document.getElementById('m_desc').value;
+        const services = document.getElementById('m_services').value.split(',').map(s => s.trim()).filter(s => s);
+
+        await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name, role, description: desc, services })
+        });
+        document.getElementById('masterForm').reset();
+        loadMasters();
+    });
+
+    async function deleteMaster(id) {
+        if (!confirm('Удалить мастера?')) return;
+        await fetch(`${SERVER_URL}/api/masters/${id}`, { method: 'DELETE' });
+        loadMasters();
+    }
+
     loadStats();
 </script>
 </body>

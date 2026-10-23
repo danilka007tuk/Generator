@@ -55,6 +55,30 @@ class Site(Base):
     """Хранит сгенерированный контент сайта для редактирования через дашборд."""
     __tablename__ = "sites"
 
-    id: Mapped[str] = mapped_column(String(100), primary_key=True) # site_id
-    owner_id: Mapped[int] = mapped_column(Integer, default=0) # ID пользователя MAX
-    content_json: Mapped[str] = mapped_column(String, default="{}") # Весь контент в JSON
+    id: Mapped[str] = mapped_column(String(100), primary_key=True)  # site_id
+    owner_id: Mapped[int] = mapped_column(Integer, default=0)  # ID пользователя MAX
+    content_json: Mapped[str] = mapped_column(String, default="{}")  # Весь контент в JSON
+
+
+class Master(Base):
+    """Мастера (сотрудники) сайта."""
+    __tablename__ = "masters"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    site_id: Mapped[str] = mapped_column(String(100), index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    role: Mapped[str] = mapped_column(String(100), default="")
+    description: Mapped[str] = mapped_column(String(500), default="")
+    services: Mapped[str] = mapped_column(String(500), default="")  # Услуги через запятую
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class MasterSchedule(Base):
+    """График работы мастера (какие дни и часы он работает)."""
+    __tablename__ = "master_schedules"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    master_id: Mapped[int] = mapped_column(Integer, index=True)
+    weekday: Mapped[int] = mapped_column(Integer)  # 0=Пн, 6=Вс
+    start_time: Mapped[str] = mapped_column(String(5), default="10:00")
+    end_time: Mapped[str] = mapped_column(String(5), default="20:00")
