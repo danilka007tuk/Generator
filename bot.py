@@ -459,9 +459,6 @@ async def handle_repo(message: Message, state: FSMContext):
     except Exception as e:
         logger.warning(f"Не удалось подписать создателя: {e}")
 
-    dashboard_url = f"{SERVER_URL}/dashboard/{repo_name}"
-    login_url = f"https://danilka007tuk.github.io/{repo_name}/login.html"
-
     await message.answer(
         "✅ Готово! Сайт опубликован.\n"
         "\n"
@@ -471,19 +468,13 @@ async def handle_repo(message: Message, state: FSMContext):
         f"{url}\n"
         "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📊 Личный кабинет (управление):\n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"{dashboard_url}\n"
-        "\n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "🔑 Данные для входа админа:\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"Ссылка: {login_url}\n"
         f"Email: {admin_email}\n"
         f"Пароль: {admin_password}\n"
         "\n"
         "⚠️ Сохраните этот пароль! Он нужен для входа в личный кабинет.\n"
-        "📬 Вы будете получать уведомления о заявках в этот чат."
+        "📬 Уведомления о заявках будут приходить в этот чат."
     )
     await state.clear()
 
