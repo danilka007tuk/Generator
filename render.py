@@ -40,11 +40,11 @@ DEFAULT_SIDEBAR_ITEMS = [
     {"label": "Контакты", "anchor": "#contacts", "icon": "📞"},
 ]
 
-# Добавляем таймаут (60 секунд), чтобы бот не висел
+# Таймаут увеличен до 120 секунд, так как генерация картинок иногда занимает время
 provod_client = OpenAI(
     api_key=os.getenv("PROVOD_API_KEY"),
     base_url="https://api.provod.ai/v1",
-    timeout=60.0,
+    timeout=120.0,
 )
 
 
@@ -59,17 +59,19 @@ def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) ->
         return ""
 
     try:
-        # Убедимся, что IMAGES_DIR существует
         IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"Генерация картинки: {prompt[:50]}...")
+
+        # Убрали response_format="b64_json", так как gpt-image-2 возвращает его по умолчанию
+        # Используем размер 1024x1024, который точно поддерживается
         response = provod_client.images.generate(
             model="openai/gpt-image-2",
             prompt=prompt,
             size=f"{width}x{height}",
             n=1,
-            response_format="b64_json",
         )
+
         b64 = response.data[0].b64_json
         if not b64:
             logger.warning("provod.ai вернул пустой base64")
@@ -190,7 +192,8 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     hero_prompt = data.get("hero_image_prompt", "")
     if not hero_prompt:
         hero_prompt = f"Beautiful interior for {data.get('company_name', 'business')}, photorealistic"
-    data["hero_image_url"] = generate_image_provod(hero_prompt, width=1792, height=1024)
+    # Для hero используем размер 1024x1024, чтобы избежать ошибки 502 от provod.ai
+    data["hero_image_url"] = generate_image_provod(hero_prompt, width=1024, height=1024)
 
     data["color_primary"] = clean_color(data.get("color_primary", ""), "#667eea")
     data["color_secondary"] = clean_color(data.get("color_secondary", ""), "#764ba2")
