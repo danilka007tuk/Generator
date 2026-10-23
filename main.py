@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,14 +20,10 @@ from sqlalchemy.exc import IntegrityError
 
 from database import init_db, get_session, async_session
 from models import Booking, Subscriber, ClientContact
-from schemas import SiteContent
 
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 logger = logging.getLogger("uvicorn.error")
-templates = Jinja2Templates(directory="templates")
-
-sites_content: dict[str, SiteContent] = {}
 
 class SubscriberRequest(BaseModel):
     user_id: int
@@ -61,8 +56,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+@app.get("/")
+async def index():
     return {"message": "Сервер работает. Бот запущен отдельно."}
 
 # ============ АНАЛИТИКА ============
@@ -193,7 +188,7 @@ async def send_verification_email(site_id: str, email: str, token: str):
         logger.warning("RESEND_API_KEY не задан — письмо не отправлено")
         return
 
-    server_url = os.getenv("SERVER_URL", "http://127.0.0.1:8001")
+    server_url = os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")
     verify_url = f"{server_url}/api/verify-client?token={token}"
 
     html = f"""
@@ -218,16 +213,6 @@ async def send_verification_email(site_id: str, email: str, token: str):
         logger.error(f"Ошибка отправки email через Resend: {e}")
 
 # ============ БРОНИРОВАНИЕ ============
-@app.get("/site/{site_id}", response_class=HTMLResponse)
-async def show_site(site_id: str, request: Request):
-    content = sites_content.get(site_id)
-    if not content:
-        return HTMLResponse("Сайт не найден", status_code=404)
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request, "site": content, "site_id": site_id},
-    )
-
 @app.get("/api/busy/{site_id}")
 async def get_busy(site_id: str, session: AsyncSession = Depends(get_session)):
     today = date_type.today().isoformat()
