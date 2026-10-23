@@ -57,24 +57,7 @@
 </head>
 <body>
 
-<script>
-    (async function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const verified = urlParams.get('verified');
-        if (verified) { window.history.replaceState({}, '', 'index.html'); setTimeout(() => { openModal('booking'); }, 500); return; }
-        const email = sessionStorage.getItem('user_email');
-        const siteId = {{ site_id | default("site") | tojson }};
-        const serverUrl = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
-        if (email) {
-            try {
-                const res = await fetch(`${serverUrl}/api/check-email/${siteId}?email=${encodeURIComponent(email)}`);
-                const data = await res.json();
-                if (data.exists && data.is_verified) return;
-            } catch (e) {}
-        }
-        window.location.replace('register.html');
-    })();
-</script>
+<!-- Старый скрипт в <body> УДАЛЕН. Остался только тот, что вставляет render.py в <head> -->
 
 <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
