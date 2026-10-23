@@ -36,6 +36,7 @@ class Form(StatesGroup):
     waiting_hours = State()
     waiting_template = State()
     waiting_palette = State()
+    waiting_admin_email = State()
     waiting_repo = State()
 
 
@@ -303,7 +304,34 @@ async def handle_palette(message: Message, state: FSMContext):
         "✅ Палитра выбрана!\n"
         "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📝 Шаг 9. Имя для сайта\n"
+        "📧 Шаг 9. Email для входа админа\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Введите email, который будет использоваться для входа в личный кабинет администратора.\n"
+        "На него будет отправлен пароль.\n"
+        "\n"
+        "Пример: admin@example.com"
+    )
+    await state.set_state(Form.waiting_admin_email)
+
+
+@router.message(Form.waiting_admin_email)
+async def handle_admin_email(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
+    email = message.text.strip().lower()
+    if "@" not in email or "." not in email:
+        await message.answer("❌ Неверный email. Попробуйте снова:")
+        return
+
+    await state.update_data(admin_email=email)
+
+    await message.answer(
+        "✅ Email записан!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 Шаг 10. Имя для сайта\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
         "Придумайте короткое имя для сайта.\n"
@@ -371,20 +399,20 @@ async def handle_repo(message: Message, state: FSMContext):
         register_html = render_register_page(content, server_url=SERVER_URL, site_id=repo_name)
         register_path = save_site(register_html, filename="register.html")
 
-        # ГЕНЕРАЦИЯ ПАРОЛЯ АДМИНА
         admin_password = secrets.token_urlsafe(8)
         admin_hash = hashlib.sha256(admin_password.encode()).hexdigest()
+        admin_email = data.get('admin_email', '')
 
-        # СОХРАНЯЕМ В БАЗУ (для редактора в дашборде)
         async with async_session() as db:
             site = await db.get(Site, repo_name)
             if not site:
                 site = Site(id=repo_name, content_json=content.model_dump_json(), owner_id=message.from_user.id,
-                            admin_password=admin_hash)
+                            admin_email=admin_email, admin_password=admin_hash)
                 db.add(site)
             else:
                 site.content_json = content.model_dump_json()
                 site.owner_id = message.from_user.id
+                site.admin_email = admin_email
                 site.admin_password = admin_hash
             await db.commit()
 
@@ -451,7 +479,7 @@ async def handle_repo(message: Message, state: FSMContext):
         "🔑 Данные для входа админа:\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Ссылка: {login_url}\n"
-        f"Email: ваш email\n"
+        f"Email: {admin_email}\n"
         f"Пароль: {admin_password}\n"
         "\n"
         "⚠️ Сохраните этот пароль! Он нужен для входа в личный кабинет.\n"

@@ -55,6 +55,7 @@ class LoginRequest(BaseModel):
     site_id: str
     email: str
     password: str = ""
+    role: str = "client"
 
 
 @asynccontextmanager
@@ -81,16 +82,28 @@ async def index():
 # ============ АВТОРИЗАЦИЯ ============
 @app.post("/api/login")
 async def login(data: LoginRequest, response: Response, session: AsyncSession = Depends(get_session)):
-    # 1. Проверяем, админ ли это (по паролю)
-    site = await session.get(Site, data.site_id)
-    if site and site.admin_password:
-        if hashlib.sha256(data.password.encode()).hexdigest() == site.admin_password:
-            response.set_cookie(key="role", value="admin", httponly=True)
-            response.set_cookie(key="site_id", value=data.site_id, httponly=True)
-            return {"ok": True, "role": "admin", "redirect": "/dashboard/" + data.site_id}
-
-    # 2. Проверяем, зарегистрирован ли клиент
     email = data.email.strip().lower()
+
+    if data.role == "admin":
+        site = await session.get(Site, data.site_id)
+        if site and site.admin_email == email and site.admin_password:
+            if hashlib.sha256(data.password.encode()).hexdigest() == site.admin_password:
+                response.set_cookie(key="role", value="admin", httponly=True)
+                response.set_cookie(key="site_id", value=data.site_id, httponly=True)
+                return {"ok": True, "role": "admin", "redirect": f"/dashboard/{data.site_id}"}
+        return {"ok": False, "error": "Неверный email или пароль администратора"}
+
+    if data.role == "master":
+        result = await session.execute(select(Master).where(Master.site_id == data.site_id, Master.email == email))
+        master = result.scalar_one_or_none()
+        if master and master.password_hash:
+            if hashlib.sha256(data.password.encode()).hexdigest() == master.password_hash:
+                response.set_cookie(key="role", value="master", httponly=True)
+                response.set_cookie(key="site_id", value=data.site_id, httponly=True)
+                response.set_cookie(key="email", value=email, httponly=True)
+                return {"ok": True, "role": "master", "redirect": f"/master_dashboard/{data.site_id}"}
+        return {"ok": False, "error": "Неверный email или пароль мастера"}
+
     result = await session.execute(
         select(ClientContact).where(ClientContact.site_id == data.site_id, ClientContact.email == email)
     )
@@ -101,7 +114,7 @@ async def login(data: LoginRequest, response: Response, session: AsyncSession = 
             response.set_cookie(key="role", value="client", httponly=True)
             response.set_cookie(key="email", value=email, httponly=True)
             response.set_cookie(key="site_id", value=data.site_id, httponly=True)
-            return {"ok": True, "role": "client", "redirect": "/client_dashboard/" + data.site_id}
+            return {"ok": True, "role": "client", "redirect": f"/client_dashboard/{data.site_id}"}
         else:
             return {"ok": False, "error": "Email не подтвержден. Проверьте почту."}
 
@@ -126,6 +139,15 @@ async def client_dashboard(site_id: str, request: Request):
     )
 
 
+@app.get("/master_dashboard/{site_id}", response_class=HTMLResponse)
+async def master_dashboard(site_id: str, request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="master_dashboard.html",
+        context={"site_id": site_id, "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")}
+    )
+
+
 @app.get("/api/my-bookings")
 async def get_my_bookings(
         email: str = Cookie(None),
@@ -134,7 +156,6 @@ async def get_my_bookings(
 ):
     if not email or not site_id:
         return {"ok": False, "error": "Не авторизован"}
-
     result = await session.execute(
         select(Booking).where(Booking.site_id == site_id, Booking.email == email).order_by(Booking.date.desc(),
                                                                                            Booking.time.desc())
@@ -144,6 +165,55 @@ async def get_my_bookings(
         {"date": b.date, "time": b.time, "master": b.master, "service": b.service, "name": b.name, "phone": b.phone}
         for b in bookings
     ]}
+
+
+@app.get("/api/master-bookings")
+async def get_master_bookings(
+        email: str = Cookie(None),
+        site_id: str = Cookie(None),
+        session: AsyncSession = Depends(get_session)
+):
+    if not email or not site_id:
+        return {"ok": False, "error": "Не авторизован"}
+
+    master_res = await session.execute(select(Master).where(Master.site_id == site_id, Master.email == email))
+    master = master_res.scalar_one_or_none()
+    if not master:
+        return {"ok": False, "error": "Мастер не найден"}
+
+    result = await session.execute(
+        select(Booking).where(Booking.site_id == site_id, Booking.master == master.name).order_by(Booking.date.desc(),
+                                                                                                  Booking.time.desc())
+    )
+    bookings = result.scalars().all()
+    return {"ok": True, "bookings": [
+        {"date": b.date, "time": b.time, "service": b.service, "name": b.name, "phone": b.phone, "comment": b.comment}
+        for b in bookings
+    ]}
+
+
+@app.get("/api/master-schedule")
+async def get_master_schedule(
+        email: str = Cookie(None),
+        site_id: str = Cookie(None),
+        session: AsyncSession = Depends(get_session)
+):
+    if not email or not site_id:
+        return {"ok": False, "error": "Не авторизован"}
+
+    master_res = await session.execute(select(Master).where(Master.site_id == site_id, Master.email == email))
+    master = master_res.scalar_one_or_none()
+    if not master:
+        return {"ok": False, "error": "Мастер не найден"}
+
+    result = await session.execute(select(MasterSchedule).where(MasterSchedule.master_id == master.id))
+    schedules = result.scalars().all()
+
+    schedule_list = []
+    for s in schedules:
+        schedule_list.append({"weekday": s.weekday, "start_time": s.start_time, "end_time": s.end_time})
+
+    return {"ok": True, "schedule": schedule_list}
 
 
 @app.get("/logout")
@@ -198,7 +268,8 @@ async def get_masters(site_id: str, session: AsyncSession = Depends(get_session)
     masters = result.scalars().all()
     return {"masters": [
         {"id": m.id, "name": m.name, "role": m.role, "description": m.description,
-         "services": m.services.split(",") if m.services else [], "is_active": m.is_active}
+         "services": m.services.split(",") if m.services else [], "is_active": m.is_active,
+         "email": m.email}
         for m in masters
     ]}
 
@@ -206,8 +277,16 @@ async def get_masters(site_id: str, session: AsyncSession = Depends(get_session)
 @app.post("/api/masters/{site_id}")
 async def create_master(site_id: str, data: dict = Body(...), session: AsyncSession = Depends(get_session)):
     services_str = ",".join(data.get("services", []))
-    master = Master(site_id=site_id, name=data.get("name", ""), role=data.get("role", ""),
-                    description=data.get("description", ""), services=services_str)
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+
+    password_hash = hashlib.sha256(password.encode()).hexdigest() if password else ""
+
+    master = Master(
+        site_id=site_id, name=data.get("name", ""), role=data.get("role", ""),
+        description=data.get("description", ""), services=services_str,
+        email=email, password_hash=password_hash
+    )
     session.add(master)
     await session.commit()
     return {"ok": True, "id": master.id}
@@ -367,7 +446,6 @@ async def create_booking(site_id: str, data: BookingRequest, background_tasks: B
                               Booking.time == data.time))
     if existing.scalar_one_or_none(): return {"ok": False, "error": "Это время у мастера уже занято"}
 
-    # СОХРАНЯЕМ EMAIL В БРОНИ
     booking = Booking(site_id=site_id, master=data.master, date=data.date, time=data.time, service=data.service,
                       name=data.name, phone=data.phone, email=data.email, comment=data.comment)
     session.add(booking)

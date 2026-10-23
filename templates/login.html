@@ -29,8 +29,8 @@
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 24px; padding: 48px 40px;
-            max-width: 420px; width: 100%;
+            border-radius: 24px; padding: 40px;
+            max-width: 460px; width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.08);
             animation: fadeInUp 0.6s ease-out;
         }
@@ -40,12 +40,25 @@
             letter-spacing: 0.3em; text-transform: uppercase;
             color: var(--primary); margin-bottom: 24px;
         }
-        h1 { font-size: 1.6em; font-weight: 300; text-align: center; margin-bottom: 8px; }
-        .subtitle { text-align: center; color: #888; font-size: 0.9em; font-weight: 300; margin-bottom: 28px; line-height: 1.6; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 0.72em; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: #999; margin-bottom: 10px; }
+        h1 { font-size: 1.5em; font-weight: 300; text-align: center; margin-bottom: 20px; }
+        .tabs {
+            display: flex; gap: 4px; margin-bottom: 28px;
+            background: rgba(0,0,0,0.04); padding: 4px; border-radius: 12px;
+        }
+        .tab {
+            flex: 1; padding: 10px 4px; text-align: center;
+            font-size: 0.8em; font-weight: 500;
+            letter-spacing: 0.05em; text-transform: uppercase;
+            cursor: pointer; border-radius: 8px;
+            transition: all 0.3s; color: #888;
+        }
+        .tab.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .form-panel { display: none; }
+        .form-panel.active { display: block; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.72em; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: #999; margin-bottom: 8px; }
         .form-group input {
-            width: 100%; padding: 16px 20px;
+            width: 100%; padding: 14px 18px;
             border: 2px solid rgba(0,0,0,0.08); border-radius: 12px;
             font-size: 1em; font-family: 'Inter', sans-serif;
             font-weight: 300; background: rgba(255,255,255,0.7);
@@ -53,73 +66,120 @@
         }
         .form-group input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(0,0,0,0.05); }
         .submit-btn {
-            width: 100%; padding: 18px; background: var(--primary);
+            width: 100%; padding: 16px; background: var(--primary);
             color: #fff; border: none; border-radius: 12px;
             font-size: 0.85em; font-weight: 600;
             letter-spacing: 0.2em; text-transform: uppercase;
-            cursor: pointer; transition: all 0.3s; margin-bottom: 16px;
+            cursor: pointer; transition: all 0.3s; margin-top: 8px;
         }
         .submit-btn:hover:not(:disabled) { background: var(--text); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .register-link { text-align: center; font-size: 0.85em; color: #888; }
-        .register-link a { color: var(--primary); text-decoration: none; font-weight: 500; }
-        .message { margin-top: 20px; padding: 14px 18px; border-radius: 12px; font-size: 0.88em; text-align: center; line-height: 1.5; display: none; }
+        .message { margin-top: 16px; padding: 12px 16px; border-radius: 12px; font-size: 0.85em; text-align: center; line-height: 1.5; display: none; }
         .message.success { background: rgba(67, 160, 71, 0.1); color: #2e7d32; border: 1px solid rgba(67, 160, 71, 0.3); }
         .message.error { background: rgba(211, 47, 47, 0.1); color: #c62828; border: 1px solid rgba(211, 47, 47, 0.3); }
-        @media (max-width: 600px) { .login-card { padding: 36px 24px; } }
+        .register-link { text-align: center; font-size: 0.85em; color: #888; margin-top: 20px; }
+        .register-link a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        @media (max-width: 600px) { .login-card { padding: 32px 24px; } }
     </style>
 </head>
 <body>
 
 <div class="login-card">
     <div class="logo">{{ site_id }}</div>
-    <h1>Добро пожаловать</h1>
-    <p class="subtitle">Введите email и пароль, чтобы войти в личный кабинет</p>
+    <h1>Вход в систему</h1>
 
-    <form id="loginForm">
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" placeholder="your@email.com" required>
-        </div>
-        <div class="form-group">
-            <label for="password">Пароль (только для админа)</label>
-            <input type="password" id="password" placeholder="••••••••">
-        </div>
-        <button type="submit" class="submit-btn" id="loginBtn">Войти</button>
-    </form>
-
-    <div class="register-link">
-        Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('client')">Клиент</div>
+        <div class="tab" onclick="switchTab('master')">Мастер</div>
+        <div class="tab" onclick="switchTab('admin')">Админ</div>
     </div>
 
-    <div id="message" class="message"></div>
+    <!-- Вкладка КЛИЕНТ -->
+    <div class="form-panel active" id="panel-client">
+        <p style="text-align:center; color:#888; font-size:0.9em; margin-bottom:16px;">Введите email, который вы указали при регистрации</p>
+        <form id="clientForm">
+            <div class="form-group">
+                <label for="client-email">Email</label>
+                <input type="email" id="client-email" placeholder="your@email.com" required>
+            </div>
+            <button type="submit" class="submit-btn" id="clientBtn">Войти</button>
+        </form>
+        <div class="register-link">Нет аккаунта? <a href="register.html">Зарегистрироваться</a></div>
+        <div id="clientMessage" class="message"></div>
+    </div>
+
+    <!-- Вкладка МАСТЕР -->
+    <div class="form-panel" id="panel-master">
+        <p style="text-align:center; color:#888; font-size:0.9em; margin-bottom:16px;">Введите email и пароль, выданные администратором</p>
+        <form id="masterForm">
+            <div class="form-group">
+                <label for="master-email">Email</label>
+                <input type="email" id="master-email" placeholder="master@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="master-password">Пароль</label>
+                <input type="password" id="master-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="submit-btn" id="masterBtn">Войти</button>
+        </form>
+        <div id="masterMessage" class="message"></div>
+    </div>
+
+    <!-- Вкладка АДМИН -->
+    <div class="form-panel" id="panel-admin">
+        <p style="text-align:center; color:#888; font-size:0.9em; margin-bottom:16px;">Введите email и пароль администратора</p>
+        <form id="adminForm">
+            <div class="form-group">
+                <label for="admin-email">Email</label>
+                <input type="email" id="admin-email" placeholder="admin@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="admin-password">Пароль</label>
+                <input type="password" id="admin-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="submit-btn" id="adminBtn">Войти</button>
+        </form>
+        <div id="adminMessage" class="message"></div>
+    </div>
 </div>
 
 <script>
     const SITE_ID = "{{ site_id }}";
     const SERVER_URL = "{{ server_url }}";
 
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const btn = document.getElementById('loginBtn');
-        const msg = document.getElementById('message');
+    function switchTab(name) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
 
-        btn.disabled = true; btn.textContent = 'Проверяю...';
+        if (name === 'client') {
+            document.querySelector('.tab:nth-child(1)').classList.add('active');
+            document.getElementById('panel-client').classList.add('active');
+        } else if (name === 'master') {
+            document.querySelector('.tab:nth-child(2)').classList.add('active');
+            document.getElementById('panel-master').classList.add('active');
+        } else {
+            document.querySelector('.tab:nth-child(3)').classList.add('active');
+            document.getElementById('panel-admin').classList.add('active');
+        }
+    }
+
+    async function handleLogin(role, email, password, btn, msg) {
+        btn.disabled = true;
+        const originalText = btn.textContent;
+        btn.textContent = 'Проверяю...';
         msg.style.display = 'none';
 
         try {
             const res = await fetch(`${SERVER_URL}/api/login`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ site_id: SITE_ID, email, password }),
+                body: JSON.stringify({ site_id: SITE_ID, email, password, role }),
             });
             const result = await res.json();
 
             if (result.ok) {
                 msg.className = 'message success';
-                msg.textContent = `✅ Вход выполнен как ${result.role === 'admin' ? 'Администратор' : 'Клиент'}. Перенаправление...`;
+                msg.textContent = `✅ Вход выполнен. Перенаправление...`;
                 msg.style.display = 'block';
                 setTimeout(() => { window.location.href = result.redirect; }, 1000);
             } else {
@@ -132,8 +192,29 @@
             msg.textContent = '❌ Ошибка сервера. Попробуйте позже.';
             msg.style.display = 'block';
         } finally {
-            btn.disabled = false; btn.textContent = 'Войти';
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
+    }
+
+    document.getElementById('clientForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('client-email').value.trim();
+        handleLogin('client', email, '', document.getElementById('clientBtn'), document.getElementById('clientMessage'));
+    });
+
+    document.getElementById('masterForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('master-email').value.trim();
+        const password = document.getElementById('master-password').value.trim();
+        handleLogin('master', email, password, document.getElementById('masterBtn'), document.getElementById('masterMessage'));
+    });
+
+    document.getElementById('adminForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('admin-email').value.trim();
+        const password = document.getElementById('admin-password').value.trim();
+        handleLogin('admin', email, password, document.getElementById('adminBtn'), document.getElementById('adminMessage'));
     });
 </script>
 </body>
