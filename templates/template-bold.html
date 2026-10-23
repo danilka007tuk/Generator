@@ -54,24 +54,7 @@
 </head>
 <body>
 
-<script>
-    (async function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const verified = urlParams.get('verified');
-        if (verified) { window.history.replaceState({}, '', 'index.html'); setTimeout(() => { openModal('booking'); }, 500); return; }
-        const email = sessionStorage.getItem('user_email');
-        const siteId = {{ site_id | default("site") | tojson }};
-        const serverUrl = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
-        if (email) {
-            try {
-                const res = await fetch(`${serverUrl}/api/check-email/${siteId}?email=${encodeURIComponent(email)}`);
-                const data = await res.json();
-                if (data.exists && data.is_verified) return;
-            } catch (e) {}
-        }
-        window.location.replace('register.html');
-    })();
-</script>
+<!-- Старый скрипт УДАЛЕН. Новый вставляется через render.py -->
 
 <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -119,17 +102,9 @@
 {% if testimonials %}
 <div class="modal" id="modal-testimonials" onclick="modalOutsideClick(event, 'testimonials')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Отзывы</h2><button class="modal-close" onclick="closeModal('testimonials')">×</button></div><div class="testimonials-grid">{% for t in testimonials %}<div class="testimonial"><div class="stars">{% for i in range(t.rating) %}★{% endfor %}{% for i in range(5 - t.rating) %}☆{% endfor %}</div><div class="text">«{{ t.text }}»</div><div class="author">— {{ t.author }}</div></div>{% endfor %}</div></div></div>
 {% endif %}
-
-<!-- Динамическая команда -->
-<div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div>
-        <div class="team-grid" id="teamGrid">
-            <p style="text-align:center; grid-column:1/-1;">Загрузка...</p>
-        </div>
-    </div>
-</div>
-
+{% if team %}
+<div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div><div class="team-grid">{% for m in team %}<div class="team-member"><div class="avatar">{{ m.name[0] }}</div><h3>{{ m.name }}</h3><div class="role">{{ m.role }}</div><p>{{ m.description }}</p></div>{% endfor %}</div></div></div>
+{% endif %}
 {% if faq %}
 <div class="modal" id="modal-faq" onclick="modalOutsideClick(event, 'faq')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Частые вопросы</h2><button class="modal-close" onclick="closeModal('faq')">×</button></div><div class="faq-list">{% for item in faq %}<div class="faq-item"><h3>{{ item.question }}</h3><p>{{ item.answer }}</p></div>{% endfor %}</div></div></div>
 {% endif %}
