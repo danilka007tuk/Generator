@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления — {{ site_id }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #f4f6fa; color: #2c3e50; line-height: 1.6; }
+        .header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .header h1 { font-size: 1.2em; font-weight: 600; }
+        .header a { color: #1976d2; text-decoration: none; font-weight: 500; background: #e3f2fd; padding: 8px 16px; border-radius: 8px; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 0.85em; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        tr:last-child td { border-bottom: none; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 600; background: #e8f5e9; color: #2e7d32; }
+        .badge.no { background: #ffebee; color: #c62828; }
+        .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Управление сайтом: {{ site_id }}</h1>
+    <a href="https://danilka007tuk.github.io/{{ site_id }}/" target="_blank">Посмотреть сайт ↗</a>
+</div>
+
+<div class="container">
+    <!-- Список броней -->
+    <div class="card">
+        <h2>📅 Последние бронирования</h2>
+        <table id="bookingsTable">
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Время</th>
+                    <th>Мастер</th>
+                    <th>Клиент</th>
+                    <th>Телефон</th>
+                </tr>
+            </thead>
+            <tbody id="bookingsBody">
+                <tr><td colspan="5" class="empty">Загрузка данных...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Список клиентов -->
+    <div class="card">
+        <h2>👥 База клиентов</h2>
+        <table id="clientsTable">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody id="clientsBody">
+                <tr><td colspan="2" class="empty">Загрузка данных...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const SITE_ID = "{{ site_id }}";
+    const SERVER_URL = "{{ server_url }}";
+
+    async function loadDashboard() {
+        try {
+            // Загружаем аналитику/клиентов
+            const resClients = await fetch(`${SERVER_URL}/api/analytics/${SITE_ID}`);
+            const dataClients = await resClients.json();
+
+            const clientsBody = document.getElementById('clientsBody');
+            clientsBody.innerHTML = '';
+
+            if (dataClients.total_contacts === 0) {
+                clientsBody.innerHTML = '<tr><td colspan="2" class="empty">Пока нет зарегистрированных клиентов</td></tr>';
+            } else {
+                // В будущем тут будет массив клиентов, пока заглушка
+                clientsBody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:20px;">Всего клиентов: <b>${dataClients.total_contacts}</b><br>Подтверждено: <b>${dataClients.verified_contacts}</b></td></tr>`;
+            }
+
+            // Загружаем брони (нужно добавить эндпоинт в main.py)
+            const resBookings = await fetch(`${SERVER_URL}/api/bookings/${SITE_ID}`);
+            const dataBookings = await resBookings.json();
+
+            const bookingsBody = document.getElementById('bookingsBody');
+            bookingsBody.innerHTML = '';
+
+            if (dataBookings.bookings.length === 0) {
+                bookingsBody.innerHTML = '<tr><td colspan="5" class="empty">Пока нет броней</td></tr>';
+            } else {
+                dataBookings.bookings.forEach(b => {
+                    bookingsBody.innerHTML += `
+                        <tr>
+                            <td>${b.date}</td>
+                            <td>${b.time}</td>
+                            <td>${b.master || '—'}</td>
+                            <td>${b.name}</td>
+                            <td>${b.phone}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+        } catch (e) {
+            console.error("Ошибка загрузки данных", e);
+            document.getElementById('bookingsBody').innerHTML = '<tr><td colspan="5" class="empty">Ошибка загрузки</td></tr>';
+        }
+    }
+
+    loadDashboard();
+</script>
+</body>
+</html>

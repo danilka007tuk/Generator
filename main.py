@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +25,7 @@ from models import Booking, Subscriber, ClientContact
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 logger = logging.getLogger("uvicorn.error")
+templates = Jinja2Templates(directory="templates")
 
 class SubscriberRequest(BaseModel):
     user_id: int
@@ -60,6 +62,15 @@ app.add_middleware(
 async def index():
     return {"message": "Сервер работает. Бот запущен отдельно."}
 
+# ============ ДАШБОРД (ЛИЧНЫЙ КАБИНЕТ) ============
+@app.get("/dashboard/{site_id}", response_class=HTMLResponse)
+async def dashboard(site_id: str, request: Request):
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "site_id": site_id,
+        "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")
+    })
+
 # ============ АНАЛИТИКА ============
 @app.get("/api/analytics/{site_id}")
 async def get_analytics(site_id: str, session: AsyncSession = Depends(get_session)):
@@ -68,6 +79,17 @@ async def get_analytics(site_id: str, session: AsyncSession = Depends(get_sessio
     total_bookings = await session.scalar(select(func.count()).select_from(Booking).where(Booking.site_id == site_id)) or 0
     total_subscribers = await session.scalar(select(func.count()).select_from(Subscriber).where(Subscriber.site_id == site_id)) or 0
     return {"site_id": site_id, "total_contacts": total_contacts, "verified_contacts": verified_contacts, "unverified_contacts": total_contacts - verified_contacts, "total_bookings": total_bookings, "total_subscribers": total_subscribers}
+
+@app.get("/api/bookings/{site_id}")
+async def get_bookings(site_id: str, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(
+        select(Booking).where(Booking.site_id == site_id).order_by(Booking.date.desc(), Booking.time.desc())
+    )
+    bookings = result.scalars().all()
+    return {"bookings": [
+        {"date": b.date, "time": b.time, "master": b.master, "service": b.service, "name": b.name, "phone": b.phone}
+        for b in bookings
+    ]}
 
 # ============ ПОДПИСЧИКИ ============
 @app.post("/api/subscribe")
@@ -137,7 +159,6 @@ async def verify_client(token: str, session: AsyncSession = Depends(get_session)
     contact.token_expires_at = None
     await session.commit()
 
-    # ИСПРАВЛЕНО: теперь редирект ведет на GitHub Pages, а не на API
     site_url = f"https://danilka007tuk.github.io/{contact.site_id}/index.html?verified=1"
     return HTMLResponse(f"""
         <html><body style="font-family: Inter, Arial; text-align: center; padding: 50px; background: #f5f9ff;">
@@ -153,29 +174,12 @@ async def verify_client(token: str, session: AsyncSession = Depends(get_session)
 
 async def send_verification_email(site_id: str, email: str, token: str):
     resend.api_key = os.getenv("RESEND_API_KEY")
-    if not resend.api_key:
-        logger.warning("RESEND_API_KEY не задан — письмо не отправлено")
-        return
-
+    if not resend.api_key: return
     server_url = os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")
     verify_url = f"{server_url}/api/verify-client?token={token}"
-
-    html = f"""
-    <h2>Здравствуйте!</h2>
-    <p>Вы зарегистрировались на сайте <strong>{site_id}</strong>.</p>
-    <p>Чтобы подтвердить email, перейдите по ссылке:</p>
-    <p><a href="{verify_url}">Подтвердить email</a></p>
-    <p>Или скопируйте: {verify_url}</p>
-    <p>Ссылка действует 24 часа.</p>
-    """
-
+    html = f"<h2>Здравствуйте!</h2><p>Вы зарегистрировались на сайте <strong>{site_id}</strong>.</p><p>Чтобы подтвердить email, перейдите по ссылке:</p><p><a href='{verify_url}'>Подтвердить email</a></p><p>Или скопируйте: {verify_url}</p><p>Ссылка действует 24 часа.</p>"
     try:
-        params = {
-            "from": "noreply@generator-beloretsk.ru",
-            "to": [email],
-            "subject": "Подтверждение email",
-            "html": html,
-        }
+        params = {"from": "noreply@generator-beloretsk.ru", "to": [email], "subject": "Подтверждение email", "html": html}
         response = await asyncio.to_thread(resend.Emails.send, params)
         logger.info(f"Email через Resend отправлен {email}. ID: {response.get('id')}")
     except Exception as e:

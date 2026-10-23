@@ -19,7 +19,7 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-SERVER_URL = os.getenv("SERVER_URL", "http://127.0.0.1:8001")
+SERVER_URL = os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")
 
 bot, dp, router = create_bot(max_token=os.getenv("MAX_BOT_TOKEN"))
 
@@ -61,6 +61,9 @@ async def start(message: Message, state: FSMContext):
 
 @router.message(Form.waiting_company_name)
 async def handle_company_name(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     company_name = message.text.strip()
     if len(company_name) < 2:
         await message.answer("❌ Слишком короткое название. Попробуйте снова:")
@@ -91,6 +94,9 @@ async def handle_company_name(message: Message, state: FSMContext):
 
 @router.message(Form.waiting_sphere)
 async def handle_sphere(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     sphere = message.text.strip()
     if len(sphere) < 2:
         await message.answer("❌ Слишком коротко. Напишите сферу деятельности:")
@@ -116,6 +122,9 @@ async def handle_sphere(message: Message, state: FSMContext):
 
 @router.message(Form.waiting_services)
 async def handle_services(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     services = message.text.strip()
     if len(services) < 5:
         await message.answer("❌ Слишком коротко. Перечислите услуги через запятую:")
@@ -141,6 +150,9 @@ async def handle_services(message: Message, state: FSMContext):
 
 @router.message(Form.waiting_address)
 async def handle_address(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     address = message.text.strip()
     await state.update_data(address=address)
 
@@ -160,6 +172,9 @@ async def handle_address(message: Message, state: FSMContext):
 
 @router.message(Form.waiting_phone)
 async def handle_phone(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     phone = message.text.strip()
     if len(phone) < 5:
         await message.answer("❌ Слишком короткий номер. Введите телефон:")
@@ -184,6 +199,9 @@ async def handle_phone(message: Message, state: FSMContext):
 
 @router.message(Form.waiting_hours)
 async def handle_hours(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     hours = message.text.strip()
     await state.update_data(hours=hours)
 
@@ -206,6 +224,9 @@ async def handle_hours(message: Message, state: FSMContext):
 
 @router.message(Form.waiting_template)
 async def handle_template(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     choice = message.text.strip()
     mapping = {
         "1": "template-modern.html",
@@ -247,6 +268,9 @@ async def handle_template(message: Message, state: FSMContext):
 
 @router.message(Form.waiting_palette)
 async def handle_palette(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     choice = message.text.strip()
     mapping = {
         "1": "blue",
@@ -297,6 +321,9 @@ async def handle_palette(message: Message, state: FSMContext):
 
 @router.message(Form.waiting_repo)
 async def handle_repo(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     repo_name = message.text.strip().lower()
 
     if not re.fullmatch(r"[a-z0-9\-]{3,50}", repo_name):
@@ -383,19 +410,23 @@ async def handle_repo(message: Message, state: FSMContext):
     except Exception as e:
         logger.warning(f"Не удалось подписать создателя: {e}")
 
+    # Генерируем ссылку на дашборд
+    dashboard_url = f"{SERVER_URL}/dashboard/{repo_name}"
+
     await message.answer(
         "✅ Готово! Сайт опубликован.\n"
         "\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "🔗 Ссылка на сайт:\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "\n"
         f"{url}\n"
         "\n"
-        "Откройте ссылку в браузере.\n"
-        "Если не открылась сразу — подождите 1–2 минуты.\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📊 Личный кабинет (управление):\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"{dashboard_url}\n"
         "\n"
-        "📬 Вы будете получать уведомления о заявках на этот сайт."
+        "📬 Вы будете получать уведомления о заявках в этот чат."
     )
     await state.clear()
 
