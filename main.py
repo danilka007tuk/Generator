@@ -101,6 +101,7 @@ async def update_site_content(site_id: str, data: dict = Body(...), session: Asy
 # ============ УПРАВЛЕНИЕ ПЕРСОНАЛОМ ============
 @app.get("/api/masters/{site_id}")
 async def get_masters(site_id: str, session: AsyncSession = Depends(get_session)):
+    # Строгая фильтрация по site_id
     result = await session.execute(select(Master).where(Master.site_id == site_id))
     masters = result.scalars().all()
     return {"masters": [
