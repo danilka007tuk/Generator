@@ -4,12 +4,15 @@ import os
 import uuid
 import base64
 import bleach
+import logging
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from openai import OpenAI
 from dotenv import load_dotenv
 from schemas import SiteContent
 
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+
+logger = logging.getLogger(__name__)
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 OUTPUT_DIR = Path(__file__).parent / "output"
@@ -37,27 +40,29 @@ DEFAULT_SIDEBAR_ITEMS = [
     {"label": "Контакты", "anchor": "#contacts", "icon": "📞"},
 ]
 
+# Добавляем таймаут (60 секунд), чтобы бот не висел
 provod_client = OpenAI(
     api_key=os.getenv("PROVOD_API_KEY"),
     base_url="https://api.provod.ai/v1",
+    timeout=60.0,
 )
 
-# Принудительный редирект на регистрацию (вставляется в самый верх страницы)
-REDIRECT_SCRIPT = """
-<script>
-    if (!localStorage.getItem('user_email') && !window.location.search.includes('verified=1')) {
-        window.location.replace('register.html');
-    }
-</script>
-"""
 
 def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) -> str:
     if not prompt or not isinstance(prompt, str):
+        logger.warning("Пустой промпт для картинки")
         return ""
+
     prompt = prompt.strip()[:300]
     if not prompt:
+        logger.warning("Промпт для картинки пустой после очистки")
         return ""
+
     try:
+        # Убедимся, что IMAGES_DIR существует
+        IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+        logger.info(f"Генерация картинки: {prompt[:50]}...")
         response = provod_client.images.generate(
             model="openai/gpt-image-2",
             prompt=prompt,
@@ -67,15 +72,18 @@ def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) ->
         )
         b64 = response.data[0].b64_json
         if not b64:
+            logger.warning("provod.ai вернул пустой base64")
             return ""
-        IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
         filename = f"{uuid.uuid4().hex}.png"
         filepath = IMAGES_DIR / filename
         with open(filepath, "wb") as f:
             f.write(base64.b64decode(b64))
+
+        logger.info(f"Картинка сохранена: {filename}")
         return f"images/{filename}"
     except Exception as e:
-        print(f"[provod.ai] Ошибка генерации картинки: {e}")
+        logger.error(f"Ошибка генерации картинки: {e}")
         return ""
 
 
@@ -154,7 +162,7 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     for item in data.get("gallery", []):
         item["title"] = clean(item.get("title", ""))
         item["description"] = clean(item.get("description", ""))
-        prompt = item.get("image_prompt", "") or item.get("title", "")
+        prompt = item.get("image_prompt", "") or item.get("title", "") or "Beauty salon interior"
         item["image_url"] = generate_image_provod(prompt, width=1024, height=768)
 
     for item in data.get("pricing", []):
@@ -174,12 +182,14 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         member["name"] = clean(member.get("name", ""))
         member["role"] = clean(member.get("role", ""))
         member["description"] = clean(member.get("description", ""))
-        # Чистим услуги мастера от HTML
         member["services"] = [clean(s) for s in member.get("services", [])]
 
     data["sidebar_items"] = get_sidebar_items(content)
 
+    # Генерация главной картинки (hero)
     hero_prompt = data.get("hero_image_prompt", "")
+    if not hero_prompt:
+        hero_prompt = f"Beautiful interior for {data.get('company_name', 'business')}, photorealistic"
     data["hero_image_url"] = generate_image_provod(hero_prompt, width=1792, height=1024)
 
     data["color_primary"] = clean_color(data.get("color_primary", ""), "#667eea")
@@ -195,15 +205,15 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     template = env.get_template(template_name)
     html = template.render(**data)
 
-    # Внедряем принудительный редирект в самый верх <head>
+    # Редирект на регистрацию
     if "<head>" in html:
-        html = html.replace("<head>", f"<head>{REDIRECT_SCRIPT}", 1)
+        redirect_script = """<script>if (!localStorage.getItem('user_email') && !window.location.search.includes('verified=1')) { window.location.replace('register.html'); }</script>"""
+        html = html.replace("<head>", f"<head>{redirect_script}", 1)
 
     return html
 
 
 def render_register_page(content: SiteContent, server_url: str = "", site_id: str = "") -> str:
-    """Рендерит страницу регистрации (register.html)."""
     data = content.model_dump()
     data["server_url"] = server_url or "http://127.0.0.1:8001"
     data["site_id"] = site_id or "site"
