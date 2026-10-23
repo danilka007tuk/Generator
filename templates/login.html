@@ -191,6 +191,11 @@
             const result = await res.json();
 
             if (result.ok) {
+                // СОХРАНЯЕМ EMAIL В LOCALSTORAGE (для мастера и админа)
+                if (role === 'master') {
+                    localStorage.setItem('master_email', email);
+                }
+
                 msg.className = 'message success';
                 msg.textContent = `✅ Вход выполнен. Перенаправление...`;
                 msg.style.display = 'block';

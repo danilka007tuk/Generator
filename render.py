@@ -213,6 +213,18 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         redirect_script = """<script>if (!localStorage.getItem('user_email') && !window.location.search.includes('verified=1')) { window.location.replace('register.html'); }</script>"""
         html = html.replace("<head>", f"<head>{redirect_script}", 1)
 
+    if "<head>" in html:
+        redirect_script = '''
+        <script>
+            const urlParams = new URLSearchParams(window.location.search);
+            const skip = urlParams.get('skip_redirect');
+            if (!sessionStorage.getItem('user_email') && !window.location.search.includes('verified=1') && !skip) {
+                window.location.replace('register.html');
+            }
+        </script>
+        '''
+        html = html.replace("<head>", f"<head>{redirect_script}", 1)
+
     return html
 
 
