@@ -8,224 +8,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         :root {
-            --primary: {{ color_primary }};
-            --secondary: {{ color_secondary }};
-            --bg: {{ color_bg }};
-            --text: {{ color_text }};
-            --accent: {{ color_accent }};
-            --sidebar-width: 260px;
+            --primary: {{ color_primary }}; --secondary: {{ color_secondary }}; --bg: {{ color_bg }}; --text: {{ color_text }}; --accent: {{ color_accent }}; --sidebar-width: 260px;
         }
-        * { box-sizing: border-box; }
-        html, body { height: 100%; }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0; padding: 0;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        .sidebar-toggle {
-            display: flex; align-items: center; justify-content: center;
-            position: fixed; top: 16px; left: 16px;
-            z-index: 300; background: var(--primary); color: #fff;
-            border: none; width: 48px; height: 48px;
-            border-radius: 10px; font-size: 1.4em; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .sidebar {
-            position: fixed; left: 0; top: 0;
-            width: var(--sidebar-width); height: 100vh;
-            background: var(--text); color: #fff;
-            padding: 28px 20px; overflow-y: auto;
-            display: flex; flex-direction: column;
-            z-index: 400; transition: transform 0.3s;
-            transform: translateX(-100%);
-        }
-        .sidebar.open { transform: translateX(0); }
-        .sidebar-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.5); z-index: 350;
-        }
-        .sidebar-overlay.open { display: block; }
-
+        * { box-sizing: border-box; } html, body { height: 100%; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+        .sidebar-toggle { display: flex; align-items: center; justify-content: center; position: fixed; top: 16px; left: 16px; z-index: 300; background: var(--primary); color: #fff; border: none; width: 48px; height: 48px; border-radius: 10px; font-size: 1.4em; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh; background: var(--text); color: #fff; padding: 28px 20px; overflow-y: auto; display: flex; flex-direction: column; z-index: 400; transition: transform 0.3s; transform: translateX(-100%); }
+        .sidebar.open { transform: translateX(0); } .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 350; } .sidebar-overlay.open { display: block; }
         .sidebar-logo { font-size: 1.25em; font-weight: 700; color: var(--primary); margin-bottom: 28px; line-height: 1.3; }
-        .sidebar-nav { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; flex-grow: 1; }
-        .sidebar-nav a { color: #ddd; text-decoration: none; padding: 14px 16px; border-radius: 10px; font-size: 1em; font-weight: 500; cursor: pointer; transition: all 0.2s; display: block; }
-        .sidebar-nav a:hover { background: var(--primary); color: #fff; }
-        .sidebar-cta { display: block; background: var(--accent); color: #fff; text-align: center; padding: 16px; border-radius: 10px; text-decoration: none; font-weight: 700; margin-bottom: 20px; font-size: 1em; cursor: pointer; transition: transform 0.2s; border: none; width: 100%; }
-        .sidebar-cta:hover { transform: scale(1.03); }
-        .sidebar-contacts { font-size: 0.85em; color: #aaa; line-height: 1.7; border-top: 1px solid #333; padding-top: 16px; }
-        .sidebar-contacts div { margin-bottom: 6px; }
-
-        .main-content { margin-left: 0; min-height: 100vh; }
-        .container { max-width: 1000px; margin: 0 auto; padding: 0 32px; }
-
-        .hero {
-            position: relative; background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #fff; padding: 80px 32px 60px; text-align: center;
-            overflow: hidden; min-height: 100vh;
-            display: flex; align-items: center; justify-content: center;
-        }
-        {% if hero_image_url %}
-        .hero {
-            background-image: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url('{{ hero_image_url }}');
-            background-size: cover; background-position: center;
-        }
-        {% endif %}
-        .hero-inner { position: relative; max-width: 800px; margin: 0 auto; width: 100%; }
-        .hero h1 { font-size: 3em; margin: 0 0 20px; font-weight: 800; text-shadow: 0 2px 20px rgba(0,0,0,0.3); line-height: 1.1; }
-        .hero p { font-size: 1.2em; opacity: 0.95; max-width: 640px; margin: 0 auto 24px; text-shadow: 0 1px 10px rgba(0,0,0,0.3); }
-        .hero-about { max-width: 640px; margin: 0 auto 32px; font-size: 1em; opacity: 0.9; line-height: 1.7; }
-        .hero-contacts { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; font-size: 1em; }
-        .hero-contacts div { display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 10px rgba(0,0,0,0.4); }
-        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-        .hero-btn { background: var(--accent); color: #fff; border: none; padding: 16px 32px; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; transition: transform 0.2s; }
-        .hero-btn:hover { transform: scale(1.05); }
-        .hero-btn.secondary { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.5); }
-
+        .sidebar-nav { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; flex-grow: 1; } .sidebar-nav a { color: #ddd; text-decoration: none; padding: 14px 16px; border-radius: 10px; font-size: 1em; font-weight: 500; cursor: pointer; transition: all 0.2s; display: block; } .sidebar-nav a:hover { background: var(--primary); color: #fff; }
+        .sidebar-cta { display: block; background: var(--accent); color: #fff; text-align: center; padding: 16px; border-radius: 10px; text-decoration: none; font-weight: 700; margin-bottom: 20px; font-size: 1em; cursor: pointer; transition: transform 0.2s; border: none; width: 100%; } .sidebar-cta:hover { transform: scale(1.03); }
+        .sidebar-contacts { font-size: 0.85em; color: #aaa; line-height: 1.7; border-top: 1px solid #333; padding-top: 16px; } .sidebar-contacts div { margin-bottom: 6px; }
+        .main-content { margin-left: 0; min-height: 100vh; } .container { max-width: 1000px; margin: 0 auto; padding: 0 32px; }
+        .hero { position: relative; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 80px 32px 60px; text-align: center; overflow: hidden; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        {% if hero_image_url %} .hero { background-image: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url('{{ hero_image_url }}'); background-size: cover; background-position: center; } {% endif %}
+        .hero-inner { position: relative; max-width: 800px; margin: 0 auto; width: 100%; } .hero h1 { font-size: 3em; margin: 0 0 20px; font-weight: 800; text-shadow: 0 2px 20px rgba(0,0,0,0.3); line-height: 1.1; }
+        .hero p { font-size: 1.2em; opacity: 0.95; max-width: 640px; margin: 0 auto 24px; text-shadow: 0 1px 10px rgba(0,0,0,0.3); } .hero-about { max-width: 640px; margin: 0 auto 32px; font-size: 1em; opacity: 0.9; line-height: 1.7; } .hero-contacts { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; font-size: 1em; } .hero-contacts div { display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 10px rgba(0,0,0,0.4); }
+        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; } .hero-btn { background: var(--accent); color: #fff; border: none; padding: 16px 32px; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; transition: transform 0.2s; } .hero-btn:hover { transform: scale(1.05); } .hero-btn.secondary { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.5); }
         .features-grid, .services-grid, .gallery-grid, .pricing-grid, .testimonials-grid, .team-grid { display: grid; gap: 20px; }
-        .features-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-        .services-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-        .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-        .pricing-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-        .testimonials-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-        .team-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
-
-        .feature { background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 6px 24px rgba(0,0,0,0.06); border-top: 4px solid var(--primary); }
-        .feature h3 { color: var(--primary); margin: 0 0 12px; font-size: 1.1em; }
-        .feature p { margin: 0; color: #666; font-size: 0.92em; }
-
-        .service-card { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-left: 4px solid var(--primary); }
-        .service-card h3 { margin: 0 0 10px; font-size: 1.1em; }
-        .service-card p { margin: 0 0 10px; color: #666; font-size: 0.92em; }
-        .service-card .price { font-size: 1.1em; font-weight: 700; color: var(--primary); }
-
-        .gallery-item { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-        .gallery-item img { width: 100%; height: 180px; object-fit: cover; display: block; }
-        .gallery-item .caption { padding: 16px; }
-        .gallery-item h3 { margin: 0 0 6px; color: var(--primary); font-size: 1em; }
-        .gallery-item p { margin: 0; color: #777; font-size: 0.88em; }
-
-        .pricing-card { background: #fff; border-radius: 14px; padding: 28px 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-top: 4px solid var(--accent); }
-        .pricing-card h3 { margin: 0 0 10px; font-size: 1.05em; }
-        .pricing-card .price { font-size: 1.5em; font-weight: 700; color: var(--primary); margin: 12px 0; }
-        .pricing-card p { color: #666; font-size: 0.88em; margin: 0; }
-
-        .testimonial { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-        .testimonial .stars { color: #ffc107; font-size: 1em; margin-bottom: 10px; }
-        .testimonial .text { font-style: italic; color: #555; margin-bottom: 12px; line-height: 1.6; font-size: 0.95em; }
-        .testimonial .author { font-weight: 700; color: var(--primary); font-size: 0.9em; }
-
-        .team-member { background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-        .team-member .avatar { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.8em; font-weight: 700; }
-        .team-member h3 { margin: 0 0 6px; font-size: 1em; }
-        .team-member .role { color: var(--primary); font-size: 0.85em; font-weight: 600; margin-bottom: 10px; }
-        .team-member p { color: #777; font-size: 0.88em; margin: 0; }
-
-        .about { background: #fff; padding: 40px 32px; border-radius: 16px; }
-        .about p { font-size: 1em; line-height: 1.8; color: #555; margin: 0; }
-
-        .faq-item { background: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .faq-item h3 { margin: 0 0 10px; color: var(--primary); font-size: 1em; }
-        .faq-item p { margin: 0; color: #555; line-height: 1.6; font-size: 0.95em; }
-
+        .features-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); } .services-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); } .pricing-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); } .testimonials-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } .team-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+        .feature { background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 6px 24px rgba(0,0,0,0.06); border-top: 4px solid var(--primary); } .feature h3 { color: var(--primary); margin: 0 0 12px; font-size: 1.1em; } .feature p { margin: 0; color: #666; font-size: 0.92em; }
+        .service-card { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-left: 4px solid var(--primary); } .service-card h3 { margin: 0 0 10px; font-size: 1.1em; } .service-card p { margin: 0 0 10px; color: #666; font-size: 0.92em; } .service-card .price { font-size: 1.1em; font-weight: 700; color: var(--primary); }
+        .gallery-item { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); } .gallery-item img { width: 100%; height: 180px; object-fit: cover; display: block; } .gallery-item .caption { padding: 16px; } .gallery-item h3 { margin: 0 0 6px; color: var(--primary); font-size: 1em; } .gallery-item p { margin: 0; color: #777; font-size: 0.88em; }
+        .pricing-card { background: #fff; border-radius: 14px; padding: 28px 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-top: 4px solid var(--accent); } .pricing-card h3 { margin: 0 0 10px; font-size: 1.05em; } .pricing-card .price { font-size: 1.5em; font-weight: 700; color: var(--primary); margin: 12px 0; } .pricing-card p { color: #666; font-size: 0.88em; margin: 0; }
+        .testimonial { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); } .testimonial .stars { color: #ffc107; font-size: 1em; margin-bottom: 10px; } .testimonial .text { font-style: italic; color: #555; margin-bottom: 12px; line-height: 1.6; font-size: 0.95em; } .testimonial .author { font-weight: 700; color: var(--primary); font-size: 0.9em; }
+        .team-member { background: #fff; border-radius: 14px; padding: 24px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06); } .team-member .avatar { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.8em; font-weight: 700; } .team-member h3 { margin: 0 0 6px; font-size: 1em; } .team-member .role { color: var(--primary); font-size: 0.85em; font-weight: 600; margin-bottom: 10px; } .team-member p { color: #777; font-size: 0.88em; margin: 0; }
+        .about { background: #fff; padding: 40px 32px; border-radius: 16px; } .about p { font-size: 1em; line-height: 1.8; color: #555; margin: 0; }
+        .faq-item { background: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); } .faq-item h3 { margin: 0 0 10px; color: var(--primary); font-size: 1em; } .faq-item p { margin: 0; color: #555; line-height: 1.6; font-size: 0.95em; }
         .booking { background: #fff; border-radius: 16px; padding: 32px 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .calendar-header button { background: var(--primary); border: none; width: 40px; height: 40px; border-radius: 10px; font-size: 1.2em; cursor: pointer; color: #fff; }
-        .month-year { font-size: 1.15em; font-weight: 700; }
-        .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
-        .weekdays div { text-align: center; font-weight: 600; font-size: 0.8em; color: #888; padding: 6px 0; }
-        .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; background: var(--bg); border: 2px solid transparent; font-size: 0.95em; }
-        .day:hover:not(.disabled):not(.busy):not(.selected) { background: var(--primary); color: #fff; }
-        .day.empty { background: transparent; cursor: default; }
-        .day.disabled { color: #ccc; cursor: not-allowed; background: transparent; }
-        .day.busy { background: #ffe5e5; color: #c0392b; cursor: not-allowed; text-decoration: line-through; }
-        .day.selected { background: var(--primary); color: #fff; border-color: var(--accent); }
-        .day.today { font-weight: 700; border-color: var(--primary); }
-
-        .master-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .master-card { background: var(--bg); border: 2px solid var(--text); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .master-card:hover { border-color: var(--primary); transform: translateY(-2px); }
-        .master-card.selected { border-color: var(--primary); background: var(--primary); color: #fff; }
-        .master-card .master-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5em; font-weight: 700; }
-        .master-card.selected .master-avatar { background: #fff; color: var(--primary); }
-        .master-card h3 { margin: 0 0 4px; font-size: 1em; }
-        .master-card .role { font-size: 0.8em; opacity: 0.8; }
-
-        .time-slots-wrapper { display: none; margin: 20px 0; text-align: center; }
-        .time-slots-wrapper h3 { font-size: 1.1em; color: var(--primary); margin-bottom: 12px; }
-        .time-slots { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-        .time-slot { padding: 10px 16px; border: 2px solid var(--primary); border-radius: 8px; cursor: pointer; font-weight: 600; background: #fff; color: var(--text); transition: all 0.2s; }
-        .time-slot:hover:not(.busy) { background: var(--primary); color: #fff; }
-        .time-slot.selected { background: var(--primary); color: #fff; }
-        .time-slot.busy { background: #ffe5e5; color: #c0392b; border-color: #c0392b; cursor: not-allowed; text-decoration: line-through; }
-
-        .booking-form { display: none; margin-top: 28px; padding-top: 28px; border-top: 1px solid #eee; }
-        .booking-form.active { display: block; }
-        .booking-form h3 { text-align: center; color: var(--primary); margin: 0 0 20px; font-size: 1.1em; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 6px; font-size: 0.88em; color: #555; font-weight: 600; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 14px; border: 2px solid #e0e0ec; border-radius: 10px; font-size: 0.95em; font-family: inherit; background: var(--bg); }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--primary); background: #fff; }
-        .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border: none; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; }
-
-        .contacts-grid { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
-        .contact-item { text-align: center; flex: 1 1 180px; }
-        .contact-item .label { font-size: 0.8em; color: #888; text-transform: uppercase; margin-bottom: 6px; }
-        .contact-item .value { font-size: 1em; font-weight: 700; }
-
-        .cta { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #fff; padding: 48px 24px; text-align: center; border-radius: 16px; }
-        .cta h2 { margin: 0; color: #fff; font-size: 1.6em; }
-
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; } .calendar-header button { background: var(--primary); border: none; width: 40px; height: 40px; border-radius: 10px; font-size: 1.2em; cursor: pointer; color: #fff; } .month-year { font-size: 1.15em; font-weight: 700; } .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; } .weekdays div { text-align: center; font-weight: 600; font-size: 0.8em; color: #888; padding: 6px 0; } .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; } .day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; background: var(--bg); border: 2px solid transparent; font-size: 0.95em; } .day:hover:not(.disabled):not(.busy):not(.selected) { background: var(--primary); color: #fff; } .day.empty { background: transparent; cursor: default; } .day.disabled { color: #ccc; cursor: not-allowed; background: transparent; } .day.busy { background: #ffe5e5; color: #c0392b; cursor: not-allowed; text-decoration: line-through; } .day.selected { background: var(--primary); color: #fff; border-color: var(--accent); } .day.today { font-weight: 700; border-color: var(--primary); }
+        .master-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; } .master-card { background: var(--bg); border: 2px solid var(--text); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; } .master-card:hover { border-color: var(--primary); transform: translateY(-2px); } .master-card.selected { border-color: var(--primary); background: var(--primary); color: #fff; } .master-card .master-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5em; font-weight: 700; } .master-card.selected .master-avatar { background: #fff; color: var(--primary); } .master-card h3 { margin: 0 0 4px; font-size: 1em; } .master-card .role { font-size: 0.8em; opacity: 0.8; }
+        .time-slots-wrapper { display: none; margin: 20px 0; text-align: center; } .time-slots-wrapper h3 { font-size: 1.1em; color: var(--primary); margin-bottom: 12px; } .time-slots { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; } .time-slot { padding: 10px 16px; border: 2px solid var(--primary); border-radius: 8px; cursor: pointer; font-weight: 600; background: #fff; color: var(--text); transition: all 0.2s; } .time-slot:hover:not(.busy) { background: var(--primary); color: #fff; } .time-slot.selected { background: var(--primary); color: #fff; } .time-slot.busy { background: #ffe5e5; color: #c0392b; border-color: #c0392b; cursor: not-allowed; text-decoration: line-through; }
+        .booking-form { display: none; margin-top: 28px; padding-top: 28px; border-top: 1px solid #eee; } .booking-form.active { display: block; } .booking-form h3 { text-align: center; color: var(--primary); margin: 0 0 20px; font-size: 1.1em; } .form-group { margin-bottom: 16px; } .form-group label { display: block; margin-bottom: 6px; font-size: 0.88em; color: #555; font-weight: 600; } .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 14px; border: 2px solid #e0e0ec; border-radius: 10px; font-size: 0.95em; font-family: inherit; background: var(--bg); } .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--primary); background: #fff; } .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border: none; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; }
+        .contacts-grid { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; } .contact-item { text-align: center; flex: 1 1 180px; } .contact-item .label { font-size: 0.8em; color: #888; text-transform: uppercase; margin-bottom: 6px; } .contact-item .value { font-size: 1em; font-weight: 700; }
+        .cta { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #fff; padding: 48px 24px; text-align: center; border-radius: 16px; } .cta h2 { margin: 0; color: #fff; font-size: 1.6em; }
         footer { background: var(--text); color: #aaa; padding: 28px; text-align: center; font-size: 0.9em; }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; padding: 40px 20px; overflow-y: auto; }
-        .modal.open { display: flex; align-items: flex-start; justify-content: center; }
-        .modal-box { background: var(--bg); border-radius: 16px; max-width: 1000px; width: 100%; padding: 40px 32px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease-in; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid var(--primary); }
-        .modal-header h2 { margin: 0; font-size: 2em; color: var(--text); }
-        .modal-close { background: transparent; border: 2px solid var(--text); color: var(--text); width: 48px; height: 48px; border-radius: 50%; font-size: 1.5em; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
-        .modal-close:hover { background: var(--text); color: #fff; }
-
-        .success-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 700; align-items: center; justify-content: center; padding: 20px; }
-        .success-modal.active { display: flex; }
-        .success-modal .modal-content { background: #fff; border-radius: 16px; padding: 32px; max-width: 400px; text-align: center; }
-        .success-modal h3 { color: #43a047; margin: 0 0 12px; }
-        .success-modal button { background: var(--primary); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; margin-top: 12px; }
-
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; padding: 40px 20px; overflow-y: auto; } .modal.open { display: flex; align-items: flex-start; justify-content: center; } .modal-box { background: var(--bg); border-radius: 16px; max-width: 1000px; width: 100%; padding: 40px 32px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease-in; } .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid var(--primary); } .modal-header h2 { margin: 0; font-size: 2em; color: var(--text); } .modal-close { background: transparent; border: 2px solid var(--text); color: var(--text); width: 48px; height: 48px; border-radius: 50%; font-size: 1.5em; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; } .modal-close:hover { background: var(--text); color: #fff; }
+        .success-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 700; align-items: center; justify-content: center; padding: 20px; } .success-modal.active { display: flex; } .success-modal .modal-content { background: #fff; border-radius: 16px; padding: 32px; max-width: 400px; text-align: center; } .success-modal h3 { color: #43a047; margin: 0 0 12px; } .success-modal button { background: var(--primary); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; margin-top: 12px; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        @media (max-width: 900px) {
-            .hero { padding: 80px 24px 48px; min-height: auto; }
-            .hero h1 { font-size: 2em; }
-            .container { padding: 0 20px; }
-            .modal-box { padding: 28px 20px; }
-            .modal-header h2 { font-size: 1.5em; }
-            .modal-close { width: 40px; height: 40px; font-size: 1.2em; }
-        }
+        @media (max-width: 900px) { .hero { padding: 80px 24px 48px; min-height: auto; } .hero h1 { font-size: 2em; } .container { padding: 0 20px; } .modal-box { padding: 28px 20px; } .modal-header h2 { font-size: 1.5em; } .modal-close { width: 40px; height: 40px; font-size: 1.2em; } }
     </style>
 </head>
 <body>
 
 <script>
-    (function() {
-        const email = localStorage.getItem('user_email');
+    (async function() {
         const urlParams = new URLSearchParams(window.location.search);
         const verified = urlParams.get('verified');
-
-        if (!email && !verified) {
-            window.location.href = 'register.html';
-            return;
+        if (verified) { window.history.replaceState({}, '', 'index.html'); setTimeout(() => { openModal('booking'); }, 500); return; }
+        const email = sessionStorage.getItem('user_email');
+        const siteId = {{ site_id | default("site") | tojson }};
+        const serverUrl = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
+        if (email) {
+            try {
+                const res = await fetch(`${serverUrl}/api/check-email/${siteId}?email=${encodeURIComponent(email)}`);
+                const data = await res.json();
+                if (data.exists && data.is_verified) return;
+            } catch (e) {}
         }
-
-        if (verified) {
-            window.history.replaceState({}, '', 'index.html');
-            setTimeout(() => { openModal('booking'); }, 500);
-        }
+        window.location.replace('register.html');
     })();
 </script>
 
@@ -236,22 +77,10 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">{{ company_name }}</div>
     {% if sidebar_items %}
-    <nav class="sidebar-nav" id="sidebarNav">
-        {% for item in sidebar_items %}
-        <a href="javascript:void(0)" onclick="openModal('{{ item.anchor[1:] }}')">
-            {{ item.icon }} {{ item.label }}
-        </a>
-        {% endfor %}
-    </nav>
+    <nav class="sidebar-nav" id="sidebarNav">{% for item in sidebar_items %}<a href="javascript:void(0)" onclick="openModal('{{ item.anchor[1:] }}')">{{ item.icon }} {{ item.label }}</a>{% endfor %}</nav>
     {% endif %}
-    <button class="sidebar-cta" onclick="openModal('booking')">
-        {{ sidebar_cta_text or 'Забронировать' }}
-    </button>
-    <div class="sidebar-contacts">
-        <div>📞 {{ company_phone }}</div>
-        <div>📍 {{ company_address }}</div>
-        {% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}
-    </div>
+    <button class="sidebar-cta" onclick="openModal('booking')">{{ sidebar_cta_text or 'Забронировать' }}</button>
+    <div class="sidebar-contacts"><div>📞 {{ company_phone }}</div><div>📍 {{ company_address }}</div>{% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}</div>
 </aside>
 {% endif %}
 
@@ -261,131 +90,48 @@
         <h1>{{ hero_heading }}</h1>
         <p>{{ hero_subheading }}</p>
         {% if about_short %}<div class="hero-about">{{ about_short }}</div>{% endif %}
-        <div class="hero-contacts">
-            <div>📞 {{ company_phone }}</div>
-            <div>📍 {{ company_address }}</div>
-            {% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}
-        </div>
-        <div class="hero-buttons">
-            <button class="hero-btn" onclick="openModal('booking')">
-                {{ sidebar_cta_text or 'Забронировать' }}
-            </button>
-            {% if services %}
-            <button class="hero-btn secondary" onclick="openModal('services')">Услуги</button>
-            {% endif %}
-        </div>
+        <div class="hero-contacts"><div>📞 {{ company_phone }}</div><div>📍 {{ company_address }}</div>{% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}</div>
+        <div class="hero-buttons"><button class="hero-btn" onclick="openModal('booking')">{{ sidebar_cta_text or 'Забронировать' }}</button>{% if services %}<button class="hero-btn secondary" onclick="openModal('services')">Услуги</button>{% endif %}</div>
     </div>
 </section>
 </main>
 
 <footer>{{ footer_text }}</footer>
 
-<!-- МОДАЛКИ -->
 {% if features %}
-<div class="modal" id="modal-features" onclick="modalOutsideClick(event, 'features')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Преимущества</h2><button class="modal-close" onclick="closeModal('features')">×</button></div>
-        <div class="features-grid">{% for f in features %}<div class="feature"><h3>{{ f.title }}</h3><p>{{ f.description }}</p></div>{% endfor %}</div>
-    </div>
-</div>
+<div class="modal" id="modal-features" onclick="modalOutsideClick(event, 'features')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Преимущества</h2><button class="modal-close" onclick="closeModal('features')">×</button></div><div class="features-grid">{% for f in features %}<div class="feature"><h3>{{ f.title }}</h3><p>{{ f.description }}</p></div>{% endfor %}</div></div></div>
 {% endif %}
-
 {% if about_full %}
-<div class="modal" id="modal-about" onclick="modalOutsideClick(event, 'about')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>О нас</h2><button class="modal-close" onclick="closeModal('about')">×</button></div>
-        <div class="about"><p>{{ about_full }}</p></div>
-    </div>
-</div>
+<div class="modal" id="modal-about" onclick="modalOutsideClick(event, 'about')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>О нас</h2><button class="modal-close" onclick="closeModal('about')">×</button></div><div class="about"><p>{{ about_full }}</p></div></div></div>
 {% endif %}
-
 {% if services %}
-<div class="modal" id="modal-services" onclick="modalOutsideClick(event, 'services')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Наши услуги</h2><button class="modal-close" onclick="closeModal('services')">×</button></div>
-        <div class="services-grid">{% for s in services %}<div class="service-card"><h3>{{ s.name }}</h3><p>{{ s.description }}</p>{% if s.price %}<div class="price">{{ s.price }}</div>{% endif %}</div>{% endfor %}</div>
-    </div>
-</div>
+<div class="modal" id="modal-services" onclick="modalOutsideClick(event, 'services')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Наши услуги</h2><button class="modal-close" onclick="closeModal('services')">×</button></div><div class="services-grid">{% for s in services %}<div class="service-card"><h3>{{ s.name }}</h3><p>{{ s.description }}</p>{% if s.price %}<div class="price">{{ s.price }}</div>{% endif %}</div>{% endfor %}</div></div></div>
 {% endif %}
-
 {% if gallery %}
-<div class="modal" id="modal-gallery" onclick="modalOutsideClick(event, 'gallery')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Галерея</h2><button class="modal-close" onclick="closeModal('gallery')">×</button></div>
-        <div class="gallery-grid">{% for item in gallery %}<div class="gallery-item">{% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">{% endif %}<div class="caption"><h3>{{ item.title }}</h3><p>{{ item.description }}</p></div></div>{% endfor %}</div>
-    </div>
-</div>
+<div class="modal" id="modal-gallery" onclick="modalOutsideClick(event, 'gallery')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Галерея</h2><button class="modal-close" onclick="closeModal('gallery')">×</button></div><div class="gallery-grid">{% for item in gallery %}<div class="gallery-item">{% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">{% endif %}<div class="caption"><h3>{{ item.title }}</h3><p>{{ item.description }}</p></div></div>{% endfor %}</div></div></div>
 {% endif %}
-
 {% if pricing %}
-<div class="modal" id="modal-pricing" onclick="modalOutsideClick(event, 'pricing')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Цены</h2><button class="modal-close" onclick="closeModal('pricing')">×</button></div>
-        <div class="pricing-grid">{% for p in pricing %}<div class="pricing-card"><h3>{{ p.name }}</h3><div class="price">{{ p.price }}</div><p>{{ p.description }}</p></div>{% endfor %}</div>
-    </div>
-</div>
+<div class="modal" id="modal-pricing" onclick="modalOutsideClick(event, 'pricing')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Цены</h2><button class="modal-close" onclick="closeModal('pricing')">×</button></div><div class="pricing-grid">{% for p in pricing %}<div class="pricing-card"><h3>{{ p.name }}</h3><div class="price">{{ p.price }}</div><p>{{ p.description }}</p></div>{% endfor %}</div></div></div>
 {% endif %}
-
 {% if testimonials %}
-<div class="modal" id="modal-testimonials" onclick="modalOutsideClick(event, 'testimonials')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Отзывы</h2><button class="modal-close" onclick="closeModal('testimonials')">×</button></div>
-        <div class="testimonials-grid">{% for t in testimonials %}<div class="testimonial"><div class="stars">{% for i in range(t.rating) %}★{% endfor %}{% for i in range(5 - t.rating) %}☆{% endfor %}</div><div class="text">«{{ t.text }}»</div><div class="author">— {{ t.author }}</div></div>{% endfor %}</div>
-    </div>
-</div>
+<div class="modal" id="modal-testimonials" onclick="modalOutsideClick(event, 'testimonials')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Отзывы</h2><button class="modal-close" onclick="closeModal('testimonials')">×</button></div><div class="testimonials-grid">{% for t in testimonials %}<div class="testimonial"><div class="stars">{% for i in range(t.rating) %}★{% endfor %}{% for i in range(5 - t.rating) %}☆{% endfor %}</div><div class="text">«{{ t.text }}»</div><div class="author">— {{ t.author }}</div></div>{% endfor %}</div></div></div>
 {% endif %}
-
 {% if team %}
-<div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div>
-        <div class="team-grid">{% for m in team %}<div class="team-member"><div class="avatar">{{ m.name[0] }}</div><h3>{{ m.name }}</h3><div class="role">{{ m.role }}</div><p>{{ m.description }}</p></div>{% endfor %}</div>
-    </div>
-</div>
+<div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div><div class="team-grid">{% for m in team %}<div class="team-member"><div class="avatar">{{ m.name[0] }}</div><h3>{{ m.name }}</h3><div class="role">{{ m.role }}</div><p>{{ m.description }}</p></div>{% endfor %}</div></div></div>
 {% endif %}
-
 {% if faq %}
-<div class="modal" id="modal-faq" onclick="modalOutsideClick(event, 'faq')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Частые вопросы</h2><button class="modal-close" onclick="closeModal('faq')">×</button></div>
-        <div class="faq-list">{% for item in faq %}<div class="faq-item"><h3>{{ item.question }}</h3><p>{{ item.answer }}</p></div>{% endfor %}</div>
-    </div>
-</div>
+<div class="modal" id="modal-faq" onclick="modalOutsideClick(event, 'faq')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Частые вопросы</h2><button class="modal-close" onclick="closeModal('faq')">×</button></div><div class="faq-list">{% for item in faq %}<div class="faq-item"><h3>{{ item.question }}</h3><p>{{ item.answer }}</p></div>{% endfor %}</div></div></div>
 {% endif %}
 
-<div class="modal" id="modal-contacts" onclick="modalOutsideClick(event, 'contacts')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Контакты</h2><button class="modal-close" onclick="closeModal('contacts')">×</button></div>
-        <div class="contacts-grid">
-            <div class="contact-item"><div class="label">Компания</div><div class="value">{{ company_name }}</div></div>
-            <div class="contact-item"><div class="label">Адрес</div><div class="value">{{ company_address }}</div></div>
-            <div class="contact-item"><div class="label">Телефон</div><div class="value">{{ company_phone }}</div></div>
-            {% if working_hours %}<div class="contact-item"><div class="label">Часы работы</div><div class="value">{{ working_hours }}</div></div>{% endif %}
-        </div>
-    </div>
-</div>
+<div class="modal" id="modal-contacts" onclick="modalOutsideClick(event, 'contacts')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Контакты</h2><button class="modal-close" onclick="closeModal('contacts')">×</button></div><div class="contacts-grid"><div class="contact-item"><div class="label">Компания</div><div class="value">{{ company_name }}</div></div><div class="contact-item"><div class="label">Адрес</div><div class="value">{{ company_address }}</div></div><div class="contact-item"><div class="label">Телефон</div><div class="value">{{ company_phone }}</div></div>{% if working_hours %}<div class="contact-item"><div class="label">Часы работы</div><div class="value">{{ working_hours }}</div></div>{% endif %}</div></div></div>
 
 <div class="modal" id="modal-booking" onclick="modalOutsideClick(event, 'booking')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Забронировать</h2><button class="modal-close" onclick="closeModal('booking')">×</button></div>
         <div class="booking">
-            <div id="stepMaster">
-                <h3 style="text-align:center; margin-bottom:16px;">Выберите мастера</h3>
-                <div class="master-selection" id="masterSelection"></div>
-            </div>
-            <div id="stepCalendar" style="display:none;">
-                <div class="calendar-header">
-                    <button id="prevMonth" type="button">‹</button>
-                    <div class="month-year" id="monthYear">—</div>
-                    <button id="nextMonth" type="button">›</button>
-                </div>
-                <div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div>
-                <div class="days" id="days"></div>
-            </div>
-            <div class="time-slots-wrapper" id="timeSlotsWrapper">
-                <h3>Выберите время</h3>
-                <div class="time-slots" id="timeSlots"></div>
-            </div>
+            <div id="stepMaster"><h3 style="text-align:center; margin-bottom:16px;">Выберите мастера</h3><div class="master-selection" id="masterSelection"></div></div>
+            <div id="stepCalendar" style="display:none;"><div class="calendar-header"><button id="prevMonth" type="button">‹</button><div class="month-year" id="monthYear">—</div><button id="nextMonth" type="button">›</button></div><div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div><div class="days" id="days"></div></div>
+            <div class="time-slots-wrapper" id="timeSlotsWrapper"><h3>Выберите время</h3><div class="time-slots" id="timeSlots"></div></div>
             <form class="booking-form" id="bookingForm">
                 <h3>Вы выбрали: <span id="selectedDate"></span> в <span id="selectedTimeText"></span></h3>
                 <div class="form-group"><label for="service">Услуга</label><select id="service" required><option value="">— Выберите услугу —</option></select></div>
@@ -399,268 +145,56 @@
     </div>
 </div>
 
-<div class="success-modal" id="successModal">
-    <div class="modal-content">
-        <h3>✅ Заявка отправлена!</h3>
-        <p>{{ booking_confirmation }}</p>
-        <button onclick="closeSuccessModal()">Хорошо</button>
-    </div>
-</div>
+<div class="success-modal" id="successModal"><div class="modal-content"><h3>✅ Заявка отправлена!</h3><p>{{ booking_confirmation }}</p><button onclick="closeSuccessModal()">Хорошо</button></div></div>
 
 <script>
-    const SERVER_URL = {{ server_url | default("http://127.0.0.1:8001") | tojson }};
+    const SERVER_URL = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
     const SITE_ID = {{ site_id | default("site") | tojson }};
     const WORKING_HOURS = {{ working_hours | default("09:00-20:00") | tojson }};
     const TEAM = {{ team | tojson if team else '[]' }};
 
-    let currentMonth = new Date();
-    let selectedMaster = null;
-    let selectedDate = null;
-    let selectedTime = null;
-    let busySlots = [];
+    let currentMonth = new Date(); let selectedMaster = null; let selectedDate = null; let selectedTime = null; let busySlots = [];
+    const monthYearEl = document.getElementById('monthYear'); const daysEl = document.getElementById('days'); const formEl = document.getElementById('bookingForm'); const selectedDateEl = document.getElementById('selectedDate'); const selectedTimeText = document.getElementById('selectedTimeText'); const successModal = document.getElementById('successModal'); const timeSlotsWrapper = document.getElementById('timeSlotsWrapper'); const timeSlotsEl = document.getElementById('timeSlots'); const masterSelectionEl = document.getElementById('masterSelection'); const stepMaster = document.getElementById('stepMaster'); const stepCalendar = document.getElementById('stepCalendar'); const serviceSelect = document.getElementById('service');
 
-    const monthYearEl = document.getElementById('monthYear');
-    const daysEl = document.getElementById('days');
-    const formEl = document.getElementById('bookingForm');
-    const selectedDateEl = document.getElementById('selectedDate');
-    const selectedTimeText = document.getElementById('selectedTimeText');
-    const successModal = document.getElementById('successModal');
-    const timeSlotsWrapper = document.getElementById('timeSlotsWrapper');
-    const timeSlotsEl = document.getElementById('timeSlots');
-    const masterSelectionEl = document.getElementById('masterSelection');
-    const stepMaster = document.getElementById('stepMaster');
-    const stepCalendar = document.getElementById('stepCalendar');
-    const serviceSelect = document.getElementById('service');
+    function toggleSidebar() { const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebarOverlay'); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('open'); }
+    function closeSidebar() { const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebarOverlay'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('open'); }
+    function openModal(name) { const modal = document.getElementById('modal-' + name); if (!modal) return; modal.classList.add('open'); document.body.style.overflow = 'hidden'; closeSidebar(); if (name === 'booking') { resetBooking(); renderMasters(); } }
+    function closeModal(name) { const modal = document.getElementById('modal-' + name); if (!modal) return; modal.classList.remove('open'); document.body.style.overflow = ''; }
+    function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); document.body.style.overflow = ''; closeSidebar(); } });
 
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        if (sidebar) sidebar.classList.toggle('open');
-        if (overlay) overlay.classList.toggle('open');
-    }
-    function closeSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        if (sidebar) sidebar.classList.remove('open');
-        if (overlay) overlay.classList.remove('open');
-    }
+    function renderMasters() { masterSelectionEl.innerHTML = ''; if (!TEAM || TEAM.length === 0) { masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Мастера не указаны.</p>'; return; } TEAM.forEach(master => { const card = document.createElement('div'); card.className = 'master-card'; card.innerHTML = `<div class="master-avatar">${master.name ? master.name[0] : '?'}</div><h3>${master.name}</h3><div class="role">${master.role || ''}</div>`; card.onclick = async () => await selectMaster(master, card); masterSelectionEl.appendChild(card); }); }
 
-    function openModal(name) {
-        const modal = document.getElementById('modal-' + name);
-        if (!modal) return;
-        modal.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        closeSidebar();
-        if (name === 'booking') { resetBooking(); renderMasters(); }
-    }
-    function closeModal(name) {
-        const modal = document.getElementById('modal-' + name);
-        if (!modal) return;
-        modal.classList.remove('open');
-        document.body.style.overflow = '';
-    }
-    function modalOutsideClick(event, name) {
-        if (event.target.id === 'modal-' + name) closeModal(name);
-    }
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
-            document.body.style.overflow = '';
-            closeSidebar();
-        }
-    });
+    async function selectMaster(master, card) { document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); selectedMaster = master; serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>'; const services = master.services && master.services.length > 0 ? master.services : []; services.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = s; serviceSelect.appendChild(opt); }); stepMaster.style.display = 'none'; stepCalendar.style.display = 'block'; timeSlotsWrapper.style.display = 'none'; formEl.classList.remove('active'); await loadBusySlots(); renderCalendar(); }
+    async function loadBusySlots() { try { const res = await fetch(`${SERVER_URL}/api/busy/${SITE_ID}`); const data = await res.json(); busySlots = data.busy || []; } catch (e) { console.error('Не удалось загрузить занятые слоты', e); busySlots = []; } }
+    function isSlotBusy(date, time) { if (!selectedMaster) return false; return busySlots.some(b => b.date === date && b.time === time && b.master === selectedMaster.name); }
 
-    function renderMasters() {
-        masterSelectionEl.innerHTML = '';
-        if (!TEAM || TEAM.length === 0) {
-            masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Мастера не указаны.</p>';
-            return;
-        }
-        TEAM.forEach(master => {
-            const card = document.createElement('div');
-            card.className = 'master-card';
-            card.innerHTML = `
-                <div class="master-avatar">${master.name ? master.name[0] : '?'}</div>
-                <h3>${master.name}</h3>
-                <div class="role">${master.role || ''}</div>
-            `;
-            card.onclick = async () => await selectMaster(master, card);
-            masterSelectionEl.appendChild(card);
-        });
-    }
+    function renderCalendar() { if (!daysEl) return; const year = currentMonth.getFullYear(); const month = currentMonth.getMonth(); const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']; monthYearEl.textContent = monthNames[month] + ' ' + year; const firstDay = new Date(year, month, 1); const totalDays = new Date(year, month + 1, 0).getDate(); let startOffset = firstDay.getDay() - 1; if (startOffset < 0) startOffset = 6; daysEl.innerHTML = ''; for (let i = 0; i < startOffset; i++) { const empty = document.createElement('div'); empty.className = 'day empty'; daysEl.appendChild(empty); } const today = new Date(); today.setHours(0,0,0,0); for (let d = 1; d <= totalDays; d++) { const dateObj = new Date(year, month, d); const iso = formatISO(dateObj); const dayEl = document.createElement('div'); dayEl.className = 'day'; dayEl.textContent = d; if (dateObj < today) dayEl.classList.add('disabled'); else { if (iso === formatISO(today)) dayEl.classList.add('today'); if (iso === selectedDate) dayEl.classList.add('selected'); dayEl.addEventListener('click', () => selectDate(iso, dateObj)); } daysEl.appendChild(dayEl); } }
+    function formatISO(date) { const y = date.getFullYear(); const m = String(date.getMonth() + 1).padStart(2, '0'); const d = String(date.getDate()).padStart(2, '0'); return `${y}-${m}-${d}`; }
+    function selectDate(iso, dateObj) { selectedDate = iso; selectedTime = null; const formatted = dateObj.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' }); if (selectedDateEl) selectedDateEl.textContent = formatted; if (selectedTimeText) selectedTimeText.textContent = '—'; formEl.classList.remove('active'); renderCalendar(); generateTimeSlots(); }
 
-    async function selectMaster(master, card) {
-        document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        selectedMaster = master;
-        serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>';
-        const services = master.services && master.services.length > 0 ? master.services : [];
-        services.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s;
-            opt.textContent = s;
-            serviceSelect.appendChild(opt);
-        });
-        stepMaster.style.display = 'none';
-        stepCalendar.style.display = 'block';
-        timeSlotsWrapper.style.display = 'none';
-        formEl.classList.remove('active');
+    function generateTimeSlots() { let start = 9, end = 20; const match = WORKING_HOURS.match(/(\d{1,2}):\d{2}\s*-\s*(\d{1,2}):\d{2}/); if (match) { start = parseInt(match[1]); end = parseInt(match[2]); } timeSlotsEl.innerHTML = ''; timeSlotsWrapper.style.display = 'block'; for (let h = start; h < end; h++) { const timeStr = String(h).padStart(2, '0') + ':00'; const slot = document.createElement('div'); slot.className = 'time-slot'; slot.textContent = timeStr; if (isSlotBusy(selectedDate, timeStr)) slot.classList.add('busy'); else slot.onclick = () => selectTime(slot, timeStr); timeSlotsEl.appendChild(slot); } }
 
-        await loadBusySlots();
-        renderCalendar();
-    }
+    function selectTime(slot, timeStr) { document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected')); slot.classList.add('selected'); selectedTime = timeStr; if (selectedTimeText) selectedTimeText.textContent = timeStr; formEl.classList.add('active'); formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 
-    async function loadBusySlots() {
-        try {
-            const res = await fetch(`${SERVER_URL}/api/busy/${SITE_ID}`);
-            const data = await res.json();
-            busySlots = data.busy || [];
-        } catch (e) {
-            console.error('Не удалось загрузить занятые слоты', e);
-            busySlots = [];
-        }
-    }
-
-    function isSlotBusy(date, time) {
-        if (!selectedMaster) return false;
-        return busySlots.some(b => b.date === date && b.time === time && b.master === selectedMaster.name);
-    }
-
-    function renderCalendar() {
-        if (!daysEl) return;
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth();
-        const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-        monthYearEl.textContent = monthNames[month] + ' ' + year;
-        const firstDay = new Date(year, month, 1);
-        const totalDays = new Date(year, month + 1, 0).getDate();
-        let startOffset = firstDay.getDay() - 1;
-        if (startOffset < 0) startOffset = 6;
-        daysEl.innerHTML = '';
-        for (let i = 0; i < startOffset; i++) {
-            const empty = document.createElement('div');
-            empty.className = 'day empty';
-            daysEl.appendChild(empty);
-        }
-        const today = new Date(); today.setHours(0,0,0,0);
-        for (let d = 1; d <= totalDays; d++) {
-            const dateObj = new Date(year, month, d);
-            const iso = formatISO(dateObj);
-            const dayEl = document.createElement('div');
-            dayEl.className = 'day';
-            dayEl.textContent = d;
-            if (dateObj < today) dayEl.classList.add('disabled');
-            else {
-                if (iso === formatISO(today)) dayEl.classList.add('today');
-                if (iso === selectedDate) dayEl.classList.add('selected');
-                dayEl.addEventListener('click', () => selectDate(iso, dateObj));
-            }
-            daysEl.appendChild(dayEl);
-        }
-    }
-
-    function formatISO(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    }
-
-    function selectDate(iso, dateObj) {
-        selectedDate = iso;
-        selectedTime = null;
-        const formatted = dateObj.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' });
-        if (selectedDateEl) selectedDateEl.textContent = formatted;
-        if (selectedTimeText) selectedTimeText.textContent = '—';
-        formEl.classList.remove('active');
-        renderCalendar();
-        generateTimeSlots();
-    }
-
-    function generateTimeSlots() {
-        let start = 9, end = 20;
-        const match = WORKING_HOURS.match(/(\d{1,2}):\d{2}\s*-\s*(\d{1,2}):\d{2}/);
-        if (match) { start = parseInt(match[1]); end = parseInt(match[2]); }
-        timeSlotsEl.innerHTML = '';
-        timeSlotsWrapper.style.display = 'block';
-        for (let h = start; h < end; h++) {
-            const timeStr = String(h).padStart(2, '0') + ':00';
-            const slot = document.createElement('div');
-            slot.className = 'time-slot';
-            slot.textContent = timeStr;
-            if (isSlotBusy(selectedDate, timeStr)) slot.classList.add('busy');
-            else slot.onclick = () => selectTime(slot, timeStr);
-            timeSlotsEl.appendChild(slot);
-        }
-    }
-
-    function selectTime(slot, timeStr) {
-        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-        slot.classList.add('selected');
-        selectedTime = timeStr;
-        if (selectedTimeText) selectedTimeText.textContent = timeStr;
-        formEl.classList.add('active');
-        formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function resetBooking() {
-        selectedMaster = null; selectedDate = null; selectedTime = null;
-        stepMaster.style.display = 'block';
-        stepCalendar.style.display = 'none';
-        timeSlotsWrapper.style.display = 'none';
-        formEl.classList.remove('active');
-        serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>';
-        if (selectedDateEl) selectedDateEl.textContent = '—';
-        if (selectedTimeText) selectedTimeText.textContent = '—';
-    }
-
-    const prevBtn = document.getElementById('prevMonth');
-    const nextBtn = document.getElementById('nextMonth');
-    if (prevBtn) prevBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); });
-    if (nextBtn) nextBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); });
+    function resetBooking() { selectedMaster = null; selectedDate = null; selectedTime = null; stepMaster.style.display = 'block'; stepCalendar.style.display = 'none'; timeSlotsWrapper.style.display = 'none'; formEl.classList.remove('active'); serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>'; if (selectedDateEl) selectedDateEl.textContent = '—'; if (selectedTimeText) selectedTimeText.textContent = '—'; }
+    const prevBtn = document.getElementById('prevMonth'); const nextBtn = document.getElementById('nextMonth'); if (prevBtn) prevBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); }); if (nextBtn) nextBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); });
 
     if (formEl) {
         formEl.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const service = serviceSelect.value;
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const comment = document.getElementById('comment').value.trim();
-            if (!selectedMaster || !selectedDate || !selectedTime || !service || !name || !phone) {
-                alert('Выберите мастера, дату, время, услугу и заполните поля');
-                return;
-            }
-            const submitBtn = formEl.querySelector('.submit-btn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Отправляю...';
+            const service = serviceSelect.value; const name = document.getElementById('name').value.trim(); const phone = document.getElementById('phone').value.trim(); const email = document.getElementById('email').value.trim(); const comment = document.getElementById('comment').value.trim();
+            if (!selectedMaster || !selectedDate || !selectedTime || !service || !name || !phone) { alert('Выберите мастера, дату, время, услугу и заполните поля'); return; }
+            const submitBtn = formEl.querySelector('.submit-btn'); submitBtn.disabled = true; submitBtn.textContent = 'Отправляю...';
             try {
-                const response = await fetch(`${SERVER_URL}/api/book/${SITE_ID}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ master: selectedMaster.name, date: selectedDate, time: selectedTime, service, name, phone, email, comment }),
-                });
-                const result = await response.json();
-                if (!response.ok || !result.ok) throw new Error(result.error || 'Ошибка сервера');
-                closeModal('booking');
-                successModal.classList.add('active');
-            } catch (error) {
-                alert('Не удалось отправить заявку. Попробуйте позже.');
-                console.error(error);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Отправить заявку';
-            }
+                const response = await fetch(`${SERVER_URL}/api/book/${SITE_ID}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ master: selectedMaster.name, date: selectedDate, time: selectedTime, service, name, phone, email, comment }), });
+                const result = await response.json(); if (!response.ok || !result.ok) throw new Error(result.error || 'Ошибка сервера');
+                closeModal('booking'); successModal.classList.add('active');
+            } catch (error) { alert('Не удалось отправить заявку. Попробуйте позже.'); console.error(error); } finally { submitBtn.disabled = false; submitBtn.textContent = 'Отправить заявку'; }
         });
     }
 
-    function closeSuccessModal() {
-        successModal.classList.remove('active');
-        formEl.reset();
-        resetBooking();
-        renderCalendar();
-    }
-
+    function closeSuccessModal() { successModal.classList.remove('active'); formEl.reset(); resetBooking(); renderCalendar(); }
     renderCalendar();
 </script>
 </body>
