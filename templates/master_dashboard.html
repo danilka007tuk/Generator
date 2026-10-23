@@ -39,7 +39,6 @@
 </div>
 
 <div class="container">
-    <!-- Блок 1: Мои записи -->
     <div class="card">
         <h2>📅 Мои записи</h2>
         <table>
@@ -58,7 +57,6 @@
         </table>
     </div>
 
-    <!-- Блок 2: Мой график -->
     <div class="card">
         <h2>🗓️ Мой график работы</h2>
         <div id="scheduleBody">
@@ -72,9 +70,13 @@
     const SERVER_URL = "{{ server_url }}";
     const WEEKDAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
 
+    // Получаем email из localStorage (если он есть) или из cookie
+    const email = localStorage.getItem('master_email') || '';
+
     async function loadBookings() {
         try {
-            const res = await fetch(`${SERVER_URL}/api/master-bookings`);
+            // Передаем email и site_id в query-параметрах
+            const res = await fetch(`${SERVER_URL}/api/master-bookings?email=${encodeURIComponent(email)}&site_id=${SITE_ID}`);
             const data = await res.json();
             const tbody = document.getElementById('bookingsBody');
 
@@ -100,7 +102,7 @@
 
     async function loadSchedule() {
         try {
-            const res = await fetch(`${SERVER_URL}/api/master-schedule`);
+            const res = await fetch(`${SERVER_URL}/api/master-schedule?email=${encodeURIComponent(email)}&site_id=${SITE_ID}`);
             const data = await res.json();
             const container = document.getElementById('scheduleBody');
 

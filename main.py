@@ -14,10 +14,10 @@ import resend
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Depends, BackgroundTasks, Body, Cookie, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from sqlalchemy import select, func, delete
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
@@ -84,6 +84,7 @@ async def index():
 async def login(data: LoginRequest, response: Response, session: AsyncSession = Depends(get_session)):
     email = data.email.strip().lower()
 
+    # --- ВХОД АДМИНА ---
     if data.role == "admin":
         site = await session.get(Site, data.site_id)
         if site and site.admin_email == email and site.admin_password:
@@ -93,6 +94,7 @@ async def login(data: LoginRequest, response: Response, session: AsyncSession = 
                 return {"ok": True, "role": "admin", "redirect": f"/dashboard/{data.site_id}"}
         return {"ok": False, "error": "Неверный email или пароль администратора"}
 
+    # --- ВХОД МАСТЕРА ---
     if data.role == "master":
         result = await session.execute(select(Master).where(Master.site_id == data.site_id, Master.email == email))
         master = result.scalar_one_or_none()
@@ -104,6 +106,7 @@ async def login(data: LoginRequest, response: Response, session: AsyncSession = 
                 return {"ok": True, "role": "master", "redirect": f"/master_dashboard/{data.site_id}"}
         return {"ok": False, "error": "Неверный email или пароль мастера"}
 
+    # --- ВХОД КЛИЕНТА ---
     result = await session.execute(
         select(ClientContact).where(ClientContact.site_id == data.site_id, ClientContact.email == email)
     )
@@ -148,6 +151,15 @@ async def master_dashboard(site_id: str, request: Request):
     )
 
 
+@app.get("/dashboard/{site_id}", response_class=HTMLResponse)
+async def dashboard(site_id: str, request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard.html",
+        context={"site_id": site_id, "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")}
+    )
+
+
 @app.get("/api/my-bookings")
 async def get_my_bookings(
         email: str = Cookie(None),
@@ -157,8 +169,7 @@ async def get_my_bookings(
     if not email or not site_id:
         return {"ok": False, "error": "Не авторизован"}
     result = await session.execute(
-        select(Booking).where(Booking.site_id == site_id, Booking.email == email).order_by(Booking.date.desc(),
-                                                                                           Booking.time.desc())
+        select(Booking).where(Booking.site_id == site_id, Booking.email == email).order_by(Booking.date.desc(), Booking.time.desc())
     )
     bookings = result.scalars().all()
     return {"ok": True, "bookings": [
@@ -169,10 +180,11 @@ async def get_my_bookings(
 
 @app.get("/api/master-bookings")
 async def get_master_bookings(
-        email: str = Cookie(None),
-        site_id: str = Cookie(None),
+        email: str = None,
+        site_id: str = None,
         session: AsyncSession = Depends(get_session)
 ):
+    # Если email/site_id не переданы в query — берем из cookie
     if not email or not site_id:
         return {"ok": False, "error": "Не авторизован"}
 
@@ -182,8 +194,7 @@ async def get_master_bookings(
         return {"ok": False, "error": "Мастер не найден"}
 
     result = await session.execute(
-        select(Booking).where(Booking.site_id == site_id, Booking.master == master.name).order_by(Booking.date.desc(),
-                                                                                                  Booking.time.desc())
+        select(Booking).where(Booking.site_id == site_id, Booking.master == master.name).order_by(Booking.date.desc(), Booking.time.desc())
     )
     bookings = result.scalars().all()
     return {"ok": True, "bookings": [
@@ -194,9 +205,9 @@ async def get_master_bookings(
 
 @app.get("/api/master-schedule")
 async def get_master_schedule(
-        email: str = Cookie(None),
-        site_id: str = Cookie(None),
-        session: AsyncSession = Depends(get_session)
+    email: str = None,
+    site_id: str = None,
+    session: AsyncSession = Depends(get_session)
 ):
     if not email or not site_id:
         return {"ok": False, "error": "Не авторизован"}
@@ -222,16 +233,6 @@ async def logout(response: Response):
     response.delete_cookie("email")
     response.delete_cookie("site_id")
     return {"ok": True, "message": "Вы вышли"}
-
-
-# ============ ДАШБОРД ============
-@app.get("/dashboard/{site_id}", response_class=HTMLResponse)
-async def dashboard(site_id: str, request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="dashboard.html",
-        context={"site_id": site_id, "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")}
-    )
 
 
 # ============ CMS (КОНТЕНТ) ============
@@ -301,14 +302,26 @@ async def delete_master(master_id: int, session: AsyncSession = Depends(get_sess
     return {"ok": True}
 
 
+@app.post("/api/master-schedule/{master_id}")
+async def update_master_schedule(master_id: int, data: dict = Body(...), session: AsyncSession = Depends(get_session)):
+    # Удаляем старый график
+    from sqlalchemy import delete as sql_delete
+    await session.execute(sql_delete(MasterSchedule).where(MasterSchedule.master_id == master_id))
+    # Добавляем новый
+    for day in data.get("schedule", []):
+        sched = MasterSchedule(master_id=master_id, weekday=day["weekday"], start_time=day["start_time"], end_time=day["end_time"])
+        session.add(sched)
+    await session.commit()
+    return {"ok": True}
+
+
 # ============ АНАЛИТИКА ============
 @app.get("/api/analytics/{site_id}")
 async def get_analytics(site_id: str, session: AsyncSession = Depends(get_session)):
     total_contacts = await session.scalar(
         select(func.count()).select_from(ClientContact).where(ClientContact.site_id == site_id)) or 0
     verified_contacts = await session.scalar(
-        select(func.count()).select_from(ClientContact).where(ClientContact.site_id == site_id,
-                                                              ClientContact.is_verified == True)) or 0
+        select(func.count()).select_from(ClientContact).where(ClientContact.site_id == site_id, ClientContact.is_verified == True)) or 0
     total_bookings = await session.scalar(
         select(func.count()).select_from(Booking).where(Booking.site_id == site_id)) or 0
     total_subscribers = await session.scalar(
@@ -324,8 +337,7 @@ async def get_bookings(site_id: str, session: AsyncSession = Depends(get_session
         select(Booking).where(Booking.site_id == site_id).order_by(Booking.date.desc(), Booking.time.desc()))
     bookings = result.scalars().all()
     return {"bookings": [
-        {"date": b.date, "time": b.time, "master": b.master, "service": b.service, "name": b.name, "phone": b.phone} for
-        b in bookings]}
+        {"date": b.date, "time": b.time, "master": b.master, "service": b.service, "name": b.name, "phone": b.phone} for b in bookings]}
 
 
 # ============ ПОДПИСЧИКИ ============
@@ -347,8 +359,7 @@ async def health(session: AsyncSession = Depends(get_session)):
 
 # ============ РЕГИСТРАЦИЯ КЛИЕНТОВ ============
 @app.post("/api/register-client/{site_id}")
-async def register_client(site_id: str, data: ClientRegisterRequest, background_tasks: BackgroundTasks,
-                          session: AsyncSession = Depends(get_session)):
+async def register_client(site_id: str, data: ClientRegisterRequest, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
     email = data.email.strip().lower()
     if not email or "@" not in email: return {"ok": False, "error": "Неверный email"}
     existing = await session.execute(
@@ -413,8 +424,7 @@ async def send_verification_email(site_id: str, email: str, token: str):
     verify_url = f"{server_url}/api/verify-client?token={token}"
     html = f"<h2>Здравствуйте!</h2><p>Вы зарегистрировались на сайте <strong>{site_id}</strong>.</p><p>Чтобы подтвердить email, перейдите по ссылке:</p><p><a href='{verify_url}'>Подтвердить email</a></p><p>Или скопируйте: {verify_url}</p><p>Ссылка действует 24 часа.</p>"
     try:
-        params = {"from": "noreply@generator-beloretsk.ru", "to": [email], "subject": "Подтверждение email",
-                  "html": html}
+        params = {"from": "noreply@generator-beloretsk.ru", "to": [email], "subject": "Подтверждение email", "html": html}
         response = await asyncio.to_thread(resend.Emails.send, params)
         logger.info(f"Email через Resend отправлен {email}. ID: {response.get('id')}")
     except Exception as e:
@@ -426,24 +436,20 @@ async def send_verification_email(site_id: str, email: str, token: str):
 async def get_busy(site_id: str, session: AsyncSession = Depends(get_session)):
     today = date_type.today().isoformat()
     result = await session.execute(
-        select(Booking.date, Booking.time, Booking.master, Booking.service).where(Booking.site_id == site_id,
-                                                                                  Booking.date >= today))
+        select(Booking.date, Booking.time, Booking.master, Booking.service).where(Booking.site_id == site_id, Booking.date >= today))
     busy = [{"date": row.date, "time": row.time, "master": row.master, "service": row.service} for row in result.all()]
     return {"busy": busy}
 
 
 @app.post("/api/book/{site_id}")
-async def create_booking(site_id: str, data: BookingRequest, background_tasks: BackgroundTasks,
-                         session: AsyncSession = Depends(get_session)):
+async def create_booking(site_id: str, data: BookingRequest, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
     if not data.email: return {"ok": False, "error": "Укажите email"}
     contact_result = await session.execute(
-        select(ClientContact).where(ClientContact.site_id == site_id, ClientContact.email == data.email.strip().lower(),
-                                    ClientContact.is_verified == True))
+        select(ClientContact).where(ClientContact.site_id == site_id, ClientContact.email == data.email.strip().lower(), ClientContact.is_verified == True))
     contact = contact_result.scalar_one_or_none()
     if not contact: return {"ok": False, "error": "Email не подтверждён. Зарегистрируйтесь на сайте."}
     existing = await session.execute(
-        select(Booking).where(Booking.site_id == site_id, Booking.master == data.master, Booking.date == data.date,
-                              Booking.time == data.time))
+        select(Booking).where(Booking.site_id == site_id, Booking.master == data.master, Booking.date == data.date, Booking.time == data.time))
     if existing.scalar_one_or_none(): return {"ok": False, "error": "Это время у мастера уже занято"}
 
     booking = Booking(site_id=site_id, master=data.master, date=data.date, time=data.time, service=data.service,
@@ -476,8 +482,7 @@ async def send_notifications(text: str, site_id: str):
     async with httpx.AsyncClient(timeout=15) as client:
         for user_id in recipients:
             try:
-                await client.post(url, params={"user_id": user_id}, headers={"Authorization": token},
-                                  json={"text": text}, timeout=15)
+                await client.post(url, params={"user_id": user_id}, headers={"Authorization": token}, json={"text": text}, timeout=15)
             except Exception as e:
                 logger.error(f"Не удалось отправить {user_id}: {e}")
 
