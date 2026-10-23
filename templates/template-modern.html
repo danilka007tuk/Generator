@@ -61,29 +61,17 @@
     (async function() {
         const urlParams = new URLSearchParams(window.location.search);
         const verified = urlParams.get('verified');
-
-        if (verified) {
-            window.history.replaceState({}, '', 'index.html');
-            setTimeout(() => { openModal('booking'); }, 500);
-            return;
-        }
-
-        // ИСПОЛЬЗУЕМ sessionStorage (сбрасывается при закрытии браузера)
+        if (verified) { window.history.replaceState({}, '', 'index.html'); setTimeout(() => { openModal('booking'); }, 500); return; }
         const email = sessionStorage.getItem('user_email');
         const siteId = {{ site_id | default("site") | tojson }};
         const serverUrl = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
-
         if (email) {
             try {
                 const res = await fetch(`${serverUrl}/api/check-email/${siteId}?email=${encodeURIComponent(email)}`);
                 const data = await res.json();
-                if (data.exists && data.is_verified) {
-                    return; // Пускаем
-                }
+                if (data.exists && data.is_verified) return;
             } catch (e) {}
         }
-
-        // Если нет или не подтвержден — на регистрацию
         window.location.replace('register.html');
     })();
 </script>
@@ -95,18 +83,10 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">{{ company_name }}</div>
     {% if sidebar_items %}
-    <nav class="sidebar-nav" id="sidebarNav">
-        {% for item in sidebar_items %}
-        <a href="javascript:void(0)" onclick="openModal('{{ item.anchor[1:] }}')">{{ item.icon }} {{ item.label }}</a>
-        {% endfor %}
-    </nav>
+    <nav class="sidebar-nav" id="sidebarNav">{% for item in sidebar_items %}<a href="javascript:void(0)" onclick="openModal('{{ item.anchor[1:] }}')">{{ item.icon }} {{ item.label }}</a>{% endfor %}</nav>
     {% endif %}
     <button class="sidebar-cta" onclick="openModal('booking')">{{ sidebar_cta_text or 'Забронировать' }}</button>
-    <div class="sidebar-contacts">
-        <div>📞 {{ company_phone }}</div>
-        <div>📍 {{ company_address }}</div>
-        {% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}
-    </div>
+    <div class="sidebar-contacts"><div>📞 {{ company_phone }}</div><div>📍 {{ company_address }}</div>{% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}</div>
 </aside>
 {% endif %}
 
@@ -116,15 +96,8 @@
         <h1>{{ hero_heading }}</h1>
         <p>{{ hero_subheading }}</p>
         {% if about_short %}<div class="hero-about">{{ about_short }}</div>{% endif %}
-        <div class="hero-contacts">
-            <div>📞 {{ company_phone }}</div>
-            <div>📍 {{ company_address }}</div>
-            {% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}
-        </div>
-        <div class="hero-buttons">
-            <button class="hero-btn" onclick="openModal('booking')">{{ sidebar_cta_text or 'Забронировать' }}</button>
-            {% if services %}<button class="hero-btn secondary" onclick="openModal('services')">Услуги</button>{% endif %}
-        </div>
+        <div class="hero-contacts"><div>📞 {{ company_phone }}</div><div>📍 {{ company_address }}</div>{% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}</div>
+        <div class="hero-buttons"><button class="hero-btn" onclick="openModal('booking')">{{ sidebar_cta_text or 'Забронировать' }}</button>{% if services %}<button class="hero-btn secondary" onclick="openModal('services')">Услуги</button>{% endif %}</div>
     </div>
 </section>
 </main>
@@ -184,7 +157,7 @@
     const SERVER_URL = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
     const SITE_ID = {{ site_id | default("site") | tojson }};
     const WORKING_HOURS = {{ working_hours | default("09:00-20:00") | tojson }};
-    const TEAM = {{ team | tojson if team else '[]' }};
+    const STATIC_TEAM = {{ team | tojson if team else '[]' }}; // Оставляем на случай, если API не ответит
 
     let currentMonth = new Date(); let selectedMaster = null; let selectedDate = null; let selectedTime = null; let busySlots = [];
     const monthYearEl = document.getElementById('monthYear'); const daysEl = document.getElementById('days'); const formEl = document.getElementById('bookingForm'); const selectedDateEl = document.getElementById('selectedDate'); const selectedTimeText = document.getElementById('selectedTimeText'); const successModal = document.getElementById('successModal'); const timeSlotsWrapper = document.getElementById('timeSlotsWrapper'); const timeSlotsEl = document.getElementById('timeSlots'); const masterSelectionEl = document.getElementById('masterSelection'); const stepMaster = document.getElementById('stepMaster'); const stepCalendar = document.getElementById('stepCalendar'); const serviceSelect = document.getElementById('service');
@@ -196,9 +169,58 @@
     function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); document.body.style.overflow = ''; closeSidebar(); } });
 
-    function renderMasters() { masterSelectionEl.innerHTML = ''; if (!TEAM || TEAM.length === 0) { masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Мастера не указаны.</p>'; return; } TEAM.forEach(master => { const card = document.createElement('div'); card.className = 'master-card'; card.innerHTML = `<div class="master-avatar">${master.name ? master.name[0] : '?'}</div><h3>${master.name}</h3><div class="role">${master.role || ''}</div>`; card.onclick = async () => await selectMaster(master, card); masterSelectionEl.appendChild(card); }); }
+    // ИЗМЕНЕНО: теперь загружаем мастеров из базы данных
+    async function renderMasters() {
+        masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Загрузка мастеров...</p>';
 
-    async function selectMaster(master, card) { document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); selectedMaster = master; serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>'; const services = master.services && master.services.length > 0 ? master.services : []; services.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = s; serviceSelect.appendChild(opt); }); stepMaster.style.display = 'none'; stepCalendar.style.display = 'block'; timeSlotsWrapper.style.display = 'none'; formEl.classList.remove('active'); await loadBusySlots(); renderCalendar(); }
+        try {
+            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
+            const data = await res.json();
+            const currentTeam = data.masters && data.masters.length > 0 ? data.masters : STATIC_TEAM;
+
+            masterSelectionEl.innerHTML = '';
+            if (currentTeam.length === 0) {
+                masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Мастера не указаны.</p>';
+                return;
+            }
+
+            currentTeam.forEach(master => {
+                const card = document.createElement('div');
+                card.className = 'master-card';
+                card.innerHTML = `
+                    <div class="master-avatar">${master.name ? master.name[0] : '?'}</div>
+                    <h3>${master.name}</h3>
+                    <div class="role">${master.role || ''}</div>
+                `;
+                card.onclick = async () => await selectMaster(master, card);
+                masterSelectionEl.appendChild(card);
+            });
+        } catch (e) {
+            console.error("Ошибка загрузки мастеров", e);
+            masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Ошибка загрузки мастеров</p>';
+        }
+    }
+
+    async function selectMaster(master, card) {
+        document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedMaster = master;
+        serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>';
+        const services = master.services && master.services.length > 0 ? master.services : [];
+        services.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            serviceSelect.appendChild(opt);
+        });
+        stepMaster.style.display = 'none';
+        stepCalendar.style.display = 'block';
+        timeSlotsWrapper.style.display = 'none';
+        formEl.classList.remove('active');
+        await loadBusySlots();
+        renderCalendar();
+    }
+
     async function loadBusySlots() { try { const res = await fetch(`${SERVER_URL}/api/busy/${SITE_ID}`); const data = await res.json(); busySlots = data.busy || []; } catch (e) { console.error('Не удалось загрузить занятые слоты', e); busySlots = []; } }
     function isSlotBusy(date, time) { if (!selectedMaster) return false; return busySlots.some(b => b.date === date && b.time === time && b.master === selectedMaster.name); }
 

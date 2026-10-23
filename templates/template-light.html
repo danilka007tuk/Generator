@@ -158,7 +158,7 @@
     const SERVER_URL = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
     const SITE_ID = {{ site_id | default("site") | tojson }};
     const WORKING_HOURS = {{ working_hours | default("09:00-20:00") | tojson }};
-    const TEAM = {{ team | tojson if team else '[]' }};
+    const STATIC_TEAM = {{ team | tojson if team else '[]' }};
 
     let currentMonth = new Date(); let selectedMaster = null; let selectedDate = null; let selectedTime = null; let busySlots = [];
     const monthYearEl = document.getElementById('monthYear'); const daysEl = document.getElementById('days'); const formEl = document.getElementById('bookingForm'); const selectedDateEl = document.getElementById('selectedDate'); const selectedTimeText = document.getElementById('selectedTimeText'); const successModal = document.getElementById('successModal'); const timeSlotsWrapper = document.getElementById('timeSlotsWrapper'); const timeSlotsEl = document.getElementById('timeSlots'); const masterSelectionEl = document.getElementById('masterSelection'); const stepMaster = document.getElementById('stepMaster'); const stepCalendar = document.getElementById('stepCalendar'); const serviceSelect = document.getElementById('service');
@@ -170,9 +170,56 @@
     function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); document.body.style.overflow = ''; closeSidebar(); } });
 
-    function renderMasters() { masterSelectionEl.innerHTML = ''; if (!TEAM || TEAM.length === 0) { masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#999;">Мастера не указаны.</p>'; return; } TEAM.forEach(master => { const card = document.createElement('div'); card.className = 'master-card'; card.innerHTML = `<div class="master-avatar">${master.name ? master.name[0] : '?'}</div><h3>${master.name}</h3><div class="role">${master.role || ''}</div>`; card.onclick = async () => await selectMaster(master, card); masterSelectionEl.appendChild(card); }); }
+    async function renderMasters() {
+        masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Загрузка мастеров...</p>';
+        try {
+            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
+            const data = await res.json();
+            const currentTeam = data.masters && data.masters.length > 0 ? data.masters : STATIC_TEAM;
 
-    async function selectMaster(master, card) { document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); selectedMaster = master; serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>'; const services = master.services && master.services.length > 0 ? master.services : []; services.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = s; serviceSelect.appendChild(opt); }); stepMaster.style.display = 'none'; stepCalendar.style.display = 'block'; timeSlotsWrapper.style.display = 'none'; formEl.classList.remove('active'); await loadBusySlots(); renderCalendar(); }
+            masterSelectionEl.innerHTML = '';
+            if (currentTeam.length === 0) {
+                masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Мастера не указаны.</p>';
+                return;
+            }
+
+            currentTeam.forEach(master => {
+                const card = document.createElement('div');
+                card.className = 'master-card';
+                card.innerHTML = `
+                    <div class="master-avatar">${master.name ? master.name[0] : '?'}</div>
+                    <h3>${master.name}</h3>
+                    <div class="role">${master.role || ''}</div>
+                `;
+                card.onclick = async () => await selectMaster(master, card);
+                masterSelectionEl.appendChild(card);
+            });
+        } catch (e) {
+            console.error("Ошибка загрузки мастеров", e);
+            masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Ошибка загрузки мастеров</p>';
+        }
+    }
+
+    async function selectMaster(master, card) {
+        document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedMaster = master;
+        serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>';
+        const services = master.services && master.services.length > 0 ? master.services : [];
+        services.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            serviceSelect.appendChild(opt);
+        });
+        stepMaster.style.display = 'none';
+        stepCalendar.style.display = 'block';
+        timeSlotsWrapper.style.display = 'none';
+        formEl.classList.remove('active');
+        await loadBusySlots();
+        renderCalendar();
+    }
+
     async function loadBusySlots() { try { const res = await fetch(`${SERVER_URL}/api/busy/${SITE_ID}`); const data = await res.json(); busySlots = data.busy || []; } catch (e) { console.error('Не удалось загрузить занятые слоты', e); busySlots = []; } }
     function isSlotBusy(date, time) { if (!selectedMaster) return false; return busySlots.some(b => b.date === date && b.time === time && b.master === selectedMaster.name); }
 
