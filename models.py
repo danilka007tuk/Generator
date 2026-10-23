@@ -16,6 +16,7 @@ class Booking(Base):
     service: Mapped[str] = mapped_column(String(100))
     name: Mapped[str] = mapped_column(String(100))
     phone: Mapped[str] = mapped_column(String(30))
+    email: Mapped[str] = mapped_column(String(200), default="")  # <--- ДОБАВЛЕНО
     comment: Mapped[str] = mapped_column(String(500), default="")
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
@@ -52,12 +53,13 @@ class ClientContact(Base):
 
 
 class Site(Base):
-    """Хранит сгенерированный контент сайта для редактирования через дашборд."""
+    """Хранит сгенерированный контент сайта и пароль админа."""
     __tablename__ = "sites"
 
     id: Mapped[str] = mapped_column(String(100), primary_key=True)  # site_id
     owner_id: Mapped[int] = mapped_column(Integer, default=0)  # ID пользователя MAX
     content_json: Mapped[str] = mapped_column(String, default="{}")  # Весь контент в JSON
+    admin_password: Mapped[str] = mapped_column(String(100), default="")  # <--- ДОБАВЛЕНО
 
 
 class Master(Base):

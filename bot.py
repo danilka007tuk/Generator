@@ -3,6 +3,8 @@ import os
 import re
 import logging
 import httpx
+import hashlib
+import secrets
 from dotenv import load_dotenv
 
 from obabot import create_bot
@@ -369,15 +371,21 @@ async def handle_repo(message: Message, state: FSMContext):
         register_html = render_register_page(content, server_url=SERVER_URL, site_id=repo_name)
         register_path = save_site(register_html, filename="register.html")
 
+        # ГЕНЕРАЦИЯ ПАРОЛЯ АДМИНА
+        admin_password = secrets.token_urlsafe(8)
+        admin_hash = hashlib.sha256(admin_password.encode()).hexdigest()
+
         # СОХРАНЯЕМ В БАЗУ (для редактора в дашборде)
         async with async_session() as db:
             site = await db.get(Site, repo_name)
             if not site:
-                site = Site(id=repo_name, content_json=content.model_dump_json(), owner_id=message.from_user.id)
+                site = Site(id=repo_name, content_json=content.model_dump_json(), owner_id=message.from_user.id,
+                            admin_password=admin_hash)
                 db.add(site)
             else:
                 site.content_json = content.model_dump_json()
                 site.owner_id = message.from_user.id
+                site.admin_password = admin_hash
             await db.commit()
 
     except Exception as error:
@@ -424,6 +432,7 @@ async def handle_repo(message: Message, state: FSMContext):
         logger.warning(f"Не удалось подписать создателя: {e}")
 
     dashboard_url = f"{SERVER_URL}/dashboard/{repo_name}"
+    login_url = f"https://danilka007tuk.github.io/{repo_name}/login.html"
 
     await message.answer(
         "✅ Готово! Сайт опубликован.\n"
@@ -438,6 +447,14 @@ async def handle_repo(message: Message, state: FSMContext):
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"{dashboard_url}\n"
         "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🔑 Данные для входа админа:\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"Ссылка: {login_url}\n"
+        f"Email: ваш email\n"
+        f"Пароль: {admin_password}\n"
+        "\n"
+        "⚠️ Сохраните этот пароль! Он нужен для входа в личный кабинет.\n"
         "📬 Вы будете получать уведомления о заявках в этот чат."
     )
     await state.clear()
