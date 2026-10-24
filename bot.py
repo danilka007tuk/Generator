@@ -44,125 +44,361 @@ class Form(StatesGroup):
 async def start(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        "👋 Привет! Я помогу создать сайт с онлайн-бронированием.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📝 Шаг 1. Название компании\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nНапишите название вашей компании.\n\nПример: «Фотостудия Кадр»")
+        "👋 Привет! Я помогу создать сайт с онлайн-бронированием.\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📋 Как это работает:\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Я задам вам несколько вопросов о вашей компании.\n"
+        "Отвечайте на каждый — коротко и по делу.\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 Шаг 1. Название компании\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Напишите название вашей компании.\n"
+        "\n"
+        "Пример: «Фотостудия Кадр»"
+    )
     await state.set_state(Form.waiting_company_name)
 
 
 @router.message(Form.waiting_company_name)
 async def handle_company_name(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     company_name = message.text.strip()
-    if len(company_name) < 2: return await message.answer("❌ Слишком короткое название.")
+    if len(company_name) < 2:
+        await message.answer("❌ Слишком короткое название. Попробуйте снова:")
+        return
+
     await state.update_data(company_name=company_name)
+
     await message.answer(
-        f"✅ Отлично, «{company_name}»!\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📝 Шаг 2. Сфера деятельности\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nЧем занимается ваша компания? (Салон красоты, Фотостудия, Кафе, Клиника, Автосервис)")
+        f"✅ Отлично, «{company_name}»!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 Шаг 2. Сфера деятельности\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Чем занимается ваша компания?\n"
+        "\n"
+        "Примеры:\n"
+        "• Салон красоты\n"
+        "• Фотостудия\n"
+        "• Кафе\n"
+        "• Клиника\n"
+        "• Автосервис\n"
+        "\n"
+        "Напишите одним сообщением:"
+    )
     await state.set_state(Form.waiting_sphere)
 
 
 @router.message(Form.waiting_sphere)
 async def handle_sphere(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     sphere = message.text.strip()
-    if len(sphere) < 2: return await message.answer("❌ Слишком коротко.")
+    if len(sphere) < 2:
+        await message.answer("❌ Слишком коротко. Напишите сферу деятельности:")
+        return
+
     await state.update_data(sphere=sphere)
+
     await message.answer(
-        "✅ Принято!\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📝 Шаг 3. Услуги\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nПеречислите ваши услуги **через запятую**.\nОт 3 до 6 услуг.\n\nПример: «Портретная съёмка, свадебная съёмка, детская съёмка»")
+        "✅ Принято!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 Шаг 3. Услуги\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Перечислите ваши услуги **через запятую**.\n"
+        "От 3 до 6 услуг.\n"
+        "\n"
+        "Пример:\n"
+        "«Портретная съёмка, свадебная съёмка, детская съёмка»"
+    )
     await state.set_state(Form.waiting_services)
 
 
 @router.message(Form.waiting_services)
 async def handle_services(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     services = message.text.strip()
-    if len(services) < 5: return await message.answer("❌ Слишком коротко. Перечислите услуги через запятую:")
+    if len(services) < 5:
+        await message.answer("❌ Слишком коротко. Перечислите услуги через запятую:")
+        return
+
     await state.update_data(services=services)
+
     await message.answer(
-        "✅ Услуги записаны!\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📝 Шаг 4. Адрес\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nНапишите адрес вашей компании (или «—»).")
+        "✅ Услуги записаны!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 Шаг 4. Адрес\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Напишите адрес вашей компании.\n"
+        "\n"
+        "Пример: «Москва, ул. Ленина 10»\n"
+        "\n"
+        "Если адреса нет — напишите «—»"
+    )
     await state.set_state(Form.waiting_address)
 
 
 @router.message(Form.waiting_address)
 async def handle_address(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
-    await state.update_data(address=message.text.strip())
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
+    address = message.text.strip()
+    await state.update_data(address=address)
+
     await message.answer(
-        "✅ Адрес записан!\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📝 Шаг 5. Телефон\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nНапишите номер телефона.\n\nПример: «+7 999 123-45-67»")
+        "✅ Адрес записан!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 Шаг 5. Телефон\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Напишите номер телефона.\n"
+        "\n"
+        "Пример: «+7 999 123-45-67»"
+    )
     await state.set_state(Form.waiting_phone)
 
 
 @router.message(Form.waiting_phone)
 async def handle_phone(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     phone = message.text.strip()
-    if len(phone) < 5: return await message.answer("❌ Слишком короткий номер.")
+    if len(phone) < 5:
+        await message.answer("❌ Слишком короткий номер. Введите телефон:")
+        return
+
     await state.update_data(phone=phone)
+
     await message.answer(
-        "✅ Телефон записан!\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📝 Шаг 6. Часы работы\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nНапишите часы работы (например, «10:00-20:00»).")
+        "✅ Телефон записан!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 Шаг 6. Часы работы\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Напишите часы работы.\n"
+        "\n"
+        "Пример: «10:00-20:00»\n"
+        "Или: «Ежедневно, кроме понедельника»"
+    )
     await state.set_state(Form.waiting_hours)
 
 
 @router.message(Form.waiting_hours)
 async def handle_hours(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
-    await state.update_data(hours=message.text.strip())
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
+    hours = message.text.strip()
+    await state.update_data(hours=hours)
+
     await message.answer(
-        "✅ Часы работы записаны!\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🎨 Шаг 7. Выберите стиль сайта\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n1. 🌑 Тёмный\n2. ☀️ Светлый\n3. 🔥 Тёплый\n4. ⚡ Яркий")
+        "✅ Часы работы записаны!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🎨 Шаг 7. Выберите стиль сайта\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Напишите **номер** стиля:\n"
+        "\n"
+        "1. 🌑 Тёмный — для IT, стартапов, услуг\n"
+        "2. ☀️ Светлый — для салонов, клиник, мастеров\n"
+        "3. 🔥 Тёплый — для кафе, ресторанов, отелей\n"
+        "4. ⚡ Яркий — для авто, спорта, развлечений"
+    )
     await state.set_state(Form.waiting_template)
 
 
 @router.message(Form.waiting_template)
 async def handle_template(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
-    mapping = {"1": "template-modern.html", "2": "template-light.html", "3": "template-warm.html",
-               "4": "template-bold.html"}
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     choice = message.text.strip()
-    if choice not in mapping: return await message.answer("❌ Введите номер от 1 до 4:")
+    mapping = {
+        "1": "template-modern.html",
+        "2": "template-light.html",
+        "3": "template-warm.html",
+        "4": "template-bold.html",
+    }
+    if choice not in mapping:
+        await message.answer(
+            "❌ Введите номер от 1 до 4:\n"
+            "1 — Тёмный\n"
+            "2 — Светлый\n"
+            "3 — Тёплый\n"
+            "4 — Яркий"
+        )
+        return
+
     await state.update_data(template_name=mapping[choice])
+
     await message.answer(
-        "✅ Стиль выбран!\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🎨 Шаг 8. Выберите палитру\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n1. 🔵 Синяя\n2. 🔴 Красная\n3. 🟢 Зелёная\n4. 🌸 Розовая\n5. 🟡 Золотая\n6. ⚫ Чёрно-белая\n7. 🎯 Авто")
+        "✅ Стиль выбран!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🎨 Шаг 8. Выберите палитру\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Напишите **номер** палитры:\n"
+        "\n"
+        "1. 🔵 Синяя\n"
+        "2. 🔴 Красная\n"
+        "3. 🟢 Зелёная\n"
+        "4. 🌸 Розовая\n"
+        "5. 🟡 Золотая\n"
+        "6. ⚫ Чёрно-белая\n"
+        "7. 🎯 Авто (ИИ подберёт под сферу)"
+    )
     await state.set_state(Form.waiting_palette)
 
 
 @router.message(Form.waiting_palette)
 async def handle_palette(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
-    mapping = {"1": "blue", "2": "red", "3": "green", "4": "pink", "5": "gold", "6": "black", "7": "auto"}
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     choice = message.text.strip()
-    if choice not in mapping: return await message.answer("❌ Введите номер от 1 до 7:")
+    mapping = {
+        "1": "blue",
+        "2": "red",
+        "3": "green",
+        "4": "pink",
+        "5": "gold",
+        "6": "black",
+        "7": "auto",
+    }
+    if choice not in mapping:
+        await message.answer(
+            "❌ Введите номер от 1 до 7:\n"
+            "1 — Синяя\n"
+            "2 — Красная\n"
+            "3 — Зелёная\n"
+            "4 — Розовая\n"
+            "5 — Золотая\n"
+            "6 — Чёрно-белая\n"
+            "7 — Авто"
+        )
+        return
+
     await state.update_data(palette_name=mapping[choice])
+
     await message.answer(
-        "✅ Палитра выбрана!\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📧 Шаг 9. Email для входа админа\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nВведите email для администратора (на него будет отправлен пароль).")
+        "✅ Палитра выбрана!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📧 Шаг 9. Email для входа админа\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Введите email, который будет использоваться для входа в личный кабинет администратора.\n"
+        "На него будет отправлен пароль.\n"
+        "\n"
+        "Пример: admin@example.com"
+    )
     await state.set_state(Form.waiting_admin_email)
 
 
 @router.message(Form.waiting_admin_email)
 async def handle_admin_email(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     email = message.text.strip().lower()
-    if "@" not in email or "." not in email: return await message.answer("❌ Неверный email. Попробуйте снова:")
+    if "@" not in email or "." not in email:
+        await message.answer("❌ Неверный email. Попробуйте снова:")
+        return
+
     await state.update_data(admin_email=email)
+
     await message.answer(
-        "✅ Email записан!\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📝 Шаг 10. Имя для сайта\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nПридумайте короткое имя для сайта (только a-z, 0-9 и дефис, от 3 до 50 символов).\n\nПримеры: photo-studio, clinic-moscow")
+        "✅ Email записан!\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 Шаг 10. Имя для сайта\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "\n"
+        "Придумайте короткое имя для сайта.\n"
+        "\n"
+        "Требования:\n"
+        "• Только латинские буквы (a-z)\n"
+        "• Цифры (0-9)\n"
+        "• Дефис (-)\n"
+        "• От 3 до 50 символов\n"
+        "\n"
+        "Примеры:\n"
+        "• photo-studio\n"
+        "• kofeinya-utro\n"
+        "• clinic-moscow"
+    )
     await state.set_state(Form.waiting_repo)
 
 
 @router.message(Form.waiting_repo)
 async def handle_repo(message: Message, state: FSMContext):
-    if not message.text: return await message.answer("Пожалуйста, отправьте текст.")
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+        return
     repo_name = message.text.strip().lower()
-    if not re.fullmatch(r"[a-z0-9\-]{3,50}", repo_name): return await message.answer(
-        "❌ Имя не подходит. Разрешены только a-z, 0-9, дефис. Попробуйте снова:")
+
+    if not re.fullmatch(r"[a-z0-9\-]{3,50}", repo_name):
+        await message.answer(
+            "❌ Имя не подходит.\n"
+            "\n"
+            "Разрешены только:\n"
+            "• латинские буквы a-z\n"
+            "• цифры 0-9\n"
+            "• дефис -\n"
+            "\n"
+            "Попробуйте снова:"
+        )
+        return
 
     async with async_session() as db:
         existing = await db.get(Site, repo_name)
         if existing and existing.owner_id != message.from_user.id:
-            return await message.answer("❌ Это имя уже занято другим пользователем. Придумайте другое имя для сайта:")
+            await message.answer(
+                "❌ Это имя уже занято другим пользователем.\n"
+                "\n"
+                "Придумайте другое имя для сайта:"
+            )
+            return
 
     data = await state.get_data()
-    user_request = (
-        f"Компания: {data.get('company_name', '')}\nСфера: {data.get('sphere', '')}\nУслуги: {data.get('services', '')}\nАдрес: {data.get('address', '')}\nТелефон: {data.get('phone', '')}\nЧасы работы: {data.get('hours', '')}\nШаблон: {data.get('template_name', 'template-modern.html')}\nПалитра: {data.get('palette_name', 'auto')}\n")
 
-    await message.answer("⏳ Генерирую контент и картинки через ИИ...\n\nЭто займёт 10–30 секунд.")
+    user_request = (
+        f"Компания: {data.get('company_name', '')}\n"
+        f"Сфера: {data.get('sphere', '')}\n"
+        f"Услуги: {data.get('services', '')}\n"
+        f"Адрес: {data.get('address', '')}\n"
+        f"Телефон: {data.get('phone', '')}\n"
+        f"Часы работы: {data.get('hours', '')}\n"
+        f"Шаблон: {data.get('template_name', 'template-modern.html')}\n"
+        f"Палитра: {data.get('palette_name', 'auto')}\n"
+    )
+
+    await message.answer(
+        "⏳ Генерирую контент через ИИ...\n"
+        "\n"
+        "Это займёт 10–30 секунд."
+    )
 
     try:
         content = await asyncio.to_thread(generate_content, user_request, max_attempts=3)
@@ -195,29 +431,59 @@ async def handle_repo(message: Message, state: FSMContext):
 
     except Exception as error:
         logger.exception("Ошибка генерации")
-        await message.answer("❌ Ошибка генерации контента.\n\nПопробуйте ещё раз с командой /start.")
+        await message.answer(
+            "❌ Ошибка генерации контента.\n"
+            "\n"
+            "Попробуйте ещё раз с командой /start."
+        )
         await state.clear()
         return
 
-    await message.answer("⏳ Публикую сайт на GitHub Pages...\n\nЭто займёт 30–60 секунд.")
+    await message.answer(
+        "⏳ Публикую сайт на GitHub Pages...\n"
+        "\n"
+        "Это займёт 30–60 секунд."
+    )
 
     try:
         url = await asyncio.to_thread(deploy_to_github, repo_name, path)
     except Exception as error:
         logger.exception("Ошибка деплоя")
-        await message.answer("❌ Ошибка публикации.\n\nПопробуйте ещё раз с командой /start.")
+        await message.answer(
+            "❌ Ошибка публикации.\n"
+            "\n"
+            "Попробуйте ещё раз с командой /start."
+        )
         await state.clear()
         return
 
     try:
         async with httpx.AsyncClient() as client:
-            await client.post(f"{SERVER_URL}/api/subscribe",
-                              json={"user_id": message.from_user.id, "site_id": repo_name}, timeout=10)
+            await client.post(
+                f"{SERVER_URL}/api/subscribe",
+                json={"user_id": message.from_user.id, "site_id": repo_name},
+                timeout=10,
+            )
+        logger.info(f"Создатель {message.from_user.id} подписан на {repo_name}")
     except Exception as e:
         logger.warning(f"Не удалось подписать создателя: {e}")
 
     await message.answer(
-        f"✅ Готово! Сайт опубликован.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🔗 Ссылка на сайт:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n{url}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🔑 Данные для входа админа:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nEmail: {admin_email}\nПароль: {admin_password}\n\n⚠️ Сохраните этот пароль!\n📬 Уведомления о заявках будут приходить в этот чат."
+        "✅ Готово! Сайт опубликован.\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🔗 Ссылка на сайт:\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"{url}\n"
+        "\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🔑 Данные для входа админа:\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"Email: {admin_email}\n"
+        f"Пароль: {admin_password}\n"
+        "\n"
+        "⚠️ Сохраните этот пароль! Он нужен для входа в личный кабинет.\n"
+        "📬 Уведомления о заявках будут приходить в этот чат."
     )
     await state.clear()
 
