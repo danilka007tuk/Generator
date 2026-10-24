@@ -10,7 +10,8 @@
         body { font-family: 'Inter', sans-serif; background: #f4f6fa; color: #2c3e50; line-height: 1.6; }
         .header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .header h1 { font-size: 1.2em; font-weight: 600; }
-        .header a { color: #1976d2; text-decoration: none; font-weight: 500; background: #e3f2fd; padding: 8px 16px; border-radius: 8px; }
+        .header a { color: #1976d2; text-decoration: none; font-weight: 500; background: #e3f2fd; padding: 8px 16px; border-radius: 8px; margin-left: 10px; }
+        .header .logout-btn { background: #c62828; color: #fff; }
         .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
         .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; }
@@ -19,7 +20,6 @@
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95em; }
         tr:last-child td { border-bottom: none; }
         .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
-        .logout-btn { background: #c62828; color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -56,29 +56,39 @@
     const SITE_ID = "{{ site_id }}";
     const SERVER_URL = "{{ server_url }}";
 
-    async function loadBookings() {
-        try {
-            const res = await fetch(`${SERVER_URL}/api/my-bookings`);
-            const data = await res.json();
-            const tbody = document.getElementById('bookingsBody');
+    // XSS-защита
+    const esc = (s) => String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-            if (!data.ok || !data.bookings || data.bookings.length === 0) {
+    async function loadBookings() {
+        const tbody = document.getElementById('bookingsBody');
+        try {
+            const res = await fetch(`${SERVER_URL}/api/my-bookings`, { credentials: 'include' });
+            const data = await res.json();
+
+            if (!data.ok) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty">${esc(data.error) || 'Ошибка авторизации. <a href="' + SERVER_URL + '/login?site_id=' + encodeURIComponent(SITE_ID) + '">Войдите заново</a>.'}</td></tr>`;
+                return;
+            }
+
+            if (!data.bookings || data.bookings.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="empty">У вас пока нет записей</td></tr>';
                 return;
             }
 
             tbody.innerHTML = data.bookings.map(b => `
                 <tr>
-                    <td>${b.date}</td>
-                    <td>${b.time}</td>
-                    <td>${b.master || '—'}</td>
-                    <td>${b.service}</td>
+                    <td>${esc(b.date)}</td>
+                    <td>${esc(b.time)}</td>
+                    <td>${esc(b.master) || '—'}</td>
+                    <td>${esc(b.service)}</td>
                     <td>✅ Подтверждена</td>
                 </tr>
             `).join('');
         } catch (e) {
             console.error("Ошибка загрузки", e);
-            document.getElementById('bookingsBody').innerHTML = '<tr><td colspan="5" class="empty">Ошибка загрузки</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">Ошибка загрузки данных</td></tr>';
         }
     }
 
