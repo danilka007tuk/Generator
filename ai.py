@@ -1,5 +1,6 @@
 import json
 import os
+import logging
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -9,6 +10,7 @@ from schemas import SiteContent
 
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
+logger = logging.getLogger(__name__)
 
 client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),
@@ -179,29 +181,55 @@ SYSTEM_PROMPT = """
 """.strip()
 
 
+def _clean_json_response(raw: str) -> str:
+    """Убирает markdown-обёртку ```json ... ``` и лишние пробелы."""
+    if not isinstance(raw, str):
+        return ""
+    text = raw.strip()
+    if text.startswith("```"):
+        # убрать первую строку (```json или ```)
+        text = text.split("\n", 1)[1] if "\n" in text else text
+        # убрать закрывающие ```
+        if text.endswith("```"):
+            text = text[:-3]
+    return text.strip()
+
+
 def generate_content(user_request: str, max_attempts: int = 3) -> SiteContent:
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_request},
     ]
 
+    last_error = None
     for attempt in range(max_attempts):
-        response = client.chat.completions.create(
-            model="openai/gpt-4o-mini",
-            messages=messages,
-            response_format={"type": "json_object"},
-            temperature=0.7,
-        )
-        raw = response.choices[0].message.content
+        try:
+            response = client.chat.completions.create(
+                model="openai/gpt-4o-mini",
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=0.7,
+            )
+            raw = response.choices[0].message.content
+        except Exception as e:
+            logger.error(f"Ошибка запроса к LLM (попытка {attempt + 1}): {e}")
+            last_error = str(e)
+            continue
+
+        cleaned = _clean_json_response(raw)
 
         try:
-            data = json.loads(raw)
+            data = json.loads(cleaned)
             return SiteContent.model_validate(data)
         except (json.JSONDecodeError, ValidationError) as error:
-            messages.append({"role": "assistant", "content": raw})
+            logger.warning(f"Попытка {attempt + 1}: ошибка валидации: {error}")
+            last_error = str(error)
+            messages.append({"role": "assistant", "content": cleaned})
             messages.append({
                 "role": "user",
-                "content": f"Ошибка валидации: {error}. Верни исправленный JSON строго по схеме.",
+                "content": f"Ошибка валидации: {error}. Верни исправленный JSON строго по схеме. "
+                           f"Никаких markdown-обёрток, только чистый JSON.",
             })
 
-    raise RuntimeError("Не удалось сгенерировать контент после нескольких попыток")
+    raise RuntimeError(f"Не удалось сгенерировать контент после {max_attempts} попыток. "
+                       f"Последняя ошибка: {last_error}")

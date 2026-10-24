@@ -14,6 +14,7 @@ class Base(DeclarativeBase):
 
 async def init_db():
     """Создаёт таблицы при первом запуске."""
+    import models  # гарантирует регистрацию всех моделей в Base.metadata
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
