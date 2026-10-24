@@ -30,6 +30,10 @@ load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 logger = logging.getLogger("uvicorn.error")
 templates = Jinja2Templates(directory="templates")
 
+# Определяем окружение (локально или на VPS) для настройки Cookies
+SERVER_URL = os.getenv("SERVER_URL", "")
+IS_LOCAL = SERVER_URL.startswith("http://127.0.0.1") or SERVER_URL.startswith("http://localhost")
+
 
 class SubscriberRequest(BaseModel):
     user_id: int
@@ -55,7 +59,7 @@ class ClientRegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     site_id: str
     email: str
-    password: str = ""
+    password: str
     role: str = "client"
 
 
@@ -67,9 +71,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# CORS для работы с GitHub Pages (и локалкой)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://danilka007tuk.github.io",
+        "https://api.generator-beloretsk.ru",
+        "http://127.0.0.1:8001",
+        "http://localhost:8001",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -85,13 +96,20 @@ async def index():
 async def login(data: LoginRequest, response: Response, session: AsyncSession = Depends(get_session)):
     email = data.email.strip().lower()
 
+    # Настройки куки (на проде secure=True, локально False)
+    cookie_kwargs = dict(
+        httponly=True,
+        samesite="none" if not IS_LOCAL else "lax",
+        secure=not IS_LOCAL
+    )
+
     # --- ВХОД АДМИНА ---
     if data.role == "admin":
         site = await session.get(Site, data.site_id)
         if site and site.admin_email == email and site.admin_password:
             if hashlib.sha256(data.password.encode()).hexdigest() == site.admin_password:
-                response.set_cookie(key="role", value="admin", httponly=True)
-                response.set_cookie(key="site_id", value=data.site_id, httponly=True)
+                response.set_cookie(key="role", value="admin", **cookie_kwargs)
+                response.set_cookie(key="site_id", value=data.site_id, **cookie_kwargs)
                 return {"ok": True, "role": "admin", "redirect": f"/dashboard/{data.site_id}"}
         return {"ok": False, "error": "Неверный email или пароль администратора"}
 
@@ -101,9 +119,9 @@ async def login(data: LoginRequest, response: Response, session: AsyncSession = 
         master = result.scalar_one_or_none()
         if master and master.password_hash:
             if hashlib.sha256(data.password.encode()).hexdigest() == master.password_hash:
-                response.set_cookie(key="role", value="master", httponly=True)
-                response.set_cookie(key="site_id", value=data.site_id, httponly=True)
-                response.set_cookie(key="email", value=email, httponly=True)
+                response.set_cookie(key="role", value="master", **cookie_kwargs)
+                response.set_cookie(key="site_id", value=data.site_id, **cookie_kwargs)
+                response.set_cookie(key="email", value=email, **cookie_kwargs)
                 return {"ok": True, "role": "master", "redirect": f"/master_dashboard/{data.site_id}"}
         return {"ok": False, "error": "Неверный email или пароль мастера"}
 
@@ -115,9 +133,9 @@ async def login(data: LoginRequest, response: Response, session: AsyncSession = 
 
     if contact and contact.password_hash:
         if hashlib.sha256(data.password.encode()).hexdigest() == contact.password_hash:
-            response.set_cookie(key="role", value="client", httponly=True)
-            response.set_cookie(key="email", value=email, httponly=True)
-            response.set_cookie(key="site_id", value=data.site_id, httponly=True)
+            response.set_cookie(key="role", value="client", **cookie_kwargs)
+            response.set_cookie(key="email", value=email, **cookie_kwargs)
+            response.set_cookie(key="site_id", value=data.site_id, **cookie_kwargs)
             return {"ok": True, "role": "client", "redirect": f"/client_dashboard/{data.site_id}"}
 
     return {"ok": False, "error": "Неверный email или пароль"}
@@ -128,7 +146,7 @@ async def login_page(request: Request, site_id: str = "site"):
     return templates.TemplateResponse(
         request=request,
         name="login.html",
-        context={"site_id": site_id, "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")}
+        context={"site_id": site_id, "server_url": SERVER_URL}
     )
 
 
@@ -137,7 +155,7 @@ async def client_dashboard(site_id: str, request: Request):
     return templates.TemplateResponse(
         request=request,
         name="client_dashboard.html",
-        context={"site_id": site_id, "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")}
+        context={"site_id": site_id, "server_url": SERVER_URL}
     )
 
 
@@ -146,7 +164,7 @@ async def master_dashboard(site_id: str, request: Request):
     return templates.TemplateResponse(
         request=request,
         name="master_dashboard.html",
-        context={"site_id": site_id, "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")}
+        context={"site_id": site_id, "server_url": SERVER_URL}
     )
 
 
@@ -155,7 +173,7 @@ async def dashboard(site_id: str, request: Request):
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
-        context={"site_id": site_id, "server_url": os.getenv("SERVER_URL", "https://api.generator-beloretsk.ru")}
+        context={"site_id": site_id, "server_url": SERVER_URL}
     )
 
 
@@ -186,6 +204,7 @@ async def get_master_bookings(
 ):
     if not email or not site_id:
         return {"ok": False, "error": "Не авторизован"}
+    email = email.strip().lower()
     master_res = await session.execute(select(Master).where(Master.site_id == site_id, Master.email == email))
     master = master_res.scalar_one_or_none()
     if not master:
@@ -205,14 +224,24 @@ async def get_master_bookings(
 async def get_master_schedule(
         email: str = None,
         site_id: str = None,
+        master_id: int = None,
         session: AsyncSession = Depends(get_session)
 ):
-    if not email or not site_id:
-        return {"ok": False, "error": "Не авторизован"}
-    master_res = await session.execute(select(Master).where(Master.site_id == site_id, Master.email == email))
-    master = master_res.scalar_one_or_none()
-    if not master:
-        return {"ok": False, "error": "Мастер не найден"}
+    # Режим 1: по master_id (для админа в dashboard.html)
+    if master_id is not None:
+        master = await session.get(Master, master_id)
+        if not master:
+            return {"ok": False, "error": "Мастер не найден"}
+    else:
+        # Режим 2: по email + site_id (для мастера в master_dashboard.html)
+        if not email or not site_id:
+            return {"ok": False, "error": "Не авторизован"}
+        email = email.strip().lower()
+        master_res = await session.execute(select(Master).where(Master.site_id == site_id, Master.email == email))
+        master = master_res.scalar_one_or_none()
+        if not master:
+            return {"ok": False, "error": "Мастер не найден"}
+
     result = await session.execute(select(MasterSchedule).where(MasterSchedule.master_id == master.id))
     schedules = result.scalars().all()
     return {"ok": True, "schedule": [
@@ -223,9 +252,12 @@ async def get_master_schedule(
 
 @app.get("/logout")
 async def logout(response: Response):
-    response.delete_cookie("role")
-    response.delete_cookie("email")
-    response.delete_cookie("site_id")
+    cookie_kwargs = dict(
+        samesite="none" if not IS_LOCAL else "lax",
+        secure=not IS_LOCAL
+    )
+    for key in ("role", "email", "site_id"):
+        response.delete_cookie(key, **cookie_kwargs)
     return {"ok": True, "message": "Вы вышли"}
 
 
@@ -241,13 +273,20 @@ async def get_site_content(site_id: str, session: AsyncSession = Depends(get_ses
 async def update_site_content(site_id: str, data: dict = Body(...), session: AsyncSession = Depends(get_session)):
     site = await session.get(Site, site_id)
     if not site: return {"ok": False, "error": "Сайт не найден"}
+
+    # Валидация ДО сохранения, чтобы не затереть БД мусором
+    try:
+        content = SiteContent.model_validate(data)
+    except Exception as e:
+        return {"ok": False, "error": f"Невалидный контент: {e}"}
+
     site.content_json = json.dumps(data, ensure_ascii=False)
     await session.commit()
+
     from render import render_site, save_site
     from deploy import deploy_to_github
     try:
-        content = SiteContent.model_validate(data)
-        html = render_site(content, server_url=os.getenv("SERVER_URL"), site_id=site_id)
+        html = render_site(content, server_url=SERVER_URL, site_id=site_id)
         path = save_site(html, filename="index.html")
         await asyncio.to_thread(deploy_to_github, site_id, path)
         return {"ok": True, "message": "Сохранено и опубликовано"}
@@ -281,7 +320,11 @@ async def create_master(site_id: str, data: dict = Body(...), session: AsyncSess
         email=email, password_hash=password_hash
     )
     session.add(master)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        return {"ok": False, "error": "Мастер с таким email уже существует"}
     return {"ok": True, "id": master.id}
 
 
