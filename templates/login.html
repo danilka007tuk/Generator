@@ -6,72 +6,32 @@
     <title>Вход — {{ site_id }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #667eea; --secondary: #764ba2; --bg: #f4f6fa; --text: #2c3e50; --accent: #667eea;
-        }
+        :root { --primary: #667eea; --secondary: #764ba2; --bg: #f4f6fa; --text: #2c3e50; --accent: #667eea; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
         body {
             font-family: 'Inter', Arial, sans-serif;
             background: linear-gradient(135deg, var(--bg), #ffffff);
-            color: var(--text);
-            display: flex; align-items: center; justify-content: center;
+            color: var(--text); display: flex; align-items: center; justify-content: center;
             min-height: 100vh; padding: 20px; overflow: hidden; position: relative;
         }
-        body::before, body::after {
-            content: ""; position: absolute; border-radius: 50%;
-            filter: blur(80px); opacity: 0.35; z-index: 0;
-        }
+        body::before, body::after { content: ""; position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; z-index: 0; }
         body::before { width: 500px; height: 500px; background: var(--primary); top: -150px; left: -150px; }
         body::after { width: 600px; height: 600px; background: var(--secondary); bottom: -200px; right: -200px; }
-        .login-card {
-            position: relative; z-index: 1;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 24px; padding: 40px;
-            max-width: 460px; width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-            animation: fadeInUp 0.6s ease-out;
-        }
+        .login-card { position: relative; z-index: 1; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 24px; padding: 40px; max-width: 460px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.08); animation: fadeInUp 0.6s ease-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .logo {
-            text-align: center; font-size: 0.8em; font-weight: 500;
-            letter-spacing: 0.3em; text-transform: uppercase;
-            color: var(--primary); margin-bottom: 24px;
-        }
+        .logo { text-align: center; font-size: 0.8em; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: var(--primary); margin-bottom: 24px; }
         h1 { font-size: 1.5em; font-weight: 300; text-align: center; margin-bottom: 20px; }
-        .tabs {
-            display: flex; gap: 4px; margin-bottom: 28px;
-            background: rgba(0,0,0,0.04); padding: 4px; border-radius: 12px;
-        }
-        .tab {
-            flex: 1; padding: 10px 4px; text-align: center;
-            font-size: 0.8em; font-weight: 500;
-            letter-spacing: 0.05em; text-transform: uppercase;
-            cursor: pointer; border-radius: 8px;
-            transition: all 0.3s; color: #888;
-        }
+        .tabs { display: flex; gap: 4px; margin-bottom: 28px; background: rgba(0,0,0,0.04); padding: 4px; border-radius: 12px; }
+        .tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 0.8em; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; border-radius: 8px; transition: all 0.3s; color: #888; }
         .tab.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .form-panel { display: none; }
         .form-panel.active { display: block; }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-size: 0.72em; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: #999; margin-bottom: 8px; }
-        .form-group input {
-            width: 100%; padding: 14px 18px;
-            border: 2px solid rgba(0,0,0,0.08); border-radius: 12px;
-            font-size: 1em; font-family: 'Inter', sans-serif;
-            font-weight: 300; background: rgba(255,255,255,0.7);
-            color: var(--text); transition: all 0.3s;
-        }
+        .form-group input { width: 100%; padding: 14px 18px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 1em; font-family: 'Inter', sans-serif; font-weight: 300; background: rgba(255,255,255,0.7); color: var(--text); transition: all 0.3s; }
         .form-group input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(0,0,0,0.05); }
-        .submit-btn {
-            width: 100%; padding: 16px; background: var(--primary);
-            color: #fff; border: none; border-radius: 12px;
-            font-size: 0.85em; font-weight: 600;
-            letter-spacing: 0.2em; text-transform: uppercase;
-            cursor: pointer; transition: all 0.3s; margin-top: 8px;
-        }
+        .submit-btn { width: 100%; padding: 16px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; margin-top: 8px; }
         .submit-btn:hover:not(:disabled) { background: var(--text); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .message { margin-top: 16px; padding: 12px 16px; border-radius: 12px; font-size: 0.85em; text-align: center; line-height: 1.5; display: none; }
@@ -96,21 +56,24 @@
 
     <!-- Вкладка КЛИЕНТ -->
     <div class="form-panel active" id="panel-client">
-        <p style="text-align:center; color:#888; font-size:0.9em; margin-bottom:16px;">Введите email, который вы указали при регистрации</p>
         <form id="clientForm">
             <div class="form-group">
                 <label for="client-email">Email</label>
                 <input type="email" id="client-email" placeholder="your@email.com" required>
             </div>
+            <!-- ДОБАВЛЕНО ПОЛЕ ПАРОЛЯ ДЛЯ КЛИЕНТА -->
+            <div class="form-group">
+                <label for="client-password">Пароль</label>
+                <input type="password" id="client-password" placeholder="••••••••" required>
+            </div>
             <button type="submit" class="submit-btn" id="clientBtn">Войти</button>
         </form>
-        <div class="register-link">Нет аккаунта? <a href="register.html">Зарегистрироваться</a></div>
+        <div class="register-link">Нет аккаунта? <a href="{{ server_url }}/api/register-client/{{ site_id }}">Зарегистрироваться</a></div>
         <div id="clientMessage" class="message"></div>
     </div>
 
     <!-- Вкладка МАСТЕР -->
     <div class="form-panel" id="panel-master">
-        <p style="text-align:center; color:#888; font-size:0.9em; margin-bottom:16px;">Введите email и пароль, выданные администратором</p>
         <form id="masterForm">
             <div class="form-group">
                 <label for="master-email">Email</label>
@@ -127,7 +90,6 @@
 
     <!-- Вкладка АДМИН -->
     <div class="form-panel" id="panel-admin">
-        <p style="text-align:center; color:#888; font-size:0.9em; margin-bottom:16px;">Введите email и пароль администратора</p>
         <form id="adminForm">
             <div class="form-group">
                 <label for="admin-email">Email</label>
@@ -150,32 +112,14 @@
     function switchTab(name) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
-
-        if (name === 'client') {
-            document.querySelector('.tab:nth-child(1)').classList.add('active');
-            document.getElementById('panel-client').classList.add('active');
-        } else if (name === 'master') {
-            document.querySelector('.tab:nth-child(2)').classList.add('active');
-            document.getElementById('panel-master').classList.add('active');
-        } else {
-            document.querySelector('.tab:nth-child(3)').classList.add('active');
-            document.getElementById('panel-admin').classList.add('active');
-        }
+        if (name === 'client') { document.querySelector('.tab:nth-child(1)').classList.add('active'); document.getElementById('panel-client').classList.add('active'); }
+        else if (name === 'master') { document.querySelector('.tab:nth-child(2)').classList.add('active'); document.getElementById('panel-master').classList.add('active'); }
+        else { document.querySelector('.tab:nth-child(3)').classList.add('active'); document.getElementById('panel-admin').classList.add('active'); }
     }
 
     async function handleLogin(role, email, password, btn, msg) {
-        if (!email) {
-            msg.className = 'message error';
-            msg.textContent = '❌ Введите email';
-            msg.style.display = 'block';
-            return;
-        }
-        if (role !== 'client' && !password) {
-            msg.className = 'message error';
-            msg.textContent = '❌ Введите пароль';
-            msg.style.display = 'block';
-            return;
-        }
+        if (!email) { msg.className = 'message error'; msg.textContent = '❌ Введите email'; msg.style.display = 'block'; return; }
+        if (!password) { msg.className = 'message error'; msg.textContent = '❌ Введите пароль'; msg.style.display = 'block'; return; }
 
         btn.disabled = true;
         const originalText = btn.textContent;
@@ -186,12 +130,13 @@
             const res = await fetch(`${SERVER_URL}/api/login`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
                 body: JSON.stringify({ site_id: SITE_ID, email, password, role }),
             });
             const result = await res.json();
 
             if (result.ok) {
-                    if (role === 'master') { localStorage.setItem('master_email', email); }
+                if (role === 'master') { localStorage.setItem('master_email', email.trim().toLowerCase()); }
                 msg.className = 'message success';
                 msg.textContent = `✅ Вход выполнен. Перенаправление...`;
                 msg.style.display = 'block';
@@ -214,7 +159,8 @@
     document.getElementById('clientForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const email = document.getElementById('client-email').value.trim();
-        handleLogin('client', email, '', document.getElementById('clientBtn'), document.getElementById('clientMessage'));
+        const password = document.getElementById('client-password').value.trim();
+        handleLogin('client', email, password, document.getElementById('clientBtn'), document.getElementById('clientMessage'));
     });
 
     document.getElementById('masterForm').addEventListener('submit', (e) => {
