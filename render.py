@@ -40,7 +40,6 @@ DEFAULT_SIDEBAR_ITEMS = [
     {"label": "Контакты", "anchor": "#contacts", "icon": "📞"},
 ]
 
-# Таймаут увеличен до 120 секунд, так как генерация картинок иногда занимает время
 provod_client = OpenAI(
     api_key=os.getenv("PROVOD_API_KEY"),
     base_url="https://api.provod.ai/v1",
@@ -50,37 +49,25 @@ provod_client = OpenAI(
 
 def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) -> str:
     if not prompt or not isinstance(prompt, str):
-        logger.warning("Пустой промпт для картинки")
         return ""
-
     prompt = prompt.strip()[:300]
     if not prompt:
-        logger.warning("Промпт для картинки пустой после очистки")
         return ""
-
     try:
         IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-
-        logger.info(f"Генерация картинки: {prompt[:50]}...")
-
         response = provod_client.images.generate(
             model="openai/gpt-image-2",
             prompt=prompt,
             size=f"{width}x{height}",
             n=1,
         )
-
         b64 = response.data[0].b64_json
         if not b64:
-            logger.warning("provod.ai вернул пустой base64")
             return ""
-
         filename = f"{uuid.uuid4().hex}.png"
         filepath = IMAGES_DIR / filename
         with open(filepath, "wb") as f:
             f.write(base64.b64decode(b64))
-
-        logger.info(f"Картинка сохранена: {filename}")
         return f"images/{filename}"
     except Exception as e:
         logger.error(f"Ошибка генерации картинки: {e}")
@@ -115,25 +102,13 @@ def clean_color(hex_color: str, default: str) -> str:
     if not isinstance(hex_color, str):
         return default
     hex_color = hex_color.strip()
-    if not hex_color.startswith("#"):
-        return default
-    if len(hex_color) not in (4, 7):
+    if not hex_color.startswith("#") or len(hex_color) not in (4, 7):
         return default
     try:
         int(hex_color[1:], 16)
     except ValueError:
         return default
     return hex_color
-
-
-def clean_anchor(anchor: str) -> str:
-    if not isinstance(anchor, str):
-        return "#"
-    anchor = anchor.strip()
-    if not anchor.startswith("#"):
-        anchor = "#" + anchor
-    safe = "".join(c for c in anchor if c.isalnum() or c in "-#_")
-    return safe if safe != "#" else "#"
 
 
 def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -> str:
@@ -159,11 +134,15 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         service["description"] = clean(service.get("description", ""))
         service["price"] = clean(service.get("price", ""))
 
-    for item in data.get("gallery", []):
+    # Генерация галереи и сохранение ссылок в content
+    for i, item in enumerate(data.get("gallery", [])):
         item["title"] = clean(item.get("title", ""))
         item["description"] = clean(item.get("description", ""))
         prompt = item.get("image_prompt", "") or item.get("title", "") or "Beauty salon interior"
-        item["image_url"] = generate_image_provod(prompt, width=1024, height=768)
+        image_url = generate_image_provod(prompt, width=1024, height=768)
+        item["image_url"] = image_url
+        if i < len(content.gallery):
+            content.gallery[i].image_url = image_url
 
     for item in data.get("pricing", []):
         item["name"] = clean(item.get("name", ""))
@@ -186,11 +165,13 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
 
     data["sidebar_items"] = get_sidebar_items(content)
 
-    # Генерация главной картинки (hero)
+    # Генерация hero-картинки и сохранение ссылки в content
     hero_prompt = data.get("hero_image_prompt", "")
     if not hero_prompt:
         hero_prompt = f"Beautiful interior for {data.get('company_name', 'business')}, photorealistic"
-    data["hero_image_url"] = generate_image_provod(hero_prompt, width=1024, height=1024)
+    hero_url = generate_image_provod(hero_prompt, width=1024, height=1024)
+    data["hero_image_url"] = hero_url
+    content.hero_image_url = hero_url  # <--- ВАЖНО: сохраняем в модель!
 
     data["color_primary"] = clean_color(data.get("color_primary", ""), "#667eea")
     data["color_secondary"] = clean_color(data.get("color_secondary", ""), "#764ba2")
@@ -205,7 +186,6 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     template = env.get_template(template_name)
     html = template.render(**data)
 
-    # Редирект на регистрацию — один скрипт, с поддержкой skip_redirect
     if "<head>" in html:
         redirect_script = '''
         <script>

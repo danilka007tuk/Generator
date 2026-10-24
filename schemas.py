@@ -19,6 +19,7 @@ class GalleryItem(BaseModel):
     title: str = Field(max_length=80)
     description: str = Field(max_length=200)
     image_prompt: str = Field(default="", max_length=300)
+    image_url: str = Field(default="")  # ДОБАВЛЕНО
 
 
 class Testimonial(BaseModel):
@@ -81,6 +82,7 @@ class SiteContent(BaseModel):
         default="", max_length=300,
         description="Описание для генерации фоновой картинки hero-блока"
     )
+    hero_image_url: str = Field(default="")  # ДОБАВЛЕНО
 
     # === О компании ===
     about_short: str = Field(default="", max_length=300)
