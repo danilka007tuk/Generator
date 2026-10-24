@@ -42,6 +42,7 @@ class Form(StatesGroup):
 
 @router.message(Command("start"))
 async def start(message: Message, state: FSMContext):
+    await state.clear()  # Очищаем старые данные, чтобы не смешивались с новыми
     await message.answer(
         "👋 Привет! Я помогу создать сайт с онлайн-бронированием.\n"
         "\n"
@@ -370,6 +371,17 @@ async def handle_repo(message: Message, state: FSMContext):
         )
         return
 
+    # Проверка, что имя не занято другим пользователем
+    async with async_session() as db:
+        existing = await db.get(Site, repo_name)
+        if existing and existing.owner_id != message.from_user.id:
+            await message.answer(
+                "❌ Это имя уже занято другим пользователем.\n"
+                "\n"
+                "Придумайте другое имя для сайта:"
+            )
+            return
+
     data = await state.get_data()
 
     user_request = (
@@ -393,10 +405,12 @@ async def handle_repo(message: Message, state: FSMContext):
         content = await asyncio.to_thread(generate_content, user_request, max_attempts=3)
         content.template_name = data.get('template_name', 'template-modern.html')
         content.palette_name = data.get('palette_name', 'auto')
-        html = render_site(content, server_url=SERVER_URL, site_id=repo_name)
+
+        # Рендеринг и генерация картинок в отдельном потоке, чтобы не блокировать бота
+        html = await asyncio.to_thread(render_site, content, SERVER_URL, repo_name)
         path = save_site(html, filename="index.html")
 
-        register_html = render_register_page(content, server_url=SERVER_URL, site_id=repo_name)
+        register_html = await asyncio.to_thread(render_register_page, content, SERVER_URL, repo_name)
         register_path = save_site(register_html, filename="register.html")
 
         admin_password = secrets.token_urlsafe(8)
@@ -419,9 +433,7 @@ async def handle_repo(message: Message, state: FSMContext):
     except Exception as error:
         logger.exception("Ошибка генерации")
         await message.answer(
-            "❌ Ошибка генерации.\n"
-            "\n"
-            f"Причина: {error}\n"
+            "❌ Ошибка генерации контента.\n"
             "\n"
             "Попробуйте ещё раз с командой /start."
         )
@@ -440,8 +452,6 @@ async def handle_repo(message: Message, state: FSMContext):
         logger.exception("Ошибка деплоя")
         await message.answer(
             "❌ Ошибка публикации.\n"
-            "\n"
-            f"Причина: {error}\n"
             "\n"
             "Попробуйте ещё раз с командой /start."
         )
