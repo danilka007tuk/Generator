@@ -54,8 +54,6 @@
 </head>
 <body>
 
-<!-- Старый скрипт в <body> УДАЛЕН -->
-
 <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -103,7 +101,7 @@
 <div class="modal" id="modal-testimonials" onclick="modalOutsideClick(event, 'testimonials')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Отзывы</h2><button class="modal-close" onclick="closeModal('testimonials')">×</button></div><div class="testimonials-grid">{% for t in testimonials %}<div class="testimonial"><div class="stars">{% for i in range(t.rating) %}★{% endfor %}{% for i in range(5 - t.rating) %}☆{% endfor %}</div><div class="text">«{{ t.text }}»</div><div class="author">— {{ t.author }}</div></div>{% endfor %}</div></div></div>
 {% endif %}
 {% if team %}
-<div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div><div class="team-grid">{% for m in team %}<div class="team-member"><div class="avatar">{{ m.name[0] }}</div><h3>{{ m.name }}</h3><div class="role">{{ m.role }}</div><p>{{ m.description }}</p></div>{% endfor %}</div></div></div>
+<div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div><div class="team-grid" id="teamGrid">{% for m in team %}<div class="team-member"><div class="avatar">{{ m.name[0] }}</div><h3>{{ m.name }}</h3><div class="role">{{ m.role }}</div><p>{{ m.description }}</p></div>{% endfor %}</div></div></div>
 {% endif %}
 {% if faq %}
 <div class="modal" id="modal-faq" onclick="modalOutsideClick(event, 'faq')"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-header"><h2>Частые вопросы</h2><button class="modal-close" onclick="closeModal('faq')">×</button></div><div class="faq-list">{% for item in faq %}<div class="faq-item"><h3>{{ item.question }}</h3><p>{{ item.answer }}</p></div>{% endfor %}</div></div></div>
@@ -139,6 +137,11 @@
     const WORKING_HOURS = {{ working_hours | default("09:00-20:00") | tojson }};
     const STATIC_TEAM = {{ team | tojson if team else '[]' }};
 
+    // XSS-защита
+    const esc = (s) => String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
     let currentMonth = new Date(); let selectedMaster = null; let selectedDate = null; let selectedTime = null; let busySlots = [];
     const monthYearEl = document.getElementById('monthYear'); const daysEl = document.getElementById('days'); const formEl = document.getElementById('bookingForm'); const selectedDateEl = document.getElementById('selectedDate'); const selectedTimeText = document.getElementById('selectedTimeText'); const successModal = document.getElementById('successModal'); const timeSlotsWrapper = document.getElementById('timeSlotsWrapper'); const timeSlotsEl = document.getElementById('timeSlots'); const masterSelectionEl = document.getElementById('masterSelection'); const stepMaster = document.getElementById('stepMaster'); const stepCalendar = document.getElementById('stepCalendar'); const serviceSelect = document.getElementById('service');
 
@@ -153,7 +156,7 @@
         const teamGrid = document.getElementById('teamGrid');
         if (!teamGrid) return;
         try {
-            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
+            const res = await fetch(`${SERVER_URL}/api/masters/${encodeURIComponent(SITE_ID)}`);
             const data = await res.json();
             const masters = data.masters || [];
             if (masters.length === 0) {
@@ -162,10 +165,10 @@
             }
             teamGrid.innerHTML = masters.map(m => `
                 <div class="team-member">
-                    <div class="avatar">${m.name ? m.name[0] : '?'}</div>
-                    <h3>${m.name}</h3>
-                    <div class="role">${m.role || ''}</div>
-                    <p>${m.description || ''}</p>
+                    <div class="avatar">${esc(m.name ? m.name[0] : '?')}</div>
+                    <h3>${esc(m.name)}</h3>
+                    <div class="role">${esc(m.role)}</div>
+                    <p>${esc(m.description)}</p>
                 </div>
             `).join('');
         } catch (e) {
@@ -178,7 +181,7 @@
         if (!masterSelectionEl) { console.error("Контейнер masterSelection не найден!"); return; }
         masterSelectionEl.innerHTML = '<p style="text-align:center; grid-column:1/-1;">Загрузка мастеров...</p>';
         try {
-            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
+            const res = await fetch(`${SERVER_URL}/api/masters/${encodeURIComponent(SITE_ID)}`);
             const data = await res.json();
             const currentTeam = data.masters && data.masters.length > 0 ? data.masters : STATIC_TEAM;
             masterSelectionEl.innerHTML = '';
@@ -190,9 +193,9 @@
                 const card = document.createElement('div');
                 card.className = 'master-card';
                 card.innerHTML = `
-                    <div class="master-avatar">${master.name ? master.name[0] : '?'}</div>
-                    <h3>${master.name}</h3>
-                    <div class="role">${master.role || ''}</div>
+                    <div class="master-avatar">${esc(master.name ? master.name[0] : '?')}</div>
+                    <h3>${esc(master.name)}</h3>
+                    <div class="role">${esc(master.role)}</div>
                 `;
                 card.onclick = async () => await selectMaster(master, card);
                 masterSelectionEl.appendChild(card);
@@ -223,7 +226,7 @@
         renderCalendar();
     }
 
-    async function loadBusySlots() { try { const res = await fetch(`${SERVER_URL}/api/busy/${SITE_ID}`); const data = await res.json(); busySlots = data.busy || []; } catch (e) { console.error('Не удалось загрузить занятые слоты', e); busySlots = []; } }
+    async function loadBusySlots() { try { const res = await fetch(`${SERVER_URL}/api/busy/${encodeURIComponent(SITE_ID)}`); const data = await res.json(); busySlots = data.busy || []; } catch (e) { console.error('Не удалось загрузить занятые слоты', e); busySlots = []; } }
     function isSlotBusy(date, time) { if (!selectedMaster) return false; return busySlots.some(b => b.date === date && b.time === time && b.master === selectedMaster.name); }
 
     function renderCalendar() { if (!daysEl) return; const year = currentMonth.getFullYear(); const month = currentMonth.getMonth(); const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']; monthYearEl.textContent = monthNames[month] + ' ' + year; const firstDay = new Date(year, month, 1); const totalDays = new Date(year, month + 1, 0).getDate(); let startOffset = firstDay.getDay() - 1; if (startOffset < 0) startOffset = 6; daysEl.innerHTML = ''; for (let i = 0; i < startOffset; i++) { const empty = document.createElement('div'); empty.className = 'day empty'; daysEl.appendChild(empty); } const today = new Date(); today.setHours(0,0,0,0); for (let d = 1; d <= totalDays; d++) { const dateObj = new Date(year, month, d); const iso = formatISO(dateObj); const dayEl = document.createElement('div'); dayEl.className = 'day'; dayEl.textContent = d; if (dateObj < today) dayEl.classList.add('disabled'); else { if (iso === formatISO(today)) dayEl.classList.add('today'); if (iso === selectedDate) dayEl.classList.add('selected'); dayEl.addEventListener('click', () => selectDate(iso, dateObj)); } daysEl.appendChild(dayEl); } }
@@ -244,7 +247,7 @@
             if (!selectedMaster || !selectedDate || !selectedTime || !service || !name || !phone) { alert('Выберите мастера, дату, время, услугу и заполните поля'); return; }
             const submitBtn = formEl.querySelector('.submit-btn'); submitBtn.disabled = true; submitBtn.textContent = 'Отправляю...';
             try {
-                const response = await fetch(`${SERVER_URL}/api/book/${SITE_ID}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ master: selectedMaster.name, date: selectedDate, time: selectedTime, service, name, phone, email, comment }), });
+                const response = await fetch(`${SERVER_URL}/api/book/${encodeURIComponent(SITE_ID)}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ master: selectedMaster.name, date: selectedDate, time: selectedTime, service, name, phone, email, comment }), });
                 const result = await response.json(); if (!response.ok || !result.ok) throw new Error(result.error || 'Ошибка сервера');
                 closeModal('booking'); successModal.classList.add('active');
             } catch (error) { alert('Не удалось отправить заявку. Попробуйте позже.'); console.error(error); } finally { submitBtn.disabled = false; submitBtn.textContent = 'Отправить заявку'; }
