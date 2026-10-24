@@ -16,7 +16,7 @@ class Booking(Base):
     service: Mapped[str] = mapped_column(String(100))
     name: Mapped[str] = mapped_column(String(100))
     phone: Mapped[str] = mapped_column(String(30))
-    email: Mapped[str] = mapped_column(String(200), default="")  # <--- ДОБАВЛЕНО
+    email: Mapped[str] = mapped_column(String(200), default="")
     comment: Mapped[str] = mapped_column(String(500), default="")
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
@@ -38,32 +38,29 @@ class Subscriber(Base):
 
 
 class ClientContact(Base):
-    """Контакты клиентов сайта (email + верификация)."""
     __tablename__ = "client_contacts"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     site_id: Mapped[str] = mapped_column(String(100), index=True)
     email: Mapped[str] = mapped_column(String(200), index=True)
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    verification_token: Mapped[str] = mapped_column(String(200), nullable=True, index=True)
-    token_expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    password_hash: Mapped[str] = mapped_column(String(200), default="")  # <--- ДОБАВЛЕНО
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=True)  # <--- теперь True по умолчанию
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
 
 
 class Site(Base):
-    """Хранит сгенерированный контент сайта и пароль админа."""
     __tablename__ = "sites"
 
-    id: Mapped[str] = mapped_column(String(100), primary_key=True)  # site_id
-    owner_id: Mapped[int] = mapped_column(Integer, default=0)  # ID пользователя MAX
-    content_json: Mapped[str] = mapped_column(String, default="{}")  # Весь контент в JSON
-    admin_password: Mapped[str] = mapped_column(String(100), default="")  # <--- ДОБАВЛЕНО
+    id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    owner_id: Mapped[int] = mapped_column(Integer, default=0)
+    content_json: Mapped[str] = mapped_column(String, default="{}")
+    admin_email: Mapped[str] = mapped_column(String(200), default="")
+    admin_password: Mapped[str] = mapped_column(String(200), default="")
 
 
 class Master(Base):
-    """Мастера (сотрудники) сайта."""
     __tablename__ = "masters"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -71,16 +68,17 @@ class Master(Base):
     name: Mapped[str] = mapped_column(String(100))
     role: Mapped[str] = mapped_column(String(100), default="")
     description: Mapped[str] = mapped_column(String(500), default="")
-    services: Mapped[str] = mapped_column(String(500), default="")  # Услуги через запятую
+    services: Mapped[str] = mapped_column(String(500), default="")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    email: Mapped[str] = mapped_column(String(200), default="")
+    password_hash: Mapped[str] = mapped_column(String(200), default="")
 
 
 class MasterSchedule(Base):
-    """График работы мастера (какие дни и часы он работает)."""
     __tablename__ = "master_schedules"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     master_id: Mapped[int] = mapped_column(Integer, index=True)
-    weekday: Mapped[int] = mapped_column(Integer)  # 0=Пн, 6=Вс
+    weekday: Mapped[int] = mapped_column(Integer)
     start_time: Mapped[str] = mapped_column(String(5), default="10:00")
     end_time: Mapped[str] = mapped_column(String(5), default="20:00")
