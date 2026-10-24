@@ -43,10 +43,14 @@ class ClientContact(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     site_id: Mapped[str] = mapped_column(String(100), index=True)
     email: Mapped[str] = mapped_column(String(200), index=True)
-    password_hash: Mapped[str] = mapped_column(String(200), default="")  # <--- ДОБАВЛЕНО
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=True)  # <--- теперь True по умолчанию
+    password_hash: Mapped[str] = mapped_column(String(200), default="")
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    __table_args__ = (
+        UniqueConstraint("site_id", "email", name="uq_client_contact_site_email"),
     )
 
 
@@ -73,6 +77,10 @@ class Master(Base):
     email: Mapped[str] = mapped_column(String(200), default="")
     password_hash: Mapped[str] = mapped_column(String(200), default="")
 
+    __table_args__ = (
+        UniqueConstraint("site_id", "email", name="uq_master_site_email"),
+    )
+
 
 class MasterSchedule(Base):
     __tablename__ = "master_schedules"
@@ -82,3 +90,7 @@ class MasterSchedule(Base):
     weekday: Mapped[int] = mapped_column(Integer)
     start_time: Mapped[str] = mapped_column(String(5), default="10:00")
     end_time: Mapped[str] = mapped_column(String(5), default="20:00")
+
+    __table_args__ = (
+        UniqueConstraint("master_id", "weekday", name="uq_master_weekday"),
+    )
