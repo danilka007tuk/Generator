@@ -15,10 +15,6 @@ USER = os.getenv("GITHUB_USERNAME")
 
 
 def _wait_for_pages_build(repo, timeout: int = 60, interval: int = 3) -> bool:
-    """
-    Ждёт, пока GitHub Pages соберёт сайт.
-    Возвращает True, если сборка завершилась успешно, False — если таймаут.
-    """
     deadline = time.time() + timeout
     last_status = None
     while time.time() < deadline:
@@ -37,7 +33,6 @@ def _wait_for_pages_build(repo, timeout: int = 60, interval: int = 3) -> bool:
                 logger.error(f"Pages build errored: {build.get('error')}")
                 return False
         except GithubException as e:
-            # 404 — Pages ещё не инициализирован, ждём
             if e.status == 404:
                 pass
             else:
@@ -50,7 +45,6 @@ def _wait_for_pages_build(repo, timeout: int = 60, interval: int = 3) -> bool:
 def deploy_to_github(repo_name: str, html_path: Path) -> str:
     user = g.get_user()
 
-    # 1. Получаем или создаём репозиторий
     try:
         repo = user.get_repo(repo_name)
     except GithubException as e:
@@ -61,7 +55,6 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
             logger.error(f"Ошибка GitHub при получении репозитория {repo_name}: {e}")
             raise e
 
-    # 2. Заливаем index.html
     content = html_path.read_text(encoding="utf-8")
     try:
         existing = repo.get_contents("index.html")
@@ -73,7 +66,6 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
             logger.error(f"Ошибка при заливке index.html: {e}")
             raise e
 
-    # 3. Заливаем register.html (если есть)
     register_path = html_path.parent / "register.html"
     if register_path.exists():
         register_content = register_path.read_text(encoding="utf-8")
@@ -91,9 +83,10 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
     else:
         logger.warning(f"Файл register.html не найден по пути {register_path}")
 
-    # 4. Заливаем картинки
+    # === КРИТИЧЕСКИЙ ФИКС: Заливаем ВСЕ картинки из папки images ===
     images_dir = html_path.parent / "images"
     if images_dir.exists() and images_dir.is_dir():
+        logger.info(f"Найдено картинок для заливки: {len(list(images_dir.iterdir()))}")
         for img_file in images_dir.iterdir():
             if not img_file.is_file():
                 continue
@@ -102,16 +95,19 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
             try:
                 existing = repo.get_contents(img_path_in_repo)
                 repo.update_file(img_path_in_repo, f"Update {img_file.name}", img_bytes, existing.sha)
+                logger.info(f"Обновлена картинка: {img_file.name}")
             except GithubException as e:
                 if e.status == 404:
                     try:
                         repo.create_file(img_path_in_repo, f"Add {img_file.name}", img_bytes)
+                        logger.info(f"Загружена новая картинка: {img_file.name}")
                     except GithubException as ex:
                         logger.error(f"Не удалось залить {img_file.name}: {ex}")
                 else:
                     logger.error(f"Ошибка при получении {img_path_in_repo}: {e}")
+    else:
+        logger.warning(f"Папка с картинками не найдена: {images_dir}")
 
-    # 5. Включаем GitHub Pages (если ещё не включён)
     try:
         repo.requester.requestJsonAndCheck(
             "POST",
@@ -120,13 +116,11 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
         )
     except GithubException as e:
         if e.status == 409:
-            # Pages уже включён — это нормально
             pass
         else:
             logger.error(f"Ошибка при включении GitHub Pages: {e}")
             raise e
 
-    # 6. Ждём сборки Pages через polling вместо sleep(10)
     if _wait_for_pages_build(repo, timeout=60):
         logger.info(f"Сайт {repo_name} собран и доступен")
     else:
