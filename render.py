@@ -63,8 +63,6 @@ def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) ->
 
         logger.info(f"Генерация картинки: {prompt[:50]}...")
 
-        # Убрали response_format="b64_json", так как gpt-image-2 возвращает его по умолчанию
-        # Используем размер 1024x1024, который точно поддерживается
         response = provod_client.images.generate(
             model="openai/gpt-image-2",
             prompt=prompt,
@@ -192,7 +190,6 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     hero_prompt = data.get("hero_image_prompt", "")
     if not hero_prompt:
         hero_prompt = f"Beautiful interior for {data.get('company_name', 'business')}, photorealistic"
-    # Для hero используем размер 1024x1024, чтобы избежать ошибки 502 от provod.ai
     data["hero_image_url"] = generate_image_provod(hero_prompt, width=1024, height=1024)
 
     data["color_primary"] = clean_color(data.get("color_primary", ""), "#667eea")
@@ -208,19 +205,20 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
     template = env.get_template(template_name)
     html = template.render(**data)
 
-    # Редирект на регистрацию
-    if "<head>" in html:
-        redirect_script = """<script>if (!localStorage.getItem('user_email') && !window.location.search.includes('verified=1')) { window.location.replace('register.html'); }</script>"""
-        html = html.replace("<head>", f"<head>{redirect_script}", 1)
-
+    # Редирект на регистрацию — один скрипт, с поддержкой skip_redirect
     if "<head>" in html:
         redirect_script = '''
         <script>
-            const urlParams = new URLSearchParams(window.location.search);
-            const skip = urlParams.get('skip_redirect');
-            if (!sessionStorage.getItem('user_email') && !window.location.search.includes('verified=1') && !skip) {
-                window.location.replace('register.html');
-            }
+            (function() {
+                var params = new URLSearchParams(window.location.search);
+                var skip = params.get('skip_redirect');
+                var verified = window.location.search.indexOf('verified=1') !== -1;
+                var hasEmail = false;
+                try { hasEmail = !!sessionStorage.getItem('user_email'); } catch (e) {}
+                if (!hasEmail && !verified && !skip) {
+                    window.location.replace('register.html');
+                }
+            })();
         </script>
         '''
         html = html.replace("<head>", f"<head>{redirect_script}", 1)
