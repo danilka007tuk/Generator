@@ -33,7 +33,7 @@
 <div class="header">
     <h1>Кабинет мастера ({{ site_id }})</h1>
     <div>
-        <a href="https://danilka007tuk.github.io/{{ site_id }}/register.html" target="_blank">Регистрация/Вход</a>
+        <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank">Регистрация/Вход</a>
         <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank">Бронирование</a>
         <a href="/logout" class="logout-btn">Выйти</a>
     </div>
@@ -71,13 +71,23 @@
     const SERVER_URL = "{{ server_url }}";
     const WEEKDAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
 
-    const email = localStorage.getItem('master_email') || '';
+    // XSS-защита
+    const esc = (s) => String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+    // Нормализация email из localStorage
+    const email = (localStorage.getItem('master_email') || '').trim().toLowerCase();
 
     async function loadBookings() {
+        const tbody = document.getElementById('bookingsBody');
+        if (!email) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">Сессия истекла. <a href="' + SERVER_URL + '/login?site_id=' + encodeURIComponent(SITE_ID) + '">Войдите заново</a>.</td></tr>';
+            return;
+        }
         try {
-            const res = await fetch(`${SERVER_URL}/api/master-bookings?email=${encodeURIComponent(email)}&site_id=${SITE_ID}`);
+            const res = await fetch(`${SERVER_URL}/api/master-bookings?email=${encodeURIComponent(email)}&site_id=${encodeURIComponent(SITE_ID)}`, { credentials: 'include' });
             const data = await res.json();
-            const tbody = document.getElementById('bookingsBody');
 
             if (!data.ok || !data.bookings || data.bookings.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="empty">У вас пока нет записей</td></tr>';
@@ -86,24 +96,28 @@
 
             tbody.innerHTML = data.bookings.map(b => `
                 <tr>
-                    <td>${b.date}</td>
-                    <td>${b.time}</td>
-                    <td>${b.name}</td>
-                    <td>${b.phone}</td>
-                    <td>${b.service}</td>
+                    <td>${esc(b.date)}</td>
+                    <td>${esc(b.time)}</td>
+                    <td>${esc(b.name)}</td>
+                    <td>${esc(b.phone)}</td>
+                    <td>${esc(b.service)}</td>
                 </tr>
             `).join('');
         } catch (e) {
             console.error("Ошибка загрузки", e);
-            document.getElementById('bookingsBody').innerHTML = '<tr><td colspan="5" class="empty">Ошибка загрузки</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">Ошибка загрузки</td></tr>';
         }
     }
 
     async function loadSchedule() {
+        const container = document.getElementById('scheduleBody');
+        if (!email) {
+            container.innerHTML = '<p class="empty">Сессия истекла. <a href="' + SERVER_URL + '/login?site_id=' + encodeURIComponent(SITE_ID) + '">Войдите заново</a>.</p>';
+            return;
+        }
         try {
-            const res = await fetch(`${SERVER_URL}/api/master-schedule?email=${encodeURIComponent(email)}&site_id=${SITE_ID}`);
+            const res = await fetch(`${SERVER_URL}/api/master-schedule?email=${encodeURIComponent(email)}&site_id=${encodeURIComponent(SITE_ID)}`, { credentials: 'include' });
             const data = await res.json();
-            const container = document.getElementById('scheduleBody');
 
             if (!data.ok || !data.schedule || data.schedule.length === 0) {
                 container.innerHTML = '<p class="empty">График не задан</p>';
@@ -116,14 +130,14 @@
             container.innerHTML = week.map(day => {
                 const dayName = WEEKDAYS[day.weekday];
                 if (day.start_time && day.end_time) {
-                    return `<div class="schedule-item"><span class="schedule-day">${dayName}</span><span class="schedule-time">${day.start_time} — ${day.end_time}</span></div>`;
+                    return `<div class="schedule-item"><span class="schedule-day">${dayName}</span><span class="schedule-time">${esc(day.start_time)} — ${esc(day.end_time)}</span></div>`;
                 } else {
                     return `<div class="schedule-item"><span class="schedule-day">${dayName}</span><span class="schedule-off">Выходной</span></div>`;
                 }
             }).join('');
         } catch (e) {
             console.error("Ошибка загрузки графика", e);
-            document.getElementById('scheduleBody').innerHTML = '<p class="empty">Ошибка загрузки графика</p>';
+            container.innerHTML = '<p class="empty">Ошибка загрузки графика</p>';
         }
     }
 
