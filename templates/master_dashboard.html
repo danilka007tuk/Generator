@@ -2,28 +2,32 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    {% if favicon_url %}<link rel="icon" href="https://danilka007tuk.github.io/{{ site_id }}/{{ favicon_url }}">{% endif %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кабинет мастера — {{ site_id }}</title>
+    <title>Кабинет мастера — {{ logo_text }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root { --primary: {{ color_primary }}; --secondary: {{ color_secondary }}; --bg: {{ color_bg }}; --text: {{ color_text }}; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: #f4f6fa; color: #2c3e50; line-height: 1.6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
         .header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .header h1 { font-size: 1.2em; font-weight: 600; }
-        .header a { color: #1976d2; text-decoration: none; font-weight: 500; background: #e3f2fd; padding: 8px 16px; border-radius: 8px; margin-left: 10px; }
+        .header h1 { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+        .header h1 img { height: 36px; border-radius: 8px; }
+        .header a { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(0,0,0,0.04); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; }
+        .header a:hover { background: rgba(0,0,0,0.08); }
         .header .logout-btn { background: #c62828; color: #fff; }
         .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; }
+        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 12px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 0.85em; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        th { text-align: left; padding: 12px; background: rgba(0,0,0,0.02); font-size: 0.85em; color: var(--text); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95em; }
         tr:last-child td { border-bottom: none; }
         .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
-        .schedule-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.95em; }
+        .schedule-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95em; }
         .schedule-item:last-child { border-bottom: none; }
         .schedule-day { font-weight: 500; }
-        .schedule-time { color: #1976d2; font-weight: 500; }
+        .schedule-time { color: var(--primary); font-weight: 500; }
         .schedule-off { color: #c62828; font-style: italic; }
         @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
     </style>
@@ -31,7 +35,10 @@
 <body>
 
 <div class="header">
-    <h1>Кабинет мастера ({{ site_id }})</h1>
+    <h1>
+        {% if favicon_url %}<img src="https://danilka007tuk.github.io/{{ site_id }}/{{ favicon_url }}" alt="">{% endif %}
+        {{ logo_text }}
+    </h1>
     <div>
         <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank">Регистрация/Вход</a>
         <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank">Бронирование</a>
@@ -70,13 +77,7 @@
     const SITE_ID = "{{ site_id }}";
     const SERVER_URL = "{{ server_url }}";
     const WEEKDAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-
-    // XSS-защита
-    const esc = (s) => String(s == null ? '' : s)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-
-    // Нормализация email из localStorage
+    const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const email = (localStorage.getItem('master_email') || '').trim().toLowerCase();
 
     async function loadBookings() {
@@ -88,12 +89,10 @@
         try {
             const res = await fetch(`${SERVER_URL}/api/master-bookings?email=${encodeURIComponent(email)}&site_id=${encodeURIComponent(SITE_ID)}`, { credentials: 'include' });
             const data = await res.json();
-
             if (!data.ok || !data.bookings || data.bookings.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="empty">У вас пока нет записей</td></tr>';
                 return;
             }
-
             tbody.innerHTML = data.bookings.map(b => `
                 <tr>
                     <td>${esc(b.date)}</td>
@@ -118,15 +117,12 @@
         try {
             const res = await fetch(`${SERVER_URL}/api/master-schedule?email=${encodeURIComponent(email)}&site_id=${encodeURIComponent(SITE_ID)}`, { credentials: 'include' });
             const data = await res.json();
-
             if (!data.ok || !data.schedule || data.schedule.length === 0) {
                 container.innerHTML = '<p class="empty">График не задан</p>';
                 return;
             }
-
             const week = Array.from({length: 7}, (_, i) => ({ weekday: i, start_time: null, end_time: null }));
             data.schedule.forEach(item => { week[item.weekday] = item; });
-
             container.innerHTML = week.map(day => {
                 const dayName = WEEKDAYS[day.weekday];
                 if (day.start_time && day.end_time) {
@@ -140,7 +136,6 @@
             container.innerHTML = '<p class="empty">Ошибка загрузки графика</p>';
         }
     }
-
     loadBookings();
     loadSchedule();
 </script>

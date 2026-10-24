@@ -2,22 +2,26 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    {% if favicon_url %}<link rel="icon" href="https://danilka007tuk.github.io/{{ site_id }}/{{ favicon_url }}">{% endif %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мои записи — {{ site_id }}</title>
+    <title>Мои записи — {{ logo_text }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root { --primary: {{ color_primary }}; --secondary: {{ color_secondary }}; --bg: {{ color_bg }}; --text: {{ color_text }}; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: #f4f6fa; color: #2c3e50; line-height: 1.6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
         .header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .header h1 { font-size: 1.2em; font-weight: 600; }
-        .header a { color: #1976d2; text-decoration: none; font-weight: 500; background: #e3f2fd; padding: 8px 16px; border-radius: 8px; margin-left: 10px; }
+        .header h1 { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+        .header h1 img { height: 36px; border-radius: 8px; }
+        .header a { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(0,0,0,0.04); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; }
+        .header a:hover { background: rgba(0,0,0,0.08); }
         .header .logout-btn { background: #c62828; color: #fff; }
         .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
         .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; }
+        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 12px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 0.85em; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        th { text-align: left; padding: 12px; background: rgba(0,0,0,0.02); font-size: 0.85em; color: var(--text); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95em; }
         tr:last-child td { border-bottom: none; }
         .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
     </style>
@@ -25,9 +29,11 @@
 <body>
 
 <div class="header">
-    <h1>Мои записи ({{ site_id }})</h1>
+    <h1>
+        {% if favicon_url %}<img src="https://danilka007tuk.github.io/{{ site_id }}/{{ favicon_url }}" alt="">{% endif %}
+        {{ logo_text }}
+    </h1>
     <div>
-        <!-- ДОБАВЛЕНО ?skip_redirect=1 -->
         <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank">На сайт ↗</a>
         <a href="/logout" class="logout-btn">Выйти</a>
     </div>
@@ -56,28 +62,21 @@
 <script>
     const SITE_ID = "{{ site_id }}";
     const SERVER_URL = "{{ server_url }}";
-
-    // XSS-защита
-    const esc = (s) => String(s == null ? '' : s)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
     async function loadBookings() {
         const tbody = document.getElementById('bookingsBody');
         try {
             const res = await fetch(`${SERVER_URL}/api/my-bookings`, { credentials: 'include' });
             const data = await res.json();
-
             if (!data.ok) {
                 tbody.innerHTML = `<tr><td colspan="5" class="empty">${esc(data.error) || 'Ошибка авторизации. <a href="' + SERVER_URL + '/login?site_id=' + encodeURIComponent(SITE_ID) + '">Войдите заново</a>.'}</td></tr>`;
                 return;
             }
-
             if (!data.bookings || data.bookings.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="empty">У вас пока нет записей</td></tr>';
                 return;
             }
-
             tbody.innerHTML = data.bookings.map(b => `
                 <tr>
                     <td>${esc(b.date)}</td>
@@ -92,7 +91,6 @@
             tbody.innerHTML = '<tr><td colspan="5" class="empty">Ошибка загрузки данных</td></tr>';
         }
     }
-
     loadBookings();
 </script>
 </body>
