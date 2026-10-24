@@ -49,7 +49,7 @@
 <div class="header">
     <h1>Управление сайтом: {{ site_id }}</h1>
     <div>
-        <a href="https://danilka007tuk.github.io/{{ site_id }}/register.html" target="_blank">Регистрация/Вход</a>
+        <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank">Регистрация/Вход</a>
         <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank">Бронирование</a>
         <a href="/logout" class="logout-btn">Выйти</a>
     </div>
@@ -118,6 +118,11 @@
     const SERVER_URL = "{{ server_url }}";
     const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
+    // XSS-защита
+    const esc = (s) => String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
     function switchTab(tab) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => {
@@ -134,21 +139,23 @@
     // --- СТАТИСТИКА ---
     async function loadStats() {
         try {
-            const resB = await fetch(`${SERVER_URL}/api/bookings/${SITE_ID}`);
+            const resB = await fetch(`${SERVER_URL}/api/bookings/${SITE_ID}`, { credentials: 'include' });
             const dataB = await resB.json();
             const bBody = document.getElementById('bookingsBody');
-            bBody.innerHTML = dataB.bookings.length === 0 ? '<tr><td colspan="5" class="empty">Пока нет броней</td></tr>' : dataB.bookings.map(b => `<tr><td>${b.date}</td><td>${b.time}</td><td>${b.master || '—'}</td><td>${b.name}</td><td>${b.phone}</td></tr>`).join('');
+            bBody.innerHTML = !dataB.bookings || dataB.bookings.length === 0
+                ? '<tr><td colspan="5" class="empty">Пока нет броней</td></tr>'
+                : dataB.bookings.map(b => `<tr><td>${esc(b.date)}</td><td>${esc(b.time)}</td><td>${esc(b.master) || '—'}</td><td>${esc(b.name)}</td><td>${esc(b.phone)}</td></tr>`).join('');
 
-            const resC = await fetch(`${SERVER_URL}/api/analytics/${SITE_ID}`);
+            const resC = await fetch(`${SERVER_URL}/api/analytics/${SITE_ID}`, { credentials: 'include' });
             const dataC = await resC.json();
-            document.getElementById('clientsInfo').innerHTML = `Всего клиентов: <b>${dataC.total_contacts}</b><br>Подтверждено: <b>${dataC.verified_contacts}</b>`;
+            document.getElementById('clientsInfo').innerHTML = `Всего клиентов: <b>${dataC.total_contacts || 0}</b><br>Подтверждено: <b>${dataC.verified_contacts || 0}</b>`;
         } catch (e) { console.error(e); }
     }
 
     // --- КОНТЕНТ ---
     async function loadEditor() {
         try {
-            const res = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`);
+            const res = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`, { credentials: 'include' });
             const data = await res.json();
             if (!data.ok) return alert('Ошибка загрузки контента');
             const c = data.content;
@@ -165,7 +172,7 @@
         const msg = document.getElementById('editorMessage');
         msg.textContent = '⏳ Сохранение...';
         try {
-            const res = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`);
+            const res = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`, { credentials: 'include' });
             const data = await res.json();
             let content = data.content;
             content.company_name = document.getElementById('company_name').value;
@@ -179,19 +186,25 @@
                 return { name: parts[0] || '', price: parts[1] || '', description: parts[2] || '' };
             });
 
-            const saveRes = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(content) });
+            const saveRes = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
+                body: JSON.stringify(content)
+            });
             const saveData = await saveRes.json();
-            if (saveData.ok) { msg.style.color = '#2e7d32'; msg.textContent = '✅ Сохранено!'; } else throw new Error(saveData.error);
+            if (saveData.ok) { msg.style.color = '#2e7d32'; msg.textContent = '✅ Сохранено!'; }
+            else throw new Error(saveData.error);
         } catch (err) { msg.style.color = '#c62828'; msg.textContent = '❌ ' + err.message; }
     });
 
     // --- ПЕРСОНАЛ ---
     async function loadMasters() {
         try {
-            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`);
+            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`, { credentials: 'include' });
             const data = await res.json();
             const list = document.getElementById('mastersList');
-            if (data.masters.length === 0) {
+            if (!data.masters || data.masters.length === 0) {
                 list.innerHTML = '<p class="empty">Пока нет добавленных мастеров.</p>';
                 return;
             }
@@ -199,23 +212,29 @@
                 <div class="master-card">
                     <div class="master-header">
                         <div class="master-info">
-                            <h3>${m.name}</h3>
-                            <p>${m.role || 'Должность не указана'} • Услуги: ${m.services.join(', ') || 'Нет'} • Email: ${m.email || '—'}</p>
+                            <h3>${esc(m.name)}</h3>
+                            <p>${esc(m.role) || 'Должность не указана'} • Услуги: ${esc((m.services || []).join(', ')) || 'Нет'} • Email: ${esc(m.email) || '—'}</p>
                         </div>
                         <button class="btn btn-danger" onclick="deleteMaster(${m.id})">Удалить</button>
                     </div>
                     <div class="schedule-grid" id="schedule-${m.id}">
-                        <div class="schedule-day"><label>Пн</label><input type="time" id="start-${m.id}-0" value="10:00"></div>
-                        <div class="schedule-day"><label>Вт</label><input type="time" id="start-${m.id}-1" value="10:00"></div>
-                        <div class="schedule-day"><label>Ср</label><input type="time" id="start-${m.id}-2" value="10:00"></div>
-                        <div class="schedule-day"><label>Чт</label><input type="time" id="start-${m.id}-3" value="10:00"></div>
-                        <div class="schedule-day"><label>Пт</label><input type="time" id="start-${m.id}-4" value="10:00"></div>
-                        <div class="schedule-day"><label>Сб</label><input type="time" id="start-${m.id}-5" value="10:00"></div>
-                        <div class="schedule-day"><label>Вс</label><input type="time" id="start-${m.id}-6" value="10:00"></div>
+                        ${[0,1,2,3,4,5,6].map(i => `<div class="schedule-day"><label>${WEEKDAYS[i]}</label><input type="time" id="start-${m.id}-${i}"></div>`).join('')}
                     </div>
                     <button class="btn btn-save" style="margin-top: 8px; padding: 8px 16px; font-size: 0.85em;" onclick="saveSchedule(${m.id})">💾 Сохранить график</button>
                 </div>
             `).join('');
+
+            // Подгружаем существующий график для каждого мастера
+            for (const m of data.masters) {
+                try {
+                    const sr = await fetch(`${SERVER_URL}/api/master-schedule?master_id=${m.id}&site_id=${encodeURIComponent(SITE_ID)}`, { credentials: 'include' });
+                    const sd = await sr.json();
+                    (sd.schedule || []).forEach(item => {
+                        const el = document.getElementById(`start-${m.id}-${item.weekday}`);
+                        if (el && item.start_time) el.value = item.start_time;
+                    });
+                } catch (e) { console.error('schedule load', m.id, e); }
+            }
         } catch (e) { console.error(e); }
     }
 
@@ -229,11 +248,14 @@
         const password = document.getElementById('m_password').value;
 
         try {
-            await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`, {
+            const res = await fetch(`${SERVER_URL}/api/masters/${SITE_ID}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
                 body: JSON.stringify({ name, role, description: desc, services, email, password })
             });
+            const data = await res.json();
+            if (!data.ok) { alert(data.error || 'Ошибка добавления'); return; }
             document.getElementById('masterForm').reset();
             loadMasters();
         } catch (err) { alert('Ошибка добавления мастера'); }
@@ -242,7 +264,7 @@
     async function deleteMaster(id) {
         if (!confirm('Удалить мастера?')) return;
         try {
-            await fetch(`${SERVER_URL}/api/masters/${id}`, { method: 'DELETE' });
+            await fetch(`${SERVER_URL}/api/masters/${id}`, { method: 'DELETE', credentials: 'include' });
             loadMasters();
         } catch (err) { alert('Ошибка удаления'); }
     }
@@ -257,6 +279,7 @@
             await fetch(`${SERVER_URL}/api/master-schedule/${masterId}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
                 body: JSON.stringify({ schedule })
             });
             alert('✅ График сохранен!');
