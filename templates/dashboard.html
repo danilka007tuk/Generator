@@ -37,8 +37,8 @@
         }
         .header h1 { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 12px; color: #fff; }
         .header h1 img { height: 36px; border-radius: 8px; }
-        .header a { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; }
-        .header a:hover { background: #fff; }
+        .header a, .header button { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; border: none; cursor: pointer; font-family: inherit; font-size: 1em; }
+        .header a:hover, .header button:hover { background: #fff; }
         .header .logout-btn { background: #c62828; color: #fff; }
         .header .logout-btn:hover { background: #b71c1c; }
         .tabs { display: flex; background: rgba(255,255,255,0.95); border-bottom: 1px solid rgba(0,0,0,0.05); padding: 0 40px; backdrop-filter: blur(4px); }
@@ -95,7 +95,7 @@
     <div>
         <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank" id="tour-link-login">Регистрация/Вход</a>
         <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" id="tour-link-booking">Бронирование</a>
-        <a href="/logout" class="logout-btn" id="tour-link-logout">Выйти</a>
+        <a href="#" class="logout-btn" id="tour-link-logout" onclick="logoutUser(event)">Выйти</a>
         <button class="btn-help" onclick="startTour(true)">❓ Помощь</button>
     </div>
 </div>
@@ -111,7 +111,9 @@
         <div class="card" id="tour-stats-bookings">
             <h2>📅 Последние бронирования</h2>
             <table id="bookingsTable">
-                <thead><tr><th>Дата</th><th>Время</th><th>Мастер</th><th>Клиент</th><th>Телефон</th></tr></thead>
+                <thead>
+                    <tr><th>Дата</th><th>Время</th><th>Мастер</th><th>Клиент</th><th>Телефон</th></tr>
+                </thead>
                 <tbody id="bookingsBody"><tr><td colspan="5" class="empty">Загрузка...</td></tr></tbody>
             </table>
         </div>
@@ -139,7 +141,7 @@
     <div id="tab-staff" class="hidden">
         <div class="card">
             <h2>👥 Сотрудники (Мастера)</h2>
-            <div id="mastersList" id="tour-masters-list"></div>
+            <div id="mastersList"></div>
             <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(0,0,0,0.1);">
             <h3>Добавить мастера</h3>
             <form id="masterForm">
@@ -160,6 +162,12 @@
     const SERVER_URL = "{{ server_url }}";
     const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+    async function logoutUser(e) {
+        if (e) e.preventDefault();
+        try { await fetch(`${SERVER_URL}/logout`, { credentials: 'include' }); } catch (err) {}
+        window.location.href = `${SERVER_URL}/login?site_id=${encodeURIComponent(SITE_ID)}`;
+    }
 
     function switchTab(tab) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -324,7 +332,7 @@
     document.body.appendChild(overlay);
 
     function startTour(force = false) {
-        const tourKey = 'tour_completed_admin_v4_' + SITE_ID;
+        const tourKey = 'tour_completed_admin_v5_' + SITE_ID;
         if (!force && localStorage.getItem(tourKey)) return;
 
         currentTourIndex = 0;
@@ -383,7 +391,7 @@
         overlay.style.display = 'none';
         const oldTooltip = document.querySelector('.tour-tooltip');
         if (oldTooltip) oldTooltip.remove();
-        localStorage.setItem('tour_completed_admin_v4_' + SITE_ID, '1');
+        localStorage.setItem('tour_completed_admin_v5_' + SITE_ID, '1');
     }
 
     setTimeout(() => startTour(false), 1000);

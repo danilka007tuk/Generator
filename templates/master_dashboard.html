@@ -37,8 +37,8 @@
         }
         .header h1 { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 12px; color: #fff; }
         .header h1 img { height: 36px; border-radius: 8px; }
-        .header a { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; }
-        .header a:hover { background: #fff; }
+        .header a, .header button { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; border: none; cursor: pointer; font-family: inherit; font-size: 1em; }
+        .header a:hover, .header button:hover { background: #fff; }
         .header .logout-btn { background: #c62828; color: #fff; }
         .header .logout-btn:hover { background: #b71c1c; }
         .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -79,7 +79,7 @@
     <div>
         <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank" id="tour-link-login">Регистрация/Вход</a>
         <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" id="tour-link-booking">Бронирование</a>
-        <a href="/logout" class="logout-btn" id="tour-link-logout">Выйти</a>
+        <a href="#" class="logout-btn" id="tour-link-logout" onclick="logoutUser(event)">Выйти</a>
         <button class="btn-help" onclick="startTour(true)">❓ Помощь</button>
     </div>
 </div>
@@ -89,7 +89,13 @@
         <h2>📅 Мои записи</h2>
         <table id="tour-table-bookings">
             <thead>
-                <tr><th>Дата</th><th>Время</th><th>Клиент</th><th>Телефон</th><th>Услуга</th></tr>
+                <tr>
+                    <th>Дата</th>
+                    <th>Время</th>
+                    <th>Клиент</th>
+                    <th>Телефон</th>
+                    <th>Услуга</th>
+                </tr>
             </thead>
             <tbody id="bookingsBody">
                 <tr><td colspan="5" class="empty">Загрузка...</td></tr>
@@ -99,7 +105,7 @@
 
     <div class="card">
         <h2>🗓️ Мой график работы</h2>
-        <div id="scheduleBody" id="tour-schedule">
+        <div id="scheduleBody">
             <p class="empty">Загрузка...</p>
         </div>
     </div>
@@ -111,6 +117,12 @@
     const WEEKDAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
     const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const email = (localStorage.getItem('master_email') || '').trim().toLowerCase();
+
+    async function logoutUser(e) {
+        if (e) e.preventDefault();
+        try { await fetch(`${SERVER_URL}/logout`, { credentials: 'include' }); } catch (err) {}
+        window.location.href = `${SERVER_URL}/login?site_id=${encodeURIComponent(SITE_ID)}`;
+    }
 
     async function loadBookings() {
         const tbody = document.getElementById('bookingsBody');
@@ -176,6 +188,7 @@
 <script>
     const tourSteps = [
         { selector: '.header', title: '👋 Добро пожаловать в кабинет!', text: 'Здесь вы управляете своими записями и графиком.' },
+        { selector: '#tour-link-login', title: '🔐 Регистрация/Вход', text: 'Если вы вышли из кабинета, эта кнопка вернет вас на страницу входа.' },
         { selector: '#tour-link-booking', title: '🔗 Бронирование', text: 'Кнопка «Бронирование» перенесет вас на сайт, где можно посмотреть расписание.' },
         { selector: '#tour-table-bookings', title: '📅 Мои записи', text: 'В этой таблице отображаются все клиенты, которые к вам записались.' },
         { selector: '#scheduleBody', title: '🗓️ Мой график', text: 'Здесь ваш график работы. Если он не задан, попросите администратора настроить его.' },
@@ -188,7 +201,7 @@
     document.body.appendChild(overlay);
 
     function startTour(force = false) {
-        const tourKey = 'tour_completed_master_v4_' + SITE_ID;
+        const tourKey = 'tour_completed_master_v5_' + SITE_ID;
         if (!force && localStorage.getItem(tourKey)) return;
 
         currentTourIndex = 0;
@@ -247,7 +260,7 @@
         overlay.style.display = 'none';
         const oldTooltip = document.querySelector('.tour-tooltip');
         if (oldTooltip) oldTooltip.remove();
-        localStorage.setItem('tour_completed_master_v4_' + SITE_ID, '1');
+        localStorage.setItem('tour_completed_master_v5_' + SITE_ID, '1');
     }
 
     setTimeout(() => startTour(false), 1000);
