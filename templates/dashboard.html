@@ -81,13 +81,13 @@
         {{ logo_text }}
     </h1>
     <div>
-        <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank">Регистрация/Вход</a>
-        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank">Бронирование</a>
-        <a href="/logout" class="logout-btn">Выйти</a>
+        <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank" id="tour-link-login">Регистрация/Вход</a>
+        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" id="tour-link-booking">Бронирование</a>
+        <a href="/logout" class="logout-btn" id="tour-link-logout">Выйти</a>
     </div>
 </div>
 
-<div class="tabs">
+<div class="tabs" id="tour-tabs">
     <div class="tab active" onclick="switchTab('stats')">📊 Статистика</div>
     <div class="tab" onclick="switchTab('editor')">✏️ Контент</div>
     <div class="tab" onclick="switchTab('staff')">👥 Персонал</div>
@@ -95,14 +95,14 @@
 
 <div class="container">
     <div id="tab-stats">
-        <div class="card">
+        <div class="card" id="tour-stats-bookings">
             <h2>📅 Последние бронирования</h2>
             <table id="bookingsTable">
                 <thead><tr><th>Дата</th><th>Время</th><th>Мастер</th><th>Клиент</th><th>Телефон</th></tr></thead>
                 <tbody id="bookingsBody"><tr><td colspan="5" class="empty">Загрузка...</td></tr></tbody>
             </table>
         </div>
-        <div class="card">
+        <div class="card" id="tour-stats-clients">
             <h2>👥 База клиентов</h2>
             <div id="clientsInfo">Загрузка...</div>
         </div>
@@ -117,7 +117,7 @@
                 <div class="form-group"><label>Телефон</label><input type="text" id="company_phone" required></div>
                 <div class="form-group"><label>Адрес</label><input type="text" id="company_address" required></div>
                 <div class="form-group"><label>Услуги (Название | Цена | Описание)</label><textarea id="services" rows="6"></textarea></div>
-                <button type="submit" class="btn btn-save">💾 Сохранить и опубликовать</button>
+                <button type="submit" class="btn btn-save" id="tour-btn-save">💾 Сохранить и опубликовать</button>
                 <div id="editorMessage" style="margin-top:15px; font-weight:500;"></div>
             </form>
         </div>
@@ -126,7 +126,7 @@
     <div id="tab-staff" class="hidden">
         <div class="card">
             <h2>👥 Сотрудники (Мастера)</h2>
-            <div id="mastersList"></div>
+            <div id="mastersList" id="tour-masters-list"></div>
             <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(0,0,0,0.1);">
             <h3>Добавить мастера</h3>
             <form id="masterForm">
@@ -136,7 +136,7 @@
                 <div class="form-group"><label>Услуги (через запятую)</label><input type="text" id="m_services" placeholder="Стрижка, Укладка"></div>
                 <div class="form-group"><label>Email для входа мастера</label><input type="email" id="m_email" placeholder="master@example.com" required></div>
                 <div class="form-group"><label>Пароль для входа мастера</label><input type="text" id="m_password" placeholder="Придумайте пароль" required></div>
-                <button type="submit" class="btn">➕ Добавить</button>
+                <button type="submit" class="btn" id="tour-btn-add-master">➕ Добавить</button>
             </form>
         </div>
     </div>
@@ -297,13 +297,14 @@
 <!-- ТУТОРИАЛ (ОБУЧЕНИЕ АДМИНА) -->
 <script>
     (function() {
-        const tourKey = 'tour_completed_admin_' + SITE_ID;
+        const tourKey = 'tour_completed_admin_v3_' + SITE_ID;
         if (localStorage.getItem(tourKey)) return;
 
         const steps = [
             { selector: '.header', text: '👋 Добро пожаловать в панель управления!<br>Здесь вы управляете сайтом.' },
-            { selector: '.tabs', text: '📊 Вкладки позволяют переключаться между статистикой, контентом и персоналом.' },
-            { selector: '#tab-stats .card', text: '📅 Здесь отображаются последние бронирования ваших клиентов.' }
+            { selector: '#tour-tabs', text: '📊 Вкладки позволяют переключаться между статистикой, контентом и персоналом.' },
+            { selector: '#tour-stats-bookings', text: '📅 Здесь отображаются последние бронирования ваших клиентов.' },
+            { selector: '#tour-link-booking', text: '🔗 Кнопка «Бронирование» перенесет вас на сайт, где можно проверить, как он выглядит.' }
         ];
 
         let currentStep = 0;
@@ -326,7 +327,10 @@
             tooltip.innerHTML = step.text + '<br><br><b style="color: #4caf50;">Нажмите, чтобы продолжить</b>';
 
             const rect = el.getBoundingClientRect();
-            tooltip.style.top = (rect.bottom + window.scrollY + 12) + 'px';
+            let top = rect.bottom + window.scrollY + 12;
+            if (top > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - 80;
+
+            tooltip.style.top = top + 'px';
             tooltip.style.left = Math.max(10, Math.min(rect.left, window.innerWidth - 370)) + 'px';
 
             tooltip.onclick = () => {

@@ -65,24 +65,18 @@
         {{ logo_text }}
     </h1>
     <div>
-        <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank">Регистрация/Вход</a>
-        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank">Бронирование</a>
-        <a href="/logout" class="logout-btn">Выйти</a>
+        <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank" id="tour-link-login">Регистрация/Вход</a>
+        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" id="tour-link-booking">Бронирование</a>
+        <a href="/logout" class="logout-btn" id="tour-link-logout">Выйти</a>
     </div>
 </div>
 
 <div class="container">
     <div class="card">
         <h2>📅 Мои записи</h2>
-        <table>
+        <table id="tour-table-bookings">
             <thead>
-                <tr>
-                    <th>Дата</th>
-                    <th>Время</th>
-                    <th>Клиент</th>
-                    <th>Телефон</th>
-                    <th>Услуга</th>
-                </tr>
+                <tr><th>Дата</th><th>Время</th><th>Клиент</th><th>Телефон</th><th>Услуга</th></tr>
             </thead>
             <tbody id="bookingsBody">
                 <tr><td colspan="5" class="empty">Загрузка...</td></tr>
@@ -92,7 +86,7 @@
 
     <div class="card">
         <h2>🗓️ Мой график работы</h2>
-        <div id="scheduleBody">
+        <div id="scheduleBody" id="tour-schedule">
             <p class="empty">Загрузка...</p>
         </div>
     </div>
@@ -168,13 +162,15 @@
 <!-- ТУТОРИАЛ (ОБУЧЕНИЕ МАСТЕРА) -->
 <script>
     (function() {
-        const tourKey = 'tour_completed_master_' + SITE_ID;
+        const tourKey = 'tour_completed_master_v3_' + SITE_ID;
         if (localStorage.getItem(tourKey)) return;
 
         const steps = [
             { selector: '.header', text: '👋 Добро пожаловать в кабинет мастера!<br>Здесь вы видите свои записи и график.' },
-            { selector: '.card h2', text: '📅 В этом блоке отображаются все ваши записи.' },
-            { selector: '.header a', text: '🔗 Кнопки в шапке — переход на сайт, бронирование, выход.' }
+            { selector: '#tour-link-booking', text: '🔗 Кнопка «Бронирование» перенесет вас на сайт, где можно посмотреть расписание.' },
+            { selector: '#tour-table-bookings', text: '📅 В этой таблице отображаются все ваши записи. Вы увидите, кто и когда к вам записан.' },
+            { selector: '#scheduleBody', text: '🗓️ Здесь ваш график работы. Если он не задан, попросите администратора настроить его.' },
+            { selector: '#tour-link-logout', text: '🚪 Кнопка «Выйти» завершает сессию.' }
         ];
 
         let currentStep = 0;
@@ -197,7 +193,10 @@
             tooltip.innerHTML = step.text + '<br><br><b style="color: #4caf50;">Нажмите, чтобы продолжить</b>';
 
             const rect = el.getBoundingClientRect();
-            tooltip.style.top = (rect.bottom + window.scrollY + 12) + 'px';
+            let top = rect.bottom + window.scrollY + 12;
+            if (top > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - 80;
+
+            tooltip.style.top = top + 'px';
             tooltip.style.left = Math.max(10, Math.min(rect.left, window.innerWidth - 370)) + 'px';
 
             tooltip.onclick = () => {

@@ -59,15 +59,15 @@
         {{ logo_text }}
     </h1>
     <div>
-        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank">На сайт ↗</a>
-        <a href="/logout" class="logout-btn">Выйти</a>
+        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" id="tour-link-site">На сайт ↗</a>
+        <a href="/logout" class="logout-btn" id="tour-link-logout">Выйти</a>
     </div>
 </div>
 
 <div class="container">
     <div class="card">
-        <h2>📅 Ваши бронирования</h2>
-        <table>
+        <h2 id="tour-table-header">📅 Ваши бронирования</h2>
+        <table id="tour-table">
             <thead>
                 <tr>
                     <th>Дата</th>
@@ -122,13 +122,14 @@
 <!-- ТУТОРИАЛ (ОБУЧЕНИЕ КЛИЕНТА) -->
 <script>
     (function() {
-        const tourKey = 'tour_completed_client_' + SITE_ID;
+        const tourKey = 'tour_completed_client_v3_' + SITE_ID;
         if (localStorage.getItem(tourKey)) return;
 
         const steps = [
             { selector: '.header', text: '👋 Добро пожаловать в личный кабинет!<br>Здесь вы видите свои записи.' },
-            { selector: '.card h2', text: '📅 В этом блоке отображаются все ваши бронирования.' },
-            { selector: '.header a', text: '🔗 Кнопки в шапке позволяют перейти на сайт или выйти из кабинета.' }
+            { selector: '#tour-link-site', text: '🔗 Кнопка «На сайт» перенесет вас на главную страницу, где можно забронировать время.' },
+            { selector: '#tour-table', text: '📅 В этой таблице отображаются все ваши бронирования.' },
+            { selector: '#tour-link-logout', text: '🚪 Кнопка «Выйти» завершает сессию.' }
         ];
 
         let currentStep = 0;
@@ -151,7 +152,10 @@
             tooltip.innerHTML = step.text + '<br><br><b style="color: #4caf50;">Нажмите, чтобы продолжить</b>';
 
             const rect = el.getBoundingClientRect();
-            tooltip.style.top = (rect.bottom + window.scrollY + 12) + 'px';
+            let top = rect.bottom + window.scrollY + 12;
+            if (top > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - 80;
+
+            tooltip.style.top = top + 'px';
             tooltip.style.left = Math.max(10, Math.min(rect.left, window.innerWidth - 370)) + 'px';
 
             tooltip.onclick = () => {
