@@ -71,6 +71,18 @@
         .schedule-day label { font-size: 0.8em; display: block; margin-bottom: 4px; }
         .schedule-day input { width: 100%; padding: 4px; text-align: center; font-size: 0.8em; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px; }
         @media (max-width: 900px) { .container { padding: 0 10px; } }
+
+        /* Стили для туториала */
+        .tour-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9998; display: none; }
+        .tour-tooltip { position: fixed; background: #333; color: #fff; padding: 20px; border-radius: 12px; font-family: Inter, sans-serif; font-size: 1em; line-height: 1.6; max-width: 350px; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid #fff; }
+        .tour-tooltip h3 { margin: 0 0 8px 0; color: #fff; font-size: 1.1em; }
+        .tour-tooltip p { margin: 0 0 16px 0; color: #ddd; }
+        .tour-tooltip .tour-actions { display: flex; justify-content: space-between; align-items: center; }
+        .tour-tooltip button { background: #4caf50; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9em; }
+        .tour-tooltip button.skip { background: transparent; color: #aaa; padding: 8px 0; text-decoration: underline; }
+        .tour-highlight { position: relative; z-index: 9999 !important; box-shadow: 0 0 0 4px #4caf50 !important; border-radius: 8px !important; background: #fff !important; color: #000 !important; }
+        .btn-help { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.5); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; margin-left: 10px; }
+        .btn-help:hover { background: rgba(255,255,255,0.4); }
     </style>
 </head>
 <body>
@@ -84,6 +96,7 @@
         <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank" id="tour-link-login">Регистрация/Вход</a>
         <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" id="tour-link-booking">Бронирование</a>
         <a href="/logout" class="logout-btn" id="tour-link-logout">Выйти</a>
+        <button class="btn-help" onclick="startTour(true)">❓ Помощь</button>
     </div>
 </div>
 
@@ -294,54 +307,86 @@
     loadStats();
 </script>
 
-<!-- ТУТОРИАЛ (ОБУЧЕНИЕ АДМИНА) -->
+<!-- ТУТОРИАЛ (ПОЛНЫЙ АДМИН) -->
 <script>
-    (function() {
-        const tourKey = 'tour_completed_admin_v3_' + SITE_ID;
-        if (localStorage.getItem(tourKey)) return;
+    const tourSteps = [
+        { selector: '.header', title: '👋 Добро пожаловать!', text: 'Это ваша панель управления. Здесь вы управляете сайтом.' },
+        { selector: '.tabs', title: '📊 Вкладки', text: 'Переключайтесь между разделами: Статистика (бронирования), Контент (изменение сайта), Персонал (мастера).' },
+        { selector: '.tab:nth-child(1)', title: 'Статистика', text: 'В этом разделе вы видите последние записи и базу клиентов.' },
+        { selector: '.tab:nth-child(2)', title: 'Контент', text: 'Здесь можно изменить тексты, цены, контакты и опубликовать сайт.' },
+        { selector: '.tab:nth-child(3)', title: 'Персонал', text: 'Здесь вы добавляете мастеров и настраиваете их графики работы.' },
+        { selector: '#tour-link-booking', title: '🔗 Бронирование', text: 'Кнопка «Бронирование» перенесет вас на сайт, где можно проверить, как он выглядит.' }
+    ];
 
-        const steps = [
-            { selector: '.header', text: '👋 Добро пожаловать в панель управления!<br>Здесь вы управляете сайтом.' },
-            { selector: '#tour-tabs', text: '📊 Вкладки позволяют переключаться между статистикой, контентом и персоналом.' },
-            { selector: '#tour-stats-bookings', text: '📅 Здесь отображаются последние бронирования ваших клиентов.' },
-            { selector: '#tour-link-booking', text: '🔗 Кнопка «Бронирование» перенесет вас на сайт, где можно проверить, как он выглядит.' }
-        ];
+    let currentTourIndex = 0;
+    const overlay = document.createElement('div');
+    overlay.className = 'tour-overlay';
+    document.body.appendChild(overlay);
 
-        let currentStep = 0;
-        function showStep() {
-            if (currentStep >= steps.length) {
-                localStorage.setItem(tourKey, '1');
-                return;
-            }
-            const step = steps[currentStep];
-            const el = document.querySelector(step.selector);
-            if (!el) { currentStep++; showStep(); return; }
+    function startTour(force = false) {
+        const tourKey = 'tour_completed_admin_v4_' + SITE_ID;
+        if (!force && localStorage.getItem(tourKey)) return;
 
-            const tooltip = document.createElement('div');
-            tooltip.style.cssText = `
-                position: fixed; background: #333; color: #fff; padding: 16px 20px; border-radius: 12px;
-                font-family: Inter, sans-serif; font-size: 0.95em; line-height: 1.5; max-width: 350px;
-                z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); cursor: pointer;
-                border: 2px solid #fff;
-            `;
-            tooltip.innerHTML = step.text + '<br><br><b style="color: #4caf50;">Нажмите, чтобы продолжить</b>';
+        currentTourIndex = 0;
+        overlay.style.display = 'block';
+        showTourStep();
+    }
 
-            const rect = el.getBoundingClientRect();
-            let top = rect.bottom + window.scrollY + 12;
-            if (top > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - 80;
+    function showTourStep() {
+        document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+        const oldTooltip = document.querySelector('.tour-tooltip');
+        if (oldTooltip) oldTooltip.remove();
 
-            tooltip.style.top = top + 'px';
-            tooltip.style.left = Math.max(10, Math.min(rect.left, window.innerWidth - 370)) + 'px';
-
-            tooltip.onclick = () => {
-                tooltip.remove();
-                currentStep++;
-                showStep();
-            };
-            document.body.appendChild(tooltip);
+        if (currentTourIndex >= tourSteps.length) {
+            endTour();
+            return;
         }
-        setTimeout(showStep, 1000);
-    })();
+
+        const step = tourSteps[currentTourIndex];
+        const el = document.querySelector(step.selector);
+        if (!el) {
+            currentTourIndex++;
+            showTourStep();
+            return;
+        }
+
+        el.classList.add('tour-highlight');
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tour-tooltip';
+        tooltip.innerHTML = `
+            <h3>${step.title}</h3>
+            <p>${step.text}</p>
+            <div class="tour-actions">
+                <button class="skip" onclick="endTour()">Пропустить</button>
+                <button onclick="nextTourStep()">Далее (${currentTourIndex + 1}/${tourSteps.length})</button>
+            </div>
+        `;
+
+        const rect = el.getBoundingClientRect();
+        let top = rect.bottom + window.scrollY + 16;
+        if (top > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - 150;
+
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = Math.max(16, Math.min(rect.left, window.innerWidth - 370)) + 'px';
+        document.body.appendChild(tooltip);
+    }
+
+    function nextTourStep() {
+        currentTourIndex++;
+        showTourStep();
+    }
+
+    function endTour() {
+        document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+        overlay.style.display = 'none';
+        const oldTooltip = document.querySelector('.tour-tooltip');
+        if (oldTooltip) oldTooltip.remove();
+        localStorage.setItem('tour_completed_admin_v4_' + SITE_ID, '1');
+    }
+
+    setTimeout(() => startTour(false), 1000);
 </script>
 </body>
 </html>
