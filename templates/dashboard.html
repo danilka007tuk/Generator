@@ -7,23 +7,48 @@
     <title>Панель управления — {{ logo_text }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: {{ color_primary }}; --secondary: {{ color_secondary }}; --bg: {{ color_bg }}; --text: {{ color_text }}; }
+        :root {
+            --primary: {{ color_primary }};
+            --secondary: {{ color_secondary }};
+            --bg: {{ color_bg }};
+            --text: {{ color_text }};
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-        .header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .header h1 { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            background-image: {% if favicon_url %}url('https://danilka007tuk.github.io/{{ site_id }}/{{ favicon_url }}'){% else %}none{% endif %};
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-blend-mode: multiply;
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .header h1 { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 12px; color: #fff; }
         .header h1 img { height: 36px; border-radius: 8px; }
-        .header a { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(0,0,0,0.04); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; }
-        .header a:hover { background: rgba(0,0,0,0.08); }
+        .header a { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; }
+        .header a:hover { background: #fff; }
         .header .logout-btn { background: #c62828; color: #fff; }
-        .tabs { display: flex; background: #fff; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 0 40px; }
+        .header .logout-btn:hover { background: #b71c1c; }
+        .tabs { display: flex; background: rgba(255,255,255,0.95); border-bottom: 1px solid rgba(0,0,0,0.05); padding: 0 40px; backdrop-filter: blur(4px); }
         .tab { padding: 16px 24px; cursor: pointer; font-weight: 500; color: #777; border-bottom: 3px solid transparent; }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
         .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 12px; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; backdrop-filter: blur(4px); }
+        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 12px; color: var(--primary); }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 12px; background: rgba(0,0,0,0.02); font-size: 0.85em; color: var(--text); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+        th { text-align: left; padding: 12px; background: rgba(0,0,0,0.04); font-size: 0.85em; color: var(--text); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
         td { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95em; }
         tr:last-child td { border-bottom: none; }
         .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
@@ -37,7 +62,7 @@
         .btn-save:hover { background: #1b5e20; }
         .btn-danger { background: #c62828; padding: 6px 12px; font-size: 0.8em; }
         .hidden { display: none; }
-        .master-card { border: 1px solid rgba(0,0,0,0.05); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        .master-card { border: 1px solid rgba(0,0,0,0.05); border-radius: 8px; padding: 16px; margin-bottom: 16px; background: rgba(255,255,255,0.5); }
         .master-header { display: flex; justify-content: space-between; align-items: center; }
         .master-info h3 { margin: 0 0 4px; font-size: 1.1em; }
         .master-info p { margin: 0; color: var(--text); opacity: 0.7; font-size: 0.9em; }
@@ -267,6 +292,52 @@
     }
 
     loadStats();
+</script>
+
+<!-- ТУТОРИАЛ (ОБУЧЕНИЕ АДМИНА) -->
+<script>
+    (function() {
+        const tourKey = 'tour_completed_admin_' + SITE_ID;
+        if (localStorage.getItem(tourKey)) return;
+
+        const steps = [
+            { selector: '.header', text: '👋 Добро пожаловать в панель управления!<br>Здесь вы управляете сайтом.' },
+            { selector: '.tabs', text: '📊 Вкладки позволяют переключаться между статистикой, контентом и персоналом.' },
+            { selector: '#tab-stats .card', text: '📅 Здесь отображаются последние бронирования ваших клиентов.' }
+        ];
+
+        let currentStep = 0;
+        function showStep() {
+            if (currentStep >= steps.length) {
+                localStorage.setItem(tourKey, '1');
+                return;
+            }
+            const step = steps[currentStep];
+            const el = document.querySelector(step.selector);
+            if (!el) { currentStep++; showStep(); return; }
+
+            const tooltip = document.createElement('div');
+            tooltip.style.cssText = `
+                position: fixed; background: #333; color: #fff; padding: 16px 20px; border-radius: 12px;
+                font-family: Inter, sans-serif; font-size: 0.95em; line-height: 1.5; max-width: 350px;
+                z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); cursor: pointer;
+                border: 2px solid #fff;
+            `;
+            tooltip.innerHTML = step.text + '<br><br><b style="color: #4caf50;">Нажмите, чтобы продолжить</b>';
+
+            const rect = el.getBoundingClientRect();
+            tooltip.style.top = (rect.bottom + window.scrollY + 12) + 'px';
+            tooltip.style.left = Math.max(10, Math.min(rect.left, window.innerWidth - 370)) + 'px';
+
+            tooltip.onclick = () => {
+                tooltip.remove();
+                currentStep++;
+                showStep();
+            };
+            document.body.appendChild(tooltip);
+        }
+        setTimeout(showStep, 1000);
+    })();
 </script>
 </body>
 </html>

@@ -7,20 +7,45 @@
     <title>Мои записи — {{ logo_text }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: {{ color_primary }}; --secondary: {{ color_secondary }}; --bg: {{ color_bg }}; --text: {{ color_text }}; }
+        :root {
+            --primary: {{ color_primary }};
+            --secondary: {{ color_secondary }};
+            --bg: {{ color_bg }};
+            --text: {{ color_text }};
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-        .header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .header h1 { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            background-image: {% if favicon_url %}url('https://danilka007tuk.github.io/{{ site_id }}/{{ favicon_url }}'){% else %}none{% endif %};
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-blend-mode: multiply;
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .header h1 { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 12px; color: #fff; }
         .header h1 img { height: 36px; border-radius: 8px; }
-        .header a { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(0,0,0,0.04); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; }
-        .header a:hover { background: rgba(0,0,0,0.08); }
+        .header a { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; }
+        .header a:hover { background: #fff; }
         .header .logout-btn { background: #c62828; color: #fff; }
+        .header .logout-btn:hover { background: #b71c1c; }
         .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
-        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 12px; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); backdrop-filter: blur(4px); }
+        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 12px; color: var(--primary); }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 12px; background: rgba(0,0,0,0.02); font-size: 0.85em; color: var(--text); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+        th { text-align: left; padding: 12px; background: rgba(0,0,0,0.04); font-size: 0.85em; color: var(--text); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
         td { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95em; }
         tr:last-child td { border-bottom: none; }
         .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
@@ -92,6 +117,52 @@
         }
     }
     loadBookings();
+</script>
+
+<!-- ТУТОРИАЛ (ОБУЧЕНИЕ КЛИЕНТА) -->
+<script>
+    (function() {
+        const tourKey = 'tour_completed_client_' + SITE_ID;
+        if (localStorage.getItem(tourKey)) return;
+
+        const steps = [
+            { selector: '.header', text: '👋 Добро пожаловать в личный кабинет!<br>Здесь вы видите свои записи.' },
+            { selector: '.card h2', text: '📅 В этом блоке отображаются все ваши бронирования.' },
+            { selector: '.header a', text: '🔗 Кнопки в шапке позволяют перейти на сайт или выйти из кабинета.' }
+        ];
+
+        let currentStep = 0;
+        function showStep() {
+            if (currentStep >= steps.length) {
+                localStorage.setItem(tourKey, '1');
+                return;
+            }
+            const step = steps[currentStep];
+            const el = document.querySelector(step.selector);
+            if (!el) { currentStep++; showStep(); return; }
+
+            const tooltip = document.createElement('div');
+            tooltip.style.cssText = `
+                position: fixed; background: #333; color: #fff; padding: 16px 20px; border-radius: 12px;
+                font-family: Inter, sans-serif; font-size: 0.95em; line-height: 1.5; max-width: 350px;
+                z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); cursor: pointer;
+                border: 2px solid #fff;
+            `;
+            tooltip.innerHTML = step.text + '<br><br><b style="color: #4caf50;">Нажмите, чтобы продолжить</b>';
+
+            const rect = el.getBoundingClientRect();
+            tooltip.style.top = (rect.bottom + window.scrollY + 12) + 'px';
+            tooltip.style.left = Math.max(10, Math.min(rect.left, window.innerWidth - 370)) + 'px';
+
+            tooltip.onclick = () => {
+                tooltip.remove();
+                currentStep++;
+                showStep();
+            };
+            document.body.appendChild(tooltip);
+        }
+        setTimeout(showStep, 1000);
+    })();
 </script>
 </body>
 </html>
