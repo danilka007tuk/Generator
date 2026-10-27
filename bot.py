@@ -222,7 +222,8 @@ async def handle_hours(message: Message, state: FSMContext):
         "1. 🌑 Тёмный — для IT, стартапов, услуг\n"
         "2. ☀️ Светлый — для салонов, клиник, мастеров\n"
         "3. 🔥 Тёплый — для кафе, ресторанов, отелей\n"
-        "4. ⚡ Яркий — для авто, спорта, развлечений"
+        "4. ⚡ Яркий — для авто, спорта, развлечений\n"
+        "5. 🎩 Строгий — премиальный минимализм"
     )
     await state.set_state(Form.waiting_template)
 
@@ -238,14 +239,16 @@ async def handle_template(message: Message, state: FSMContext):
         "2": "template-light.html",
         "3": "template-warm.html",
         "4": "template-bold.html",
+        "5": "template-strict.html",
     }
     if choice not in mapping:
         await message.answer(
-            "❌ Введите номер от 1 до 4:\n"
+            "❌ Введите номер от 1 до 5:\n"
             "1 — Тёмный\n"
             "2 — Светлый\n"
             "3 — Тёплый\n"
-            "4 — Яркий"
+            "4 — Яркий\n"
+            "5 — Строгий"
         )
         return
 
@@ -405,7 +408,6 @@ async def handle_repo(message: Message, state: FSMContext):
         content.template_name = data.get('template_name', 'template-modern.html')
         content.palette_name = data.get('palette_name', 'auto')
 
-        # Рендеринг и генерация картинок (обновляет content с image_url)
         html = await asyncio.to_thread(render_site, content, SERVER_URL, repo_name)
         path = save_site(html, filename="index.html")
 

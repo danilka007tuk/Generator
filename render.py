@@ -31,6 +31,7 @@ ALLOWED_TEMPLATES = [
     "template-light.html",
     "template-warm.html",
     "template-bold.html",
+    "template-strict.html",
 ]
 
 DEFAULT_SIDEBAR_ITEMS = [
@@ -134,7 +135,6 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         service["description"] = clean(service.get("description", ""))
         service["price"] = clean(service.get("price", ""))
 
-    # Генерация галереи и сохранение ссылок в content
     for i, item in enumerate(data.get("gallery", [])):
         item["title"] = clean(item.get("title", ""))
         item["description"] = clean(item.get("description", ""))
@@ -165,13 +165,12 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
 
     data["sidebar_items"] = get_sidebar_items(content)
 
-    # Генерация hero-картинки и сохранение ссылки в content
     hero_prompt = data.get("hero_image_prompt", "")
     if not hero_prompt:
         hero_prompt = f"Beautiful interior for {data.get('company_name', 'business')}, photorealistic"
     hero_url = generate_image_provod(hero_prompt, width=1024, height=1024)
     data["hero_image_url"] = hero_url
-    content.hero_image_url = hero_url  # <--- ВАЖНО: сохраняем в модель!
+    content.hero_image_url = hero_url
 
     data["color_primary"] = clean_color(data.get("color_primary", ""), "#667eea")
     data["color_secondary"] = clean_color(data.get("color_secondary", ""), "#764ba2")
@@ -220,6 +219,8 @@ def render_register_page(content: SiteContent, server_url: str = "", site_id: st
     data["color_bg"] = clean_color(data.get("color_bg", ""), "#f4f6fa")
     data["color_text"] = clean_color(data.get("color_text", ""), "#2c3e50")
     data["color_accent"] = clean_color(data.get("color_accent", ""), "#667eea")
+
+    data["favicon_url"] = content.hero_image_url or ""
 
     template = env.get_template("register.html")
     return template.render(**data)
