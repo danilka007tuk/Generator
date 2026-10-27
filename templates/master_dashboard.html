@@ -12,61 +12,209 @@
             --secondary: {{ color_secondary }};
             --bg: {{ color_bg }};
             --text: {{ color_text }};
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --card-hover: rgba(255, 255, 255, 0.1);
+            --text-muted: rgba(255, 255, 255, 0.6);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg);
+            background: #0d0d0d;
             background-image: {% if favicon_url %}url('https://danilka007tuk.github.io/{{ site_id }}/{{ favicon_url }}'){% else %}none{% endif %};
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            background-blend-mode: multiply;
-            color: var(--text);
+            color: #fff;
             line-height: 1.6;
             min-height: 100vh;
+            position: relative;
         }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: -1;
+        }
+
+        /* === ВЕРХНЯЯ ПАНЕЛЬ === */
         .header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #fff;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--card-border);
             padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .header h1 { font-size: 1.2em; font-weight: 600; display: flex; align-items: center; gap: 12px; color: #fff; }
-        .header h1 img { height: 36px; border-radius: 8px; }
-        .header a, .header button { color: var(--primary); text-decoration: none; font-weight: 500; background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 8px; margin-left: 10px; transition: background 0.2s; border: none; cursor: pointer; font-family: inherit; font-size: 1em; }
-        .header a:hover, .header button:hover { background: #fff; }
-        .header .logout-btn { background: #c62828; color: #fff; }
-        .header .logout-btn:hover { background: #b71c1c; }
-        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); backdrop-filter: blur(4px); }
-        .card h2 { font-size: 1.1em; margin-bottom: 16px; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 12px; color: var(--primary); }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 12px; background: rgba(0,0,0,0.04); font-size: 0.85em; color: var(--text); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
-        td { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95em; }
-        tr:last-child td { border-bottom: none; }
-        .empty { text-align: center; color: #999; padding: 20px; font-style: italic; }
-        .schedule-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95em; }
-        .schedule-item:last-child { border-bottom: none; }
-        .schedule-day { font-weight: 500; }
-        .schedule-time { color: var(--primary); font-weight: 500; }
-        .schedule-off { color: #c62828; font-style: italic; }
-        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+        .header h1 {
+            font-size: 1.1em;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            letter-spacing: 0.02em;
+            color: #fff;
+        }
+        .header h1 img { height: 34px; border-radius: 4px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+        .header-actions a, .header-actions button {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 400;
+            font-size: 0.8em;
+            letter-spacing: 0.08em;
+            padding: 8px 18px;
+            border-radius: 4px;
+            border: 1px solid var(--card-border);
+            background: transparent;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .header-actions a:hover, .header-actions button:hover {
+            color: #fff;
+            background: var(--card-hover);
+            border-color: var(--primary);
+        }
+        .header-actions .logout-btn { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3); }
+        .header-actions .logout-btn:hover { background: rgba(255, 107, 107, 0.15); }
+        .header-actions .btn-help { color: var(--primary); border-color: var(--primary); }
 
-        /* Стили для туториала */
-        .tour-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9998; display: none; }
-        .tour-tooltip { position: fixed; background: #333; color: #fff; padding: 20px; border-radius: 12px; font-family: Inter, sans-serif; font-size: 1em; line-height: 1.6; max-width: 350px; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid #fff; }
-        .tour-tooltip h3 { margin: 0 0 8px 0; color: #fff; font-size: 1.1em; }
-        .tour-tooltip p { margin: 0 0 16px 0; color: #ddd; }
-        .tour-tooltip .tour-actions { display: flex; justify-content: space-between; align-items: center; }
-        .tour-tooltip button { background: #4caf50; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9em; }
-        .tour-tooltip button.skip { background: transparent; color: #aaa; padding: 8px 0; text-decoration: underline; }
-        .tour-highlight { position: relative; z-index: 9999 !important; box-shadow: 0 0 0 4px #4caf50 !important; border-radius: 8px !important; background: #fff !important; color: #000 !important; }
-        .btn-help { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.5); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; margin-left: 10px; }
-        .btn-help:hover { background: rgba(255,255,255,0.4); }
+        /* === ОСНОВНОЙ КОНТЕЙНЕР === */
+        .container {
+            max-width: 1280px;
+            margin: 40px auto;
+            padding: 0 40px;
+        }
+
+        /* === ПЛИТКИ === */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .dashboard-tile {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            min-height: 140px;
+        }
+        .dashboard-tile:hover {
+            background: var(--card-hover);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .dashboard-tile .tile-icon {
+            font-size: 2.2em;
+            margin-bottom: 16px;
+            opacity: 0.9;
+        }
+        .dashboard-tile h2 {
+            font-size: 0.95em;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .dashboard-tile p {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* === НИЖНЯЯ ПАНЕЛЬ === */
+        .bottom-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 32px;
+            margin-top: 20px;
+        }
+        .bottom-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 16px;
+        }
+        .bottom-tab {
+            padding: 8px 20px;
+            font-size: 0.8em;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .bottom-tab:hover { color: #fff; background: var(--card-hover); }
+        .bottom-tab.active { color: #fff; background: var(--primary); }
+
+        /* === ТАБЛИЦЫ === */
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            text-align: left;
+            padding: 12px;
+            font-size: 0.7em;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--card-border);
+        }
+        td {
+            padding: 14px 12px;
+            font-size: 0.9em;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #fff;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        .empty { text-align: center; color: var(--text-muted); padding: 32px; font-style: italic; font-size: 0.9em; }
+
+        /* === ГРАФИК === */
+        .schedule-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.92em;
+        }
+        .schedule-item:last-child { border-bottom: none; }
+        .schedule-day { font-weight: 500; color: #fff; }
+        .schedule-time { color: var(--primary); font-weight: 500; }
+        .schedule-off { color: var(--text-muted); font-style: italic; }
+
+        /* === ТУТОРИАЛ === */
+        .tour-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 9998; display: none; }
+        .tour-tooltip { position: fixed; background: rgba(15, 15, 15, 0.98); color: #fff; padding: 24px; border-radius: 6px; font-family: Inter, sans-serif; max-width: 380px; z-index: 10000; box-shadow: 0 20px 60px rgba(0,0,0,0.8); border: 1px solid var(--primary); }
+        .tour-tooltip h3 { margin: 0 0 12px 0; color: var(--primary); font-size: 0.95em; letter-spacing: 0.08em; text-transform: uppercase; }
+        .tour-tooltip p { margin: 0 0 20px 0; color: var(--text-muted); line-height: 1.6; }
+        .tour-tooltip .tour-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .tour-tooltip button { background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 0.75em; letter-spacing: 0.1em; text-transform: uppercase; }
+        .tour-tooltip button.skip { background: transparent; color: var(--text-muted); padding: 10px 0; }
+        .tour-tooltip button.skip:hover { color: #fff; }
+        .tour-highlight { position: relative; z-index: 9999 !important; box-shadow: 0 0 0 2px var(--primary), 0 0 30px rgba(0,0,0,0.5) !important; border-radius: 6px !important; }
+
+        @media (max-width: 900px) {
+            .container { padding: 0 20px; }
+            .header { padding: 16px 20px; flex-wrap: wrap; gap: 12px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -76,37 +224,49 @@
         {% if favicon_url %}<img src="https://danilka007tuk.github.io/{{ site_id }}/{{ favicon_url }}" alt="">{% endif %}
         {{ logo_text }}
     </h1>
-    <div>
-        <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank" id="tour-link-login">Регистрация/Вход</a>
-        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" id="tour-link-booking">Бронирование</a>
+    <div class="header-actions">
+        <a href="{{ server_url }}/login?site_id={{ site_id }}" target="_blank" id="tour-link-login">Вход</a>
+        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" id="tour-link-booking">Сайт</a>
         <a href="#" class="logout-btn" id="tour-link-logout" onclick="logoutUser(event)">Выйти</a>
         <button class="btn-help" onclick="startTour(true)">❓ Помощь</button>
     </div>
 </div>
 
 <div class="container">
-    <div class="card">
-        <h2>📅 Мои записи</h2>
-        <table id="tour-table-bookings">
-            <thead>
-                <tr>
-                    <th>Дата</th>
-                    <th>Время</th>
-                    <th>Клиент</th>
-                    <th>Телефон</th>
-                    <th>Услуга</th>
-                </tr>
-            </thead>
-            <tbody id="bookingsBody">
-                <tr><td colspan="5" class="empty">Загрузка...</td></tr>
-            </tbody>
-        </table>
+    <div class="dashboard-grid" id="tour-tabs">
+        <div class="dashboard-tile" onclick="switchTab('bookings')">
+            <div class="tile-icon">📅</div>
+            <div>
+                <h2>Мои записи</h2>
+                <p>Клиенты, которые к вам записались</p>
+            </div>
+        </div>
+        <div class="dashboard-tile" onclick="switchTab('schedule')">
+            <div class="tile-icon">🗓️</div>
+            <div>
+                <h2>Мой график</h2>
+                <p>Дни и часы вашей работы</p>
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>🗓️ Мой график работы</h2>
-        <div id="scheduleBody">
-            <p class="empty">Загрузка...</p>
+    <div class="bottom-panel">
+        <div class="bottom-tabs">
+            <div class="bottom-tab active" onclick="switchTab('bookings')" id="bottom-tab-bookings">Записи</div>
+            <div class="bottom-tab" onclick="switchTab('schedule')" id="bottom-tab-schedule">График</div>
+        </div>
+
+        <div id="tab-bookings">
+            <table id="tour-table-bookings">
+                <thead><tr><th>Дата</th><th>Время</th><th>Клиент</th><th>Телефон</th><th>Услуга</th></tr></thead>
+                <tbody id="bookingsBody"><tr><td colspan="5" class="empty">Загрузка...</td></tr></tbody>
+            </table>
+        </div>
+
+        <div id="tab-schedule" class="hidden">
+            <div id="scheduleBody">
+                <p class="empty">Загрузка...</p>
+            </div>
         </div>
     </div>
 </div>
@@ -124,10 +284,19 @@
         window.location.href = `${SERVER_URL}/login?site_id=${encodeURIComponent(SITE_ID)}`;
     }
 
+    function switchTab(tab) {
+        document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.bottom-tab').forEach(t => {
+            if (t.textContent.includes(tab === 'bookings' ? 'Записи' : 'График')) t.classList.add('active');
+        });
+        document.getElementById('tab-bookings').classList.toggle('hidden', tab !== 'bookings');
+        document.getElementById('tab-schedule').classList.toggle('hidden', tab !== 'schedule');
+    }
+
     async function loadBookings() {
         const tbody = document.getElementById('bookingsBody');
         if (!email) {
-            tbody.innerHTML = '<tr><td colspan="5" class="empty">Сессия истекла. <a href="' + SERVER_URL + '/login?site_id=' + encodeURIComponent(SITE_ID) + '">Войдите заново</a>.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">Сессия истекла. Войдите заново.</td></tr>';
             return;
         }
         try {
@@ -155,7 +324,7 @@
     async function loadSchedule() {
         const container = document.getElementById('scheduleBody');
         if (!email) {
-            container.innerHTML = '<p class="empty">Сессия истекла. <a href="' + SERVER_URL + '/login?site_id=' + encodeURIComponent(SITE_ID) + '">Войдите заново</a>.</p>';
+            container.innerHTML = '<p class="empty">Сессия истекла. Войдите заново.</p>';
             return;
         }
         try {
@@ -180,19 +349,17 @@
             container.innerHTML = '<p class="empty">Ошибка загрузки графика</p>';
         }
     }
+
     loadBookings();
     loadSchedule();
-</script>
 
-<!-- ТУТОРИАЛ (ПОЛНЫЙ МАСТЕР) -->
-<script>
+    // === ТУТОРИАЛ ===
     const tourSteps = [
-        { selector: '.header', title: '👋 Добро пожаловать в кабинет!', text: 'Здесь вы управляете своими записями и графиком.' },
-        { selector: '#tour-link-login', title: '🔐 Регистрация/Вход', text: 'Если вы вышли из кабинета, эта кнопка вернет вас на страницу входа.' },
-        { selector: '#tour-link-booking', title: '🔗 Бронирование', text: 'Кнопка «Бронирование» перенесет вас на сайт, где можно посмотреть расписание.' },
-        { selector: '#tour-table-bookings', title: '📅 Мои записи', text: 'В этой таблице отображаются все клиенты, которые к вам записались.' },
-        { selector: '#scheduleBody', title: '🗓️ Мой график', text: 'Здесь ваш график работы. Если он не задан, попросите администратора настроить его.' },
-        { selector: '#tour-link-logout', title: '🚪 Выход', text: 'Кнопка «Выйти» завершает сессию.' }
+        { selector: '.header', title: 'Кабинет мастера', text: 'Здесь вы управляете своими записями и графиком.' },
+        { selector: '#tour-link-booking', title: 'Сайт', text: 'Кнопка «Сайт» перенесет вас на ваш лендинг, где можно посмотреть расписание.' },
+        { selector: '#tour-tabs', title: 'Разделы', text: 'Нажмите на плитку, чтобы открыть записи или график.' },
+        { selector: '.dashboard-tile:nth-child(1)', title: 'Мои записи', text: 'Здесь отображаются клиенты, которые к вам записались.' },
+        { selector: '.dashboard-tile:nth-child(2)', title: 'Мой график', text: 'Здесь ваш график работы.' }
     ];
 
     let currentTourIndex = 0;
@@ -201,9 +368,8 @@
     document.body.appendChild(overlay);
 
     function startTour(force = false) {
-        const tourKey = 'tour_completed_master_v5_' + SITE_ID;
+        const tourKey = 'tour_completed_master_v8_' + SITE_ID;
         if (!force && localStorage.getItem(tourKey)) return;
-
         currentTourIndex = 0;
         overlay.style.display = 'block';
         showTourStep();
@@ -213,54 +379,30 @@
         document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
         const oldTooltip = document.querySelector('.tour-tooltip');
         if (oldTooltip) oldTooltip.remove();
-
-        if (currentTourIndex >= tourSteps.length) {
-            endTour();
-            return;
-        }
-
+        if (currentTourIndex >= tourSteps.length) { endTour(); return; }
         const step = tourSteps[currentTourIndex];
         const el = document.querySelector(step.selector);
-        if (!el) {
-            currentTourIndex++;
-            showTourStep();
-            return;
-        }
-
+        if (!el) { currentTourIndex++; showTourStep(); return; }
         el.classList.add('tour-highlight');
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
         const tooltip = document.createElement('div');
         tooltip.className = 'tour-tooltip';
-        tooltip.innerHTML = `
-            <h3>${step.title}</h3>
-            <p>${step.text}</p>
-            <div class="tour-actions">
-                <button class="skip" onclick="endTour()">Пропустить</button>
-                <button onclick="nextTourStep()">Далее (${currentTourIndex + 1}/${tourSteps.length})</button>
-            </div>
-        `;
-
+        tooltip.innerHTML = `<h3>${step.title}</h3><p>${step.text}</p><div class="tour-actions"><button class="skip" onclick="endTour()">Пропустить</button><button onclick="nextTourStep()">Далее (${currentTourIndex + 1}/${tourSteps.length})</button></div>`;
         const rect = el.getBoundingClientRect();
         let top = rect.bottom + window.scrollY + 16;
-        if (top > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - 150;
-
+        if (top > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - 160;
         tooltip.style.top = top + 'px';
-        tooltip.style.left = Math.max(16, Math.min(rect.left, window.innerWidth - 370)) + 'px';
+        tooltip.style.left = Math.max(16, Math.min(rect.left, window.innerWidth - 400)) + 'px';
         document.body.appendChild(tooltip);
     }
 
-    function nextTourStep() {
-        currentTourIndex++;
-        showTourStep();
-    }
-
+    function nextTourStep() { currentTourIndex++; showTourStep(); }
     function endTour() {
         document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
         overlay.style.display = 'none';
         const oldTooltip = document.querySelector('.tour-tooltip');
         if (oldTooltip) oldTooltip.remove();
-        localStorage.setItem('tour_completed_master_v5_' + SITE_ID, '1');
+        localStorage.setItem('tour_completed_master_v8_' + SITE_ID, '1');
     }
 
     setTimeout(() => startTour(false), 1000);
