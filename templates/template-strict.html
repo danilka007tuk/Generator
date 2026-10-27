@@ -36,16 +36,14 @@
             content: "";
             position: fixed;
             inset: 0;
-            background: rgba(10, 10, 10, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(10, 10, 10, 0.5);
             z-index: -1;
         }
 
-        /* === ВЕРХНЯЯ ПАНЕЛЬ === */
+        /* ВЕРХНЯЯ ПАНЕЛЬ */
         .header {
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(20px);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
             border-bottom: 1px solid var(--card-border);
             padding: 20px 40px;
             display: flex;
@@ -65,36 +63,42 @@
             color: #fff;
             text-transform: uppercase;
         }
-        .header-actions { display: flex; gap: 12px; align-items: center; }
+        .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .header-actions a, .header-actions button {
-            color: var(--text-muted);
+            color: #fff;
             text-decoration: none;
             font-weight: 400;
             font-size: 0.8em;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            padding: 8px 18px;
+            padding: 10px 20px;
             border-radius: 4px;
             border: 1px solid var(--card-border);
-            background: transparent;
+            background: rgba(255,255,255,0.1);
             cursor: pointer;
             font-family: inherit;
             transition: all 0.2s;
         }
         .header-actions a:hover, .header-actions button:hover {
-            color: #fff;
-            background: var(--card-hover);
+            background: rgba(255,255,255,0.25);
             border-color: var(--primary);
         }
+        .header-actions .btn-myreсords {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            font-weight: 500;
+        }
+        .header-actions .btn-myreсords:hover { filter: brightness(1.15); }
 
-        /* === ОСНОВНОЙ КОНТЕЙНЕР === */
+        /* КОНТЕЙНЕР */
         .container {
             max-width: 1280px;
             margin: 40px auto;
             padding: 0 40px;
         }
 
-        /* === HERO-СЕКЦИЯ (заголовок) === */
+        /* HERO */
         .hero {
             text-align: center;
             padding: 40px 20px 32px;
@@ -106,12 +110,14 @@
             letter-spacing: 0.02em;
             margin-bottom: 16px;
             line-height: 1.2;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.6);
         }
         .hero p {
             font-size: 1.1em;
             color: var(--text-muted);
             max-width: 700px;
             margin: 0 auto 24px;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.6);
         }
         .hero-contacts {
             display: flex;
@@ -120,9 +126,10 @@
             flex-wrap: wrap;
             color: var(--text-muted);
             font-size: 0.9em;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.6);
         }
 
-        /* === ПЛИТКИ === */
+        /* ПЛИТКИ */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -156,7 +163,7 @@
         }
         .dashboard-tile p { font-size: 0.8em; color: var(--text-muted); line-height: 1.5; }
 
-        /* === НИЖНЯЯ ПАНЕЛЬ === */
+        /* НИЖНЯЯ ПАНЕЛЬ */
         .bottom-panel {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -164,7 +171,7 @@
             padding: 32px;
         }
 
-        /* === ТАБЛИЦА (УСЛУГИ / ЦЕНЫ) === */
+        /* ТАБЛИЦА */
         table { width: 100%; border-collapse: collapse; }
         th {
             text-align: left;
@@ -186,7 +193,7 @@
         tr:hover { background: rgba(255,255,255,0.02); }
         .empty { text-align: center; color: var(--text-muted); padding: 32px; font-style: italic; font-size: 0.9em; }
 
-        /* === ФОРМЫ === */
+        /* ФОРМЫ */
         .form-group { margin-bottom: 20px; }
         .form-group label {
             display: block;
@@ -201,7 +208,7 @@
             padding: 12px 16px;
             border: 1px solid var(--card-border);
             border-radius: 4px;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.4);
             color: #fff;
             font-family: inherit;
             font-size: 0.95em;
@@ -210,11 +217,11 @@
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
             outline: none;
             border-color: var(--primary);
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
         }
-        .form-group input::placeholder { color: rgba(255,255,255,0.2); }
+        .form-group input::placeholder { color: rgba(255,255,255,0.3); }
 
-        /* === КНОПКИ === */
+        /* КНОПКИ */
         .btn {
             display: inline-block;
             padding: 12px 24px;
@@ -232,8 +239,8 @@
         }
         .btn:hover { filter: brightness(1.1); }
 
-        /* === МОДАЛКИ === */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 500; padding: 40px 20px; overflow-y: auto; }
+        /* МОДАЛКИ */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 500; padding: 40px 20px; overflow-y: auto; }
         .modal.open { display: flex; align-items: flex-start; justify-content: center; }
         .modal-box {
             background: #0d0d0d;
@@ -243,7 +250,7 @@
             width: 100%;
             padding: 40px 32px;
             position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             border: 1px solid var(--card-border);
         }
         .modal-header {
@@ -279,10 +286,10 @@
         }
         .modal-close:hover { background: var(--primary); border-color: var(--primary); }
 
-        /* === КАРТОЧКИ УСЛУГ / ЦЕН === */
+        /* УСЛУГИ / ЦЕНЫ */
         .services-grid, .pricing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
         .service-card, .pricing-card {
-            background: rgba(255,255,255,0.03);
+            background: rgba(255,255,255,0.05);
             border: 1px solid var(--card-border);
             border-radius: 4px;
             padding: 20px;
@@ -291,38 +298,38 @@
         .service-card p, .pricing-card p { margin: 0 0 12px; color: var(--text-muted); font-size: 0.88em; }
         .service-card .price, .pricing-card .price { color: var(--primary); font-weight: 500; font-size: 1.1em; }
 
-        /* === ГАЛЕРЕЯ === */
+        /* ГАЛЕРЕЯ */
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-        .gallery-item { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 4px; overflow: hidden; }
+        .gallery-item { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; overflow: hidden; }
         .gallery-item img { width: 100%; height: 200px; object-fit: cover; display: block; }
         .gallery-item .caption { padding: 16px; }
         .gallery-item h3 { margin: 0 0 6px; font-size: 0.95em; color: #fff; font-weight: 500; }
         .gallery-item p { margin: 0; color: var(--text-muted); font-size: 0.85em; }
 
-        /* === КОМАНДА === */
+        /* КОМАНДА */
         .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-        .team-member { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 4px; padding: 24px 20px; text-align: center; }
+        .team-member { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; padding: 24px 20px; text-align: center; }
         .team-member .avatar { width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: #fff; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: 500; }
         .team-member h3 { margin: 0 0 4px; font-size: 1em; color: #fff; font-weight: 500; }
         .team-member .role { color: var(--primary); font-size: 0.8em; text-transform: uppercase; margin-bottom: 8px; }
         .team-member p { margin: 0; color: var(--text-muted); font-size: 0.85em; }
 
-        /* === ОТЗЫВЫ === */
+        /* ОТЗЫВЫ */
         .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-        .testimonial { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 4px; padding: 20px; }
+        .testimonial { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; padding: 20px; }
         .testimonial .stars { color: var(--accent); font-size: 0.95em; margin-bottom: 10px; }
         .testimonial .text { color: var(--text-muted); font-size: 0.92em; line-height: 1.7; margin-bottom: 12px; }
         .testimonial .author { color: #fff; font-size: 0.85em; font-weight: 500; }
 
-        /* === FAQ === */
+        /* FAQ */
         .faq-list { display: flex; flex-direction: column; gap: 12px; }
-        .faq-item { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 4px; padding: 20px; }
+        .faq-item { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; padding: 20px; }
         .faq-item h3 { margin: 0 0 8px; color: #fff; font-size: 0.95em; font-weight: 500; }
         .faq-item p { margin: 0; color: var(--text-muted); font-size: 0.9em; }
 
-        /* === КАЛЕНДАРЬ / БРОНИРОВАНИЕ === */
+        /* БРОНИРОВАНИЕ */
         .master-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .master-card { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 4px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .master-card { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
         .master-card:hover { border-color: var(--primary); }
         .master-card.selected { background: var(--primary); border-color: var(--primary); }
         .master-card .master-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; font-weight: 500; }
@@ -339,7 +346,7 @@
         .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
         .weekdays div { text-align: center; font-size: 0.7em; color: var(--text-muted); padding: 8px 0; letter-spacing: 0.1em; text-transform: uppercase; }
         .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid transparent; font-size: 0.9em; color: #fff; transition: all 0.2s; }
+        .day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid transparent; font-size: 0.9em; color: #fff; transition: all 0.2s; }
         .day:hover:not(.disabled):not(.busy):not(.selected) { border-color: var(--primary); }
         .day.empty { background: transparent; cursor: default; }
         .day.disabled { color: rgba(255,255,255,0.2); cursor: not-allowed; background: transparent; }
@@ -350,7 +357,7 @@
         .time-slots-wrapper { display: none; margin: 20px 0; }
         .time-slots-wrapper h3 { font-size: 0.9em; color: #fff; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.1em; }
         .time-slots { display: flex; flex-wrap: wrap; gap: 8px; }
-        .time-slot { padding: 10px 18px; border: 1px solid var(--card-border); border-radius: 4px; cursor: pointer; background: rgba(255,255,255,0.03); color: #fff; font-size: 0.85em; transition: all 0.2s; }
+        .time-slot { padding: 10px 18px; border: 1px solid var(--card-border); border-radius: 4px; cursor: pointer; background: rgba(255,255,255,0.05); color: #fff; font-size: 0.85em; transition: all 0.2s; }
         .time-slot:hover:not(.busy) { border-color: var(--primary); }
         .time-slot.selected { background: var(--primary); border-color: var(--primary); color: #fff; }
         .time-slot.busy { background: rgba(198,40,40,0.15); color: #ff6b6b; border-color: rgba(198,40,40,0.4); cursor: not-allowed; text-decoration: line-through; }
@@ -359,12 +366,12 @@
         .booking-form.active { display: block; }
         .booking-form h3 { text-align: center; color: #fff; margin: 0 0 20px; font-size: 1em; letter-spacing: 0.05em; }
 
-        /* === КОНТАКТЫ === */
+        /* КОНТАКТЫ */
         .contacts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; text-align: center; }
         .contact-item .label { font-size: 0.7em; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
         .contact-item .value { font-size: 0.95em; color: #fff; font-weight: 500; }
 
-        /* === ТУТОРИАЛ (для клиента) === */
+        /* ТУТОРИАЛ */
         .tour-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 9998; display: none; }
         .tour-tooltip { position: fixed; background: rgba(15, 15, 15, 0.98); color: #fff; padding: 24px; border-radius: 6px; font-family: Inter, sans-serif; max-width: 380px; z-index: 10000; box-shadow: 0 20px 60px rgba(0,0,0,0.8); border: 1px solid var(--primary); }
         .tour-tooltip h3 { margin: 0 0 12px 0; color: var(--primary); font-size: 0.95em; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -394,9 +401,10 @@
     <h1>{{ company_name }}</h1>
     <div class="header-actions">
         <a href="javascript:void(0)" onclick="openModal('services')">Услуги</a>
+        <a href="javascript:void(0)" onclick="openModal('gallery')">Галерея</a>
         <a href="javascript:void(0)" onclick="openModal('contacts')">Контакты</a>
-        <a href="javascript:void(0)" onclick="openClientAccount()" style="color: var(--primary); border-color: var(--primary);">👤 Личный кабинет</a>
-        <a href="javascript:void(0)" onclick="openModal('booking')">Забронировать</a>
+        <a href="javascript:void(0)" onclick="openClientAccount()" class="btn-myreсords">📅 Мои записи</a>
+        <a href="javascript:void(0)" onclick="openModal('booking')" style="background: var(--primary); border-color: var(--primary);">Забронировать</a>
     </div>
 </div>
 
@@ -413,39 +421,27 @@
         </div>
     </section>
 
-    <!-- ПЛИТКИ (как на фото) -->
+    <!-- ПЛИТКИ -->
     <div class="dashboard-grid">
         <div class="dashboard-tile" onclick="openModal('services')">
             <div class="tile-icon">💼</div>
-            <div>
-                <h3>Услуги</h3>
-                <p>Все услуги и цены</p>
-            </div>
+            <div><h3>Услуги</h3><p>Все услуги и цены</p></div>
         </div>
         <div class="dashboard-tile" onclick="openModal('gallery')">
             <div class="tile-icon">🖼</div>
-            <div>
-                <h3>Галерея</h3>
-                <p>Наши работы</p>
-            </div>
+            <div><h3>Галерея</h3><p>Наши работы</p></div>
         </div>
         <div class="dashboard-tile" onclick="openModal('team')">
             <div class="tile-icon">👥</div>
-            <div>
-                <h3>Команда</h3>
-                <p>Наши мастера</p>
-            </div>
+            <div><h3>Команда</h3><p>Наши мастера</p></div>
         </div>
         <div class="dashboard-tile" onclick="openModal('booking')">
             <div class="tile-icon">📅</div>
-            <div>
-                <h3>Записаться</h3>
-                <p>Онлайн-бронирование</p>
-            </div>
+            <div><h3>Записаться</h3><p>Онлайн-бронирование</p></div>
         </div>
     </div>
 
-    <!-- НИЖНЯЯ ПАНЕЛЬ (отзывы + faq) -->
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
     <div class="bottom-panel">
         {% if testimonials %}
         <h3 style="font-size: 0.9em; margin-bottom: 20px; color: #fff; letter-spacing: 0.08em; text-transform: uppercase;">Отзывы</h3>
@@ -459,7 +455,6 @@
             {% endfor %}
         </div>
         {% endif %}
-
         {% if faq %}
         <h3 style="font-size: 0.9em; margin-bottom: 20px; color: #fff; letter-spacing: 0.08em; text-transform: uppercase;">Частые вопросы</h3>
         <div class="faq-list">
@@ -474,11 +469,11 @@
     </div>
 </div>
 
-<!-- МОДАЛКИ -->
-{% if services %}
+<!-- МОДАЛКИ (без {% if %} - всегда рендерятся) -->
 <div class="modal" id="modal-services" onclick="modalOutsideClick(event, 'services')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Услуги</h2><button class="modal-close" onclick="closeModal('services')">×</button></div>
+        {% if services %}
         <div class="services-grid">
             {% for s in services %}
             <div class="service-card">
@@ -488,14 +483,16 @@
             </div>
             {% endfor %}
         </div>
+        {% else %}
+        <p class="empty">Пока нет услуг</p>
+        {% endif %}
     </div>
 </div>
-{% endif %}
 
-{% if gallery %}
 <div class="modal" id="modal-gallery" onclick="modalOutsideClick(event, 'gallery')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Галерея</h2><button class="modal-close" onclick="closeModal('gallery')">×</button></div>
+        {% if gallery %}
         <div class="gallery-grid">
             {% for item in gallery %}
             <div class="gallery-item">
@@ -504,11 +501,12 @@
             </div>
             {% endfor %}
         </div>
+        {% else %}
+        <p class="empty">Пока нет галереи</p>
+        {% endif %}
     </div>
 </div>
-{% endif %}
 
-{% if team %}
 <div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div>
@@ -520,11 +518,12 @@
                 <div class="role">{{ m.role }}</div>
                 <p>{{ m.description }}</p>
             </div>
+            {% else %}
+            <p class="empty" style="grid-column:1/-1;">Пока нет команды</p>
             {% endfor %}
         </div>
     </div>
 </div>
-{% endif %}
 
 <div class="modal" id="modal-contacts" onclick="modalOutsideClick(event, 'contacts')">
     <div class="modal-box" onclick="event.stopPropagation()">
@@ -538,7 +537,7 @@
     </div>
 </div>
 
-<!-- МОДАЛКА БРОНИРОВАНИЯ -->
+<!-- БРОНИРОВАНИЕ -->
 <div class="modal" id="modal-booking" onclick="modalOutsideClick(event, 'booking')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Забронировать</h2><button class="modal-close" onclick="closeModal('booking')">×</button></div>
@@ -559,7 +558,7 @@
     </div>
 </div>
 
-<!-- МОДАЛКА ВХОДА -->
+<!-- ВХОД / РЕГИСТРАЦИЯ -->
 <div class="modal" id="modal-auth" onclick="modalOutsideClick(event, 'auth')">
     <div class="modal-box" style="max-width: 460px;" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Вход / Регистрация</h2><button class="modal-close" onclick="closeModal('auth')">×</button></div>
@@ -582,7 +581,7 @@
     </div>
 </div>
 
-<!-- МОДАЛКА КАБИНЕТА КЛИЕНТА -->
+<!-- МОИ ЗАПИСИ -->
 <div class="modal" id="modal-account" onclick="modalOutsideClick(event, 'account')">
     <div class="modal-box" style="max-width: 900px;" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Мои записи</h2><button class="modal-close" onclick="closeModal('account')">×</button></div>
@@ -606,10 +605,11 @@
 
     function openModal(name) {
         const modal = document.getElementById('modal-' + name);
-        if (!modal) return;
+        if (!modal) { console.warn('Modal not found:', name); return; }
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
         if (name === 'booking') { resetBooking(); renderMasters(); }
+        if (name === 'team') { loadTeamToModal(); }
     }
     function closeModal(name) { const modal = document.getElementById('modal-' + name); if (modal) modal.classList.remove('open'); document.body.style.overflow = ''; }
     function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
@@ -708,7 +708,6 @@
         });
     }
 
-    // === ЛОГИКА КЛИЕНТА ===
     async function openClientAccount() {
         try {
             const res = await fetch(`${SERVER_URL}/api/my-bookings`, { credentials: 'include' });
