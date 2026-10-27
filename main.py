@@ -13,7 +13,7 @@ import resend
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Depends, BackgroundTasks, Body, Cookie, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import select, func
@@ -128,7 +128,6 @@ async def login_page(request: Request, site_id: str = "site"):
         context={"site_id": site_id, "server_url": SERVER_URL}
     )
 
-# ============ КАБИНЕТЫ С ЦВЕТАМИ И ИКОНКАМИ ============
 @app.get("/client_dashboard/{site_id}", response_class=HTMLResponse)
 async def client_dashboard(site_id: str, request: Request, session: AsyncSession = Depends(get_session)):
     site = await session.get(Site, site_id)
@@ -188,9 +187,20 @@ async def get_my_bookings(email: str = Cookie(None), site_id: str = Cookie(None)
     bookings = result.scalars().all()
     return {"ok": True, "bookings": [{"date": b.date, "time": b.time, "master": b.master, "service": b.service, "name": b.name, "phone": b.phone} for b in bookings]}
 
+@app.get("/api/client-profile")
+async def get_client_profile(email: str = Cookie(None), site_id: str = Cookie(None), session: AsyncSession = Depends(get_session)):
+    if not email or not site_id:
+        return {"ok": False, "error": "Не авторизован"}
+    result = await session.execute(select(ClientContact).where(ClientContact.site_id == site_id, ClientContact.email == email))
+    contact = result.scalar_one_or_none()
+    if not contact:
+        return {"ok": False, "error": "Клиент не найден"}
+    return {"ok": True, "email": contact.email, "is_verified": contact.is_verified}
+
 @app.get("/api/master-bookings")
 async def get_master_bookings(email: str = Cookie(None), site_id: str = Cookie(None), session: AsyncSession = Depends(get_session)):
     if not email or not site_id: return {"ok": False, "error": "Не авторизован"}
+    email = email.strip().lower()
     master_res = await session.execute(select(Master).where(Master.site_id == site_id, Master.email == email))
     master = master_res.scalar_one_or_none()
     if not master: return {"ok": False, "error": "Мастер не найден"}
@@ -205,6 +215,7 @@ async def get_master_schedule(email: str = Cookie(None), site_id: str = Cookie(N
         if not master: return {"ok": False, "error": "Мастер не найден"}
     else:
         if not email or not site_id: return {"ok": False, "error": "Не авторизован"}
+        email = email.strip().lower()
         master_res = await session.execute(select(Master).where(Master.site_id == site_id, Master.email == email))
         master = master_res.scalar_one_or_none()
         if not master: return {"ok": False, "error": "Мастер не найден"}
@@ -218,7 +229,7 @@ async def logout(response: Response):
     for key in ("role", "email", "site_id"): response.delete_cookie(key, **cookie_kwargs)
     return {"ok": True, "message": "Вы вышли"}
 
-# ============ CMS ============
+# ============ CMS (КОНТЕНТ) ============
 @app.get("/api/site-content/{site_id}")
 async def get_site_content(site_id: str, session: AsyncSession = Depends(get_session)):
     site = await session.get(Site, site_id)
@@ -316,7 +327,7 @@ async def health(session: AsyncSession = Depends(get_session)):
     total = len(result.scalars().all())
     return {"status": "ok", "subscribers": total}
 
-# ============ РЕГИСТРАЦИЯ КЛИЕНТОВ (БЕЗ ПОДТВЕРЖДЕНИЯ) ============
+# ============ РЕГИСТРАЦИЯ КЛИЕНТОВ ============
 @app.post("/api/register-client/{site_id}")
 async def register_client(site_id: str, data: ClientRegisterRequest, session: AsyncSession = Depends(get_session)):
     email = data.email.strip().lower()
