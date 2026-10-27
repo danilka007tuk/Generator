@@ -469,7 +469,7 @@
     </div>
 </div>
 
-<!-- МОДАЛКИ (без {% if %} - всегда рендерятся) -->
+{# МОДАЛКИ: всегда рендерятся #}
 <div class="modal" id="modal-services" onclick="modalOutsideClick(event, 'services')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Услуги</h2><button class="modal-close" onclick="closeModal('services')">×</button></div>
@@ -609,7 +609,6 @@
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
         if (name === 'booking') { resetBooking(); renderMasters(); }
-        if (name === 'team') { loadTeamToModal(); }
     }
     function closeModal(name) { const modal = document.getElementById('modal-' + name); if (modal) modal.classList.remove('open'); document.body.style.overflow = ''; }
     function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
