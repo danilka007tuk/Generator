@@ -466,7 +466,12 @@
         try {
             const res = await fetch(`${SERVER_URL}/api/site-content/${SITE_ID}`, { credentials: 'include' });
             const data = await res.json();
-            if (!data.ok) return alert('Ошибка загрузки контента');
+            if (!data.ok) {
+                const msg = document.getElementById('editorMessage');
+                msg.style.color = '#ff6b6b';
+                msg.textContent = '❌ ' + (data.error || 'Ошибка загрузки контента');
+                return;
+            }
             currentContent = data.content;
             document.getElementById('company_name').value = currentContent.company_name || '';
             document.getElementById('hero_heading').value = currentContent.hero_heading || '';
@@ -617,12 +622,13 @@
             currentContent.services = services;
 
             const gallery = [];
-            document.querySelectorAll('#galleryContainer .dynamic-item').forEach(block => {
+            document.querySelectorAll('#galleryContainer .dynamic-item').forEach((block, i) => {
+                const existing = (currentContent.gallery && currentContent.gallery[i]) || {};
                 gallery.push({
                     title: block.querySelector('.gallery-title').value,
                     description: block.querySelector('.gallery-desc').value,
-                    image_url: block.dataset.imageUrl || '',
-                    image_prompt: ''
+                    image_url: block.dataset.imageUrl || existing.image_url || '',
+                    image_prompt: existing.image_prompt || ''
                 });
             });
             currentContent.gallery = gallery;
@@ -660,7 +666,13 @@
                         <button class="btn btn-danger" onclick="deleteMaster(${m.id})">Удалить</button>
                     </div>
                     <div class="schedule-grid">
-                        ${[0,1,2,3,4,5,6].map(i => `<div class="schedule-day"><label>${WEEKDAYS[i]}</label><input type="time" id="sched-${m.id}-${i}"></div>`).join('')}
+                        ${[0,1,2,3,4,5,6].map(i => `
+                            <div class="schedule-day">
+                                <label>${WEEKDAYS[i]}</label>
+                                <input type="time" id="sched-start-${m.id}-${i}" title="Начало смены">
+                                <input type="time" id="sched-end-${m.id}-${i}" title="Конец смены" style="margin-top: 4px;">
+                            </div>
+                        `).join('')}
                     </div>
                     <button class="btn btn-save btn-small" style="margin-top: 12px;" onclick="saveSchedule(${m.id})">💾 Сохранить график</button>
                 </div>
@@ -670,8 +682,10 @@
                     const sr = await fetch(`${SERVER_URL}/api/master-schedule?master_id=${m.id}&site_id=${encodeURIComponent(SITE_ID)}`, { credentials: 'include' });
                     const sd = await sr.json();
                     (sd.schedule || []).forEach(item => {
-                        const el = document.getElementById(`sched-${m.id}-${item.weekday}`);
-                        if (el && item.start_time) el.value = item.start_time;
+                        const startEl = document.getElementById(`sched-start-${m.id}-${item.weekday}`);
+                        const endEl = document.getElementById(`sched-end-${m.id}-${item.weekday}`);
+                        if (startEl && item.start_time) startEl.value = item.start_time;
+                        if (endEl && item.end_time) endEl.value = item.end_time;
                     });
                 } catch (e) { console.error(e); }
             }
@@ -702,21 +716,39 @@
 
     async function deleteMaster(id) {
         if (!confirm('Удалить мастера?')) return;
-        await fetch(`${SERVER_URL}/api/masters/${id}`, { method: 'DELETE', credentials: 'include' });
-        loadMasters();
+        try {
+            const res = await fetch(`${SERVER_URL}/api/masters/${id}`, { method: 'DELETE', credentials: 'include' });
+            const data = await res.json();
+            if (!data.ok) { alert('Ошибка: ' + (data.error || 'не удалось удалить')); return; }
+            loadMasters();
+        } catch (e) {
+            alert('Ошибка сети: ' + e.message);
+        }
     }
 
     async function saveSchedule(masterId) {
         const schedule = [];
         for (let i = 0; i < 7; i++) {
-            const start = document.getElementById(`sched-${masterId}-${i}`).value;
-            if (start) schedule.push({ weekday: i, start_time: start, end_time: '20:00' });
+            const start = document.getElementById(`sched-start-${masterId}-${i}`).value;
+            const end = document.getElementById(`sched-end-${masterId}-${i}`).value;
+            if (start && end) {
+                schedule.push({ weekday: i, start_time: start, end_time: end });
+            } else if (start && !end) {
+                alert(`Заполните время окончания для дня ${WEEKDAYS[i]}`);
+                return;
+            }
         }
-        await fetch(`${SERVER_URL}/api/master-schedule/${masterId}`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include',
-            body: JSON.stringify({ schedule })
-        });
-        alert('✅ График сохранён');
+        try {
+            const res = await fetch(`${SERVER_URL}/api/master-schedule/${masterId}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include',
+                body: JSON.stringify({ schedule })
+            });
+            const data = await res.json();
+            if (!data.ok) { alert('Ошибка: ' + (data.error || 'не удалось сохранить')); return; }
+            alert('✅ График сохранён');
+        } catch (e) {
+            alert('Ошибка сети: ' + e.message);
+        }
     }
 
     // ============ ТУТОРИАЛ ============

@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
@@ -14,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),
-    base_url="https://routerai.ru/api/v1"
+    base_url="https://routerai.ru/api/v1",
+    timeout=120.0,
 )
 
 
@@ -78,7 +80,8 @@ SYSTEM_PROMPT = """
 ВСЕГДА заполняй поле sidebar_items — минимум 4 пункта, максимум 6.
 Каждый пункт содержит:
 - label — текст пункта (до 40 символов, на русском).
-- anchor — якорь на блок. ВСЕГДА из списка: "#services", "#gallery", "#pricing", "#testimonials", "#team", "#faq", "#booking", "#contacts", "#about", "#features".
+- anchor — якорь на блок. ВСЕГДА из списка: "#services", "#gallery", "#team", "#contacts", "#booking".
+  (Только эти якоря открывают модалки в шаблонах. Другие — не работают.)
 - icon — эмодзи (один символ).
 
 Также придумай текст главной кнопки в сайдбаре (sidebar_cta_text, до 40 символов) — обычно "Забронировать", "Записаться", "Оставить заявку".
@@ -214,6 +217,8 @@ def generate_content(user_request: str, max_attempts: int = 3) -> SiteContent:
         except Exception as e:
             logger.error(f"Ошибка запроса к LLM (попытка {attempt + 1}): {e}")
             last_error = str(e)
+            if attempt < max_attempts - 1:
+                time.sleep(2 ** attempt)  # 1с, 2с
             continue
 
         cleaned = _clean_json_response(raw)
