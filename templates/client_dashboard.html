@@ -186,7 +186,7 @@
         {{ logo_text }}
     </h1>
     <div class="header-actions">
-        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" id="tour-link-site">Сайт</a>
+        <a href="https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1" target="_blank" rel="noopener noreferrer" id="tour-link-site">Сайт</a>
         <a href="#" class="logout-btn" id="tour-link-logout" onclick="logoutUser(event)">Выйти</a>
         <button class="btn-help" onclick="startTour(true)">❓ Помощь</button>
     </div>
@@ -201,7 +201,7 @@
                 <p>Все ваши бронирования на услуги</p>
             </div>
         </div>
-        <div class="dashboard-tile" onclick="window.open('https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1', '_blank')">
+        <div class="dashboard-tile" onclick="window.open('https://danilka007tuk.github.io/{{ site_id }}/?skip_redirect=1', '_blank', 'noopener,noreferrer')">
             <div class="tile-icon">🔗</div>
             <div>
                 <h2>На сайт</h2>
@@ -250,7 +250,8 @@
             const res = await fetch(`${SERVER_URL}/api/my-bookings`, { credentials: 'include' });
             const data = await res.json();
             if (!data.ok) {
-                tbody.innerHTML = `<tr><td colspan="5" class="empty">${esc(data.error) || 'Ошибка авторизации. Войдите заново.'}</td></tr>`;
+                const errText = esc(data.error) || 'Сессия истекла';
+                tbody.innerHTML = `<tr><td colspan="5" class="empty">${errText}. <a href="${SERVER_URL}/login?site_id=${encodeURIComponent(SITE_ID)}" style="color: var(--primary);">Войдите заново</a></td></tr>`;
                 return;
             }
             if (!data.bookings || data.bookings.length === 0) {
@@ -287,7 +288,7 @@
     document.body.appendChild(overlay);
 
     function startTour(force = false) {
-        const tourKey = 'tour_completed_client_v8_' + SITE_ID;
+        const tourKey = 'tour_completed_client_v9_' + SITE_ID;
         if (!force && localStorage.getItem(tourKey)) return;
         currentTourIndex = 0;
         overlay.style.display = 'block';
@@ -321,7 +322,7 @@
         overlay.style.display = 'none';
         const oldTooltip = document.querySelector('.tour-tooltip');
         if (oldTooltip) oldTooltip.remove();
-        localStorage.setItem('tour_completed_client_v8_' + SITE_ID, '1');
+        localStorage.setItem('tour_completed_client_v9_' + SITE_ID, '1');
     }
 
     setTimeout(() => startTour(false), 1000);
