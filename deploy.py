@@ -70,7 +70,7 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
 
     content = html_path.read_text(encoding="utf-8")
 
-    # Ретрай при 409 Conflict (если файл уже обновлён кем-то другим)
+    # Ретрай при 409 Conflict для index.html
     for attempt in range(3):
         try:
             existing = repo.get_contents("index.html")
@@ -90,6 +90,7 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
     else:
         raise RuntimeError("Не удалось обновить index.html после 3 попыток (409 Conflict)")
 
+    # Ретрай при 409 Conflict для register.html
     register_path = html_path.parent / "register.html"
     if register_path.exists():
         register_content = register_path.read_text(encoding="utf-8")
@@ -115,39 +116,41 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
     else:
         logger.warning(f"Файл register.html не найден по пути {register_path}")
 
-    # === Заливаем ВСЕ картинки из папки images ===
+    # === Умная заливка картинок из папки images ===
+    # Заливаем только новые картинки или те, которые изменились (по размеру)
     images_dir = html_path.parent / "images"
     if images_dir.exists() and images_dir.is_dir():
-        logger.info(f"Найдено картинок для заливки: {len(list(images_dir.iterdir()))}")
+        logger.info(f"Найдено картинок в папке: {len(list(images_dir.iterdir()))}")
         for img_file in images_dir.iterdir():
             if not img_file.is_file():
                 continue
-            img_bytes = img_file.read_bytes()
+
             img_path_in_repo = f"images/{img_file.name}"
-            for attempt in range(3):
-                try:
-                    existing = repo.get_contents(img_path_in_repo)
-                    repo.update_file(img_path_in_repo, f"Update {img_file.name}", img_bytes, existing.sha)
-                    logger.info(f"Обновлена картинка: {img_file.name}")
-                    break
-                except GithubException as e:
-                    if e.status == 404:
-                        try:
-                            repo.create_file(img_path_in_repo, f"Add {img_file.name}", img_bytes)
-                            logger.info(f"Загружена новая картинка: {img_file.name}")
-                        except GithubException as ex:
-                            logger.error(f"Не удалось залить {img_file.name}: {ex}")
-                        break
-                    elif e.status == 409:
-                        logger.warning(f"409 Conflict для {img_file.name} (попытка {attempt + 1}/3), повтор...")
-                        time.sleep(1)
-                        continue
-                    else:
-                        logger.error(f"Ошибка при получении {img_path_in_repo}: {e}")
-                        break
+            img_bytes = img_file.read_bytes()
+
+            try:
+                existing = repo.get_contents(img_path_in_repo)
+                # Если картинка уже есть на GitHub и её размер совпадает с локальной,
+                # значит она не менялась — пропускаем заливку (экономит запросы и нервы)
+                if existing.size == len(img_bytes):
+                    logger.info(f"Пропускаем (уже есть): {img_file.name}")
+                    continue
+                # Если размер разный — обновляем
+                repo.update_file(img_path_in_repo, f"Update {img_file.name}", img_bytes, existing.sha)
+                logger.info(f"Обновлена картинка: {img_file.name}")
+            except GithubException as e:
+                if e.status == 404:
+                    try:
+                        repo.create_file(img_path_in_repo, f"Add {img_file.name}", img_bytes)
+                        logger.info(f"Загружена новая картинка: {img_file.name}")
+                    except GithubException as ex:
+                        logger.error(f"Не удалось залить {img_file.name}: {ex}")
+                else:
+                    logger.error(f"Ошибка при получении {img_path_in_repo}: {e}")
     else:
         logger.warning(f"Папка с картинками не найдена: {images_dir}")
 
+    # Включение GitHub Pages
     default_branch = repo.default_branch or "main"
     try:
         repo.requester.requestJsonAndCheck(
@@ -162,7 +165,7 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
             logger.error(f"Ошибка при включении GitHub Pages: {e}")
             raise e
 
-    # Ждём сборку максимум 10 секунд (не 60), чтобы не тормозить сохранение
+    # Ждём сборку максимум 10 секунд
     if _wait_for_pages_build(repo, timeout=10):
         logger.info(f"Сайт {repo_name} собран и доступен")
     else:
