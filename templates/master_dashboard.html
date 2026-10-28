@@ -194,7 +194,7 @@
     const SERVER_URL = "{{ server_url }}";
     const WEEKDAYS = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
     const email = (localStorage.getItem('master_email') || '').trim().toLowerCase();
-    const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
     // Выход
     async function logoutUser(e) {
@@ -207,19 +207,23 @@
     function switchTab(tab) {
         document.getElementById('tab-bookings').style.display = tab === 'bookings' ? 'block' : 'none';
         document.getElementById('tab-schedule').style.display = tab === 'schedule' ? 'block' : 'none';
+        if (tab === 'bookings') loadBookings();
+        if (tab === 'schedule') loadSchedule();
     }
 
     // Загрузка записей
     async function loadBookings() {
         const tbody = document.getElementById('bookingsBody');
-        if (!email) {
-            tbody.innerHTML = '<tr><td colspan="5" class="empty">Сессия истекла. Войдите заново.</td></tr>';
-            return;
-        }
         try {
-            const res = await fetch(`${SERVER_URL}/api/master-bookings?email=${encodeURIComponent(email)}&site_id=${encodeURIComponent(SITE_ID)}`, { credentials: 'include' });
+            const url = `${SERVER_URL}/api/master-bookings?site_id=${encodeURIComponent(SITE_ID)}` +
+                        (email ? `&email=${encodeURIComponent(email)}` : '');
+            const res = await fetch(url, { credentials: 'include' });
             const data = await res.json();
-            if (!data.ok || !data.bookings || data.bookings.length === 0) {
+            if (!data.ok) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty">Сессия истекла. <a href="${SERVER_URL}/login?site_id=${encodeURIComponent(SITE_ID)}" style="color: var(--primary);">Войдите заново</a></td></tr>`;
+                return;
+            }
+            if (!data.bookings || data.bookings.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="empty">У вас пока нет записей</td></tr>';
                 return;
             }
@@ -240,14 +244,16 @@
     // Загрузка графика
     async function loadSchedule() {
         const container = document.getElementById('scheduleBody');
-        if (!email) {
-            container.innerHTML = '<p class="empty">Сессия истекла. Войдите заново.</p>';
-            return;
-        }
         try {
-            const res = await fetch(`${SERVER_URL}/api/master-schedule?email=${encodeURIComponent(email)}&site_id=${encodeURIComponent(SITE_ID)}`, { credentials: 'include' });
+            const url = `${SERVER_URL}/api/master-schedule?site_id=${encodeURIComponent(SITE_ID)}` +
+                        (email ? `&email=${encodeURIComponent(email)}` : '');
+            const res = await fetch(url, { credentials: 'include' });
             const data = await res.json();
-            if (!data.ok || !data.schedule || data.schedule.length === 0) {
+            if (!data.ok) {
+                container.innerHTML = `<p class="empty">Сессия истекла. <a href="${SERVER_URL}/login?site_id=${encodeURIComponent(SITE_ID)}" style="color: var(--primary);">Войдите заново</a></p>`;
+                return;
+            }
+            if (!data.schedule || data.schedule.length === 0) {
                 container.innerHTML = '<p class="empty">График не задан</p>';
                 return;
             }
