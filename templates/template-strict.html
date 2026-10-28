@@ -40,7 +40,6 @@
             z-index: -1;
         }
 
-        /* ВЕРХНЯЯ ПАНЕЛЬ */
         .header {
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(8px);
@@ -91,14 +90,12 @@
         }
         .header-actions .btn-myreсords:hover { filter: brightness(1.15); }
 
-        /* КОНТЕЙНЕР */
         .container {
             max-width: 1280px;
             margin: 40px auto;
             padding: 0 40px;
         }
 
-        /* HERO */
         .hero {
             text-align: center;
             padding: 40px 20px 32px;
@@ -129,7 +126,6 @@
             text-shadow: 0 1px 10px rgba(0,0,0,0.6);
         }
 
-        /* ПЛИТКИ */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -163,7 +159,6 @@
         }
         .dashboard-tile p { font-size: 0.8em; color: var(--text-muted); line-height: 1.5; }
 
-        /* НИЖНЯЯ ПАНЕЛЬ */
         .bottom-panel {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -171,75 +166,6 @@
             padding: 32px;
         }
 
-        /* ТАБЛИЦА */
-        table { width: 100%; border-collapse: collapse; }
-        th {
-            text-align: left;
-            padding: 12px;
-            font-size: 0.7em;
-            font-weight: 500;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--card-border);
-        }
-        td {
-            padding: 14px 12px;
-            font-size: 0.9em;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            color: #fff;
-        }
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background: rgba(255,255,255,0.02); }
-        .empty { text-align: center; color: var(--text-muted); padding: 32px; font-style: italic; font-size: 0.9em; }
-
-        /* ФОРМЫ */
-        .form-group { margin-bottom: 20px; }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.72em;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-        }
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--card-border);
-            border-radius: 4px;
-            background: rgba(0, 0, 0, 0.4);
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.95em;
-            transition: all 0.2s;
-        }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(0, 0, 0, 0.6);
-        }
-        .form-group input::placeholder { color: rgba(255,255,255,0.3); }
-
-        /* КНОПКИ */
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.8em;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .btn:hover { filter: brightness(1.1); }
-
-        /* МОДАЛКИ */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 500; padding: 40px 20px; overflow-y: auto; }
         .modal.open { display: flex; align-items: flex-start; justify-content: center; }
         .modal-box {
@@ -286,35 +212,84 @@
         }
         .modal-close:hover { background: var(--primary); border-color: var(--primary); }
 
-        /* УСЛУГИ / ЦЕНЫ */
-        .services-grid, .pricing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-        .service-card, .pricing-card {
+        /* Услуги с фото и процедурой */
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .service-card {
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--card-border);
-            border-radius: 4px;
-            padding: 20px;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        .service-card h3, .pricing-card h3 { font-size: 1em; margin: 0 0 8px; color: #fff; font-weight: 500; }
-        .service-card p, .pricing-card p { margin: 0 0 12px; color: var(--text-muted); font-size: 0.88em; }
-        .service-card .price, .pricing-card .price { color: var(--primary); font-weight: 500; font-size: 1.1em; }
+        .service-card .service-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+            background: rgba(0,0,0,0.3);
+        }
+        .service-card .service-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .service-card h3 { font-size: 1.1em; margin: 0 0 8px; color: #fff; font-weight: 500; }
+        .service-card .price { color: var(--primary); font-weight: 500; font-size: 1.1em; margin-bottom: 12px; }
+        .service-card .short-desc { color: var(--text-muted); font-size: 0.88em; margin-bottom: 16px; }
+        .service-card .procedure {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            line-height: 1.6;
+            border-top: 1px solid var(--card-border);
+            padding-top: 12px;
+            margin-top: auto;
+        }
+        .service-card .procedure strong { color: #fff; display: block; margin-bottom: 6px; font-size: 0.9em; }
 
-        /* ГАЛЕРЕЯ */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-        .gallery-item { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; overflow: hidden; }
-        .gallery-item img { width: 100%; height: 200px; object-fit: cover; display: block; }
+        /* Галерея */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .gallery-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .gallery-item img { width: 100%; height: 240px; object-fit: cover; display: block; }
         .gallery-item .caption { padding: 16px; }
         .gallery-item h3 { margin: 0 0 6px; font-size: 0.95em; color: #fff; font-weight: 500; }
         .gallery-item p { margin: 0; color: var(--text-muted); font-size: 0.85em; }
 
-        /* КОМАНДА */
+        /* Команда */
         .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-        .team-member { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; padding: 24px 20px; text-align: center; }
-        .team-member .avatar { width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: #fff; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: 500; }
+        .team-member {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 24px 20px;
+            text-align: center;
+        }
+        .team-member .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6em;
+            font-weight: 500;
+            overflow: hidden;
+        }
+        .team-member .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .team-member h3 { margin: 0 0 4px; font-size: 1em; color: #fff; font-weight: 500; }
         .team-member .role { color: var(--primary); font-size: 0.8em; text-transform: uppercase; margin-bottom: 8px; }
         .team-member p { margin: 0; color: var(--text-muted); font-size: 0.85em; }
 
-        /* ОТЗЫВЫ */
+        /* Отзывы */
         .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
         .testimonial { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; padding: 20px; }
         .testimonial .stars { color: var(--accent); font-size: 0.95em; margin-bottom: 10px; }
@@ -327,7 +302,7 @@
         .faq-item h3 { margin: 0 0 8px; color: #fff; font-size: 0.95em; font-weight: 500; }
         .faq-item p { margin: 0; color: var(--text-muted); font-size: 0.9em; }
 
-        /* БРОНИРОВАНИЕ */
+        /* Бронирование */
         .master-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
         .master-card { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 4px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
         .master-card:hover { border-color: var(--primary); }
@@ -335,7 +310,6 @@
         .master-card .master-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; font-weight: 500; }
         .master-card.selected .master-avatar { background: #fff; color: var(--primary); }
         .master-card h3 { margin: 0 0 4px; font-size: 0.9em; color: #fff; font-weight: 500; }
-        .master-card.selected h3 { color: #fff; }
         .master-card .role { font-size: 0.75em; color: var(--text-muted); }
         .master-card.selected .role { color: rgba(255,255,255,0.8); }
 
@@ -366,12 +340,22 @@
         .booking-form.active { display: block; }
         .booking-form h3 { text-align: center; color: #fff; margin: 0 0 20px; font-size: 1em; letter-spacing: 0.05em; }
 
-        /* КОНТАКТЫ */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.72em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 16px; border: 1px solid var(--card-border); border-radius: 4px; background: rgba(0, 0, 0, 0.4); color: #fff; font-family: inherit; font-size: 0.95em; transition: all 0.2s; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--primary); background: rgba(0, 0, 0, 0.6); }
+        .form-group input::placeholder { color: rgba(255,255,255,0.3); }
+
+        .btn { display: inline-block; padding: 12px 24px; background: var(--primary); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 0.8em; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.2s; font-family: inherit; }
+        .btn:hover { filter: brightness(1.1); }
+
         .contacts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; text-align: center; }
         .contact-item .label { font-size: 0.7em; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
         .contact-item .value { font-size: 0.95em; color: #fff; font-weight: 500; }
 
-        /* ТУТОРИАЛ */
+        .empty { text-align: center; color: var(--text-muted); padding: 32px; font-style: italic; font-size: 0.9em; }
+
+        /* Туториал */
         .tour-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 9998; display: none; }
         .tour-tooltip { position: fixed; background: rgba(15, 15, 15, 0.98); color: #fff; padding: 24px; border-radius: 6px; font-family: Inter, sans-serif; max-width: 380px; z-index: 10000; box-shadow: 0 20px 60px rgba(0,0,0,0.8); border: 1px solid var(--primary); }
         .tour-tooltip h3 { margin: 0 0 12px 0; color: var(--primary); font-size: 0.95em; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -391,12 +375,13 @@
         @media (max-width: 600px) {
             .dashboard-grid { grid-template-columns: 1fr; }
             .header-actions { flex-wrap: wrap; }
+            .modal-box { padding: 24px 16px; }
+            .services-grid, .gallery-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<!-- ВЕРХНЯЯ ПАНЕЛЬ -->
 <div class="header">
     <h1>{{ company_name }}</h1>
     <div class="header-actions">
@@ -405,11 +390,11 @@
         <a href="javascript:void(0)" onclick="openModal('contacts')">Контакты</a>
         <a href="javascript:void(0)" onclick="openClientAccount()" class="btn-myreсords">📅 Мои записи</a>
         <a href="javascript:void(0)" onclick="openModal('booking')" style="background: var(--primary); border-color: var(--primary);">Забронировать</a>
+        <button class="btn-help" onclick="startTour(true)" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3);">❓ Помощь</button>
     </div>
 </div>
 
 <div class="container">
-    <!-- HERO -->
     <section class="hero">
         <h2>{{ hero_heading }}</h2>
         <p>{{ hero_subheading }}</p>
@@ -421,11 +406,10 @@
         </div>
     </section>
 
-    <!-- ПЛИТКИ -->
     <div class="dashboard-grid">
         <div class="dashboard-tile" onclick="openModal('services')">
             <div class="tile-icon">💼</div>
-            <div><h3>Услуги</h3><p>Все услуги и цены</p></div>
+            <div><h3>Услуги</h3><p>Все услуги, цены и фото</p></div>
         </div>
         <div class="dashboard-tile" onclick="openModal('gallery')">
             <div class="tile-icon">🖼</div>
@@ -441,7 +425,6 @@
         </div>
     </div>
 
-    <!-- НИЖНЯЯ ПАНЕЛЬ -->
     <div class="bottom-panel">
         {% if testimonials %}
         <h3 style="font-size: 0.9em; margin-bottom: 20px; color: #fff; letter-spacing: 0.08em; text-transform: uppercase;">Отзывы</h3>
@@ -470,6 +453,7 @@
 </div>
 
 {# МОДАЛКИ: всегда рендерятся #}
+
 <div class="modal" id="modal-services" onclick="modalOutsideClick(event, 'services')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Услуги</h2><button class="modal-close" onclick="closeModal('services')">×</button></div>
@@ -477,9 +461,20 @@
         <div class="services-grid">
             {% for s in services %}
             <div class="service-card">
-                <h3>{{ s.name }}</h3>
-                <p>{{ s.description }}</p>
-                {% if s.price %}<div class="price">{{ s.price }}</div>{% endif %}
+                {% if s.image_url %}
+                <img class="service-image" src="https://danilka007tuk.github.io/{{ site_id }}/{{ s.image_url }}" alt="{{ s.name }}" loading="lazy">
+                {% endif %}
+                <div class="service-content">
+                    <h3>{{ s.name }}</h3>
+                    {% if s.price %}<div class="price">{{ s.price }}</div>{% endif %}
+                    {% if s.description %}<div class="short-desc">{{ s.description }}</div>{% endif %}
+                    {% if s.procedure %}
+                    <div class="procedure">
+                        <strong>Как проходит:</strong>
+                        {{ s.procedure }}
+                    </div>
+                    {% endif %}
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -496,7 +491,9 @@
         <div class="gallery-grid">
             {% for item in gallery %}
             <div class="gallery-item">
-                {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">{% endif %}
+                {% if item.image_url %}
+                <img src="https://danilka007tuk.github.io/{{ site_id }}/{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                {% endif %}
                 <div class="caption"><h3>{{ item.title }}</h3><p>{{ item.description }}</p></div>
             </div>
             {% endfor %}
@@ -513,7 +510,9 @@
         <div class="team-grid" id="teamGrid">
             {% for m in team %}
             <div class="team-member">
-                <div class="avatar">{{ m.name[0] }}</div>
+                <div class="avatar">
+                    {% if m.image_url %}<img src="https://danilka007tuk.github.io/{{ site_id }}/{{ m.image_url }}" alt="{{ m.name }}">{% else %}{{ m.name[0] }}{% endif %}
+                </div>
                 <h3>{{ m.name }}</h3>
                 <div class="role">{{ m.role }}</div>
                 <p>{{ m.description }}</p>
@@ -537,7 +536,6 @@
     </div>
 </div>
 
-<!-- БРОНИРОВАНИЕ -->
 <div class="modal" id="modal-booking" onclick="modalOutsideClick(event, 'booking')">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Забронировать</h2><button class="modal-close" onclick="closeModal('booking')">×</button></div>
@@ -558,7 +556,6 @@
     </div>
 </div>
 
-<!-- ВХОД / РЕГИСТРАЦИЯ -->
 <div class="modal" id="modal-auth" onclick="modalOutsideClick(event, 'auth')">
     <div class="modal-box" style="max-width: 460px;" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Вход / Регистрация</h2><button class="modal-close" onclick="closeModal('auth')">×</button></div>
@@ -581,7 +578,6 @@
     </div>
 </div>
 
-<!-- МОИ ЗАПИСИ -->
 <div class="modal" id="modal-account" onclick="modalOutsideClick(event, 'account')">
     <div class="modal-box" style="max-width: 900px;" onclick="event.stopPropagation()">
         <div class="modal-header"><h2>Мои записи</h2><button class="modal-close" onclick="closeModal('account')">×</button></div>
@@ -597,7 +593,6 @@
     const SITE_ID = {{ site_id | default("site") | tojson }};
     const WORKING_HOURS = {{ working_hours | default("09:00-20:00") | tojson }};
     const STATIC_TEAM = {{ team | tojson if team else '[]' }};
-
     const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
     let currentMonth = new Date(); let selectedMaster = null; let selectedDate = null; let selectedTime = null; let busySlots = [];
@@ -605,7 +600,7 @@
 
     function openModal(name) {
         const modal = document.getElementById('modal-' + name);
-        if (!modal) { console.warn('Modal not found:', name); return; }
+        if (!modal) return;
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
         if (name === 'booking') { resetBooking(); renderMasters(); }
@@ -613,28 +608,6 @@
     function closeModal(name) { const modal = document.getElementById('modal-' + name); if (modal) modal.classList.remove('open'); document.body.style.overflow = ''; }
     function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); document.body.style.overflow = ''; } });
-
-    async function loadTeamToModal() {
-        const teamGrid = document.getElementById('teamGrid');
-        if (!teamGrid) return;
-        try {
-            const res = await fetch(`${SERVER_URL}/api/masters/${encodeURIComponent(SITE_ID)}`);
-            const data = await res.json();
-            const masters = data.masters || [];
-            if (masters.length === 0) {
-                teamGrid.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:rgba(255,255,255,0.5);">Пока нет мастеров</p>';
-                return;
-            }
-            teamGrid.innerHTML = masters.map(m => `
-                <div class="team-member">
-                    <div class="avatar">${esc(m.name ? m.name[0] : '?')}</div>
-                    <h3>${esc(m.name)}</h3>
-                    <div class="role">${esc(m.role)}</div>
-                    <p>${esc(m.description)}</p>
-                </div>
-            `).join('');
-        } catch (e) { console.error(e); }
-    }
 
     async function renderMasters() {
         if (!masterSelectionEl) return;
@@ -781,7 +754,61 @@
         alert('Вы вышли из кабинета');
     }
 
+    // === ТУТОРИАЛ ДЛЯ КЛИЕНТА ===
+    const tourSteps = [
+        { selector: '.header', title: 'Добро пожаловать!', text: 'Это главная страница вашего сайта. Здесь вы можете посмотреть услуги, галерею и записаться.' },
+        { selector: '.header-actions a[onclick*="services"]', title: 'Услуги', text: 'Нажмите, чтобы открыть список услуг с фото, ценами и описанием процедуры.' },
+        { selector: '.header-actions a[onclick*="gallery"]', title: 'Галерея', text: 'Здесь вы увидите наши работы и примеры.' },
+        { selector: '.btn-myreсords', title: 'Мои записи', text: 'Здесь вы можете войти или зарегистрироваться, чтобы увидеть свои записи.' },
+        { selector: '.header-actions a[onclick*="booking"]', title: 'Забронировать', text: 'Нажмите, чтобы выбрать мастера, дату, время и оставить заявку.' }
+    ];
+
+    let currentTourIndex = 0;
+    const tourOverlay = document.createElement('div');
+    tourOverlay.className = 'tour-overlay';
+    document.body.appendChild(tourOverlay);
+
+    function startTour(force = false) {
+        const tourKey = 'tour_completed_client_v9_' + SITE_ID;
+        if (!force && localStorage.getItem(tourKey)) return;
+        currentTourIndex = 0;
+        tourOverlay.style.display = 'block';
+        showTourStep();
+    }
+
+    function showTourStep() {
+        document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+        const old = document.querySelector('.tour-tooltip');
+        if (old) old.remove();
+        if (currentTourIndex >= tourSteps.length) { endTour(); return; }
+        const step = tourSteps[currentTourIndex];
+        const el = document.querySelector(step.selector);
+        if (!el) { currentTourIndex++; showTourStep(); return; }
+        el.classList.add('tour-highlight');
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tour-tooltip';
+        tooltip.innerHTML = `<h3>${step.title}</h3><p>${step.text}</p><div class="tour-actions"><button class="skip" onclick="endTour()">Пропустить</button><button onclick="nextTourStep()">Далее (${currentTourIndex + 1}/${tourSteps.length})</button></div>`;
+        const rect = el.getBoundingClientRect();
+        let top = rect.bottom + window.scrollY + 16;
+        if (top > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - 160;
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = Math.max(16, Math.min(rect.left, window.innerWidth - 400)) + 'px';
+        document.body.appendChild(tooltip);
+    }
+
+    function nextTourStep() { currentTourIndex++; showTourStep(); }
+
+    function endTour() {
+        document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+        tourOverlay.style.display = 'none';
+        const old = document.querySelector('.tour-tooltip');
+        if (old) old.remove();
+        localStorage.setItem('tour_completed_client_v9_' + SITE_ID, '1');
+    }
+
     renderCalendar();
+    setTimeout(() => startTour(false), 1000);
 </script>
 </body>
 </html>

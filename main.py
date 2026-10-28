@@ -1,9 +1,9 @@
-# main.py — FastAPI-сервер. Бот запускается отдельно через bot.py
 import os
 import logging
 import asyncio
 import json
 import hashlib
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import date as date_type, datetime, timedelta, timezone
@@ -11,9 +11,9 @@ from datetime import date as date_type, datetime, timedelta, timezone
 import httpx
 import resend
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Depends, BackgroundTasks, Body, Cookie, Response
+from fastapi import FastAPI, Request, Depends, BackgroundTasks, Body, Cookie, Response, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import select, func
@@ -128,6 +128,7 @@ async def login_page(request: Request, site_id: str = "site"):
         context={"site_id": site_id, "server_url": SERVER_URL}
     )
 
+# ============ КАБИНЕТЫ ============
 @app.get("/client_dashboard/{site_id}", response_class=HTMLResponse)
 async def client_dashboard(site_id: str, request: Request, session: AsyncSession = Depends(get_session)):
     site = await session.get(Site, site_id)
@@ -179,7 +180,33 @@ async def dashboard(site_id: str, request: Request, session: AsyncSession = Depe
         }
     )
 
-# ============ API ДЛЯ КАБИНЕТОВ ============
+# ============ ЗАГРУЗКА КАРТИНОК ============
+@app.post("/api/upload-image/{site_id}")
+async def upload_image(site_id: str, file: UploadFile = File(...), session: AsyncSession = Depends(get_session)):
+    site = await session.get(Site, site_id)
+    if not site:
+        return {"ok": False, "error": "Сайт не найден"}
+
+    if file.content_type not in ("image/jpeg", "image/png", "image/webp"):
+        return {"ok": False, "error": "Только JPG, PNG или WebP"}
+
+    images_dir = Path(__file__).parent / "output" / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+
+    ext = file.filename.split(".")[-1].lower() if file.filename and "." in file.filename else "png"
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    filepath = images_dir / filename
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        return {"ok": False, "error": "Файл больше 10 МБ"}
+
+    with open(filepath, "wb") as f:
+        f.write(contents)
+
+    return {"ok": True, "path": f"images/{filename}"}
+
+# ============ API КАБИНЕТОВ ============
 @app.get("/api/my-bookings")
 async def get_my_bookings(email: str = Cookie(None), site_id: str = Cookie(None), session: AsyncSession = Depends(get_session)):
     if not email or not site_id: return {"ok": False, "error": "Не авторизован"}

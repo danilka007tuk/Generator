@@ -12,6 +12,8 @@ class ServiceItem(BaseModel):
     name: str = Field(max_length=80)
     description: str = Field(max_length=200)
     price: str = Field(default="", max_length=50)
+    procedure: str = Field(default="", max_length=500)  # ДОБАВЛЕНО
+    image_url: str = Field(default="")  # ДОБАВЛЕНО
 
 
 class GalleryItem(BaseModel):
@@ -48,6 +50,7 @@ class TeamMember(BaseModel):
     role: str = Field(max_length=80)
     description: str = Field(default="", max_length=200)
     services: list[str] = Field(default_factory=list)
+    image_url: str = Field(default="")  # ДОБАВЛЕНО
 
 
 class SiteContent(BaseModel):
