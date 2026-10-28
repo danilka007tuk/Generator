@@ -5,6 +5,7 @@ import logging
 import httpx
 import hashlib
 import secrets
+from pathlib import Path
 from dotenv import load_dotenv
 
 from obabot import create_bot
@@ -18,7 +19,7 @@ from deploy import deploy_to_github
 from database import async_session
 from models import Site
 
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 logger = logging.getLogger(__name__)
 
@@ -312,7 +313,7 @@ async def handle_palette(message: Message, state: FSMContext):
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "\n"
         "Введите email, который будет использоваться для входа в личный кабинет администратора.\n"
-        "На него будет отправлен пароль.\n"
+        "Пароль будет показан в этом чате после создания сайта.\n"
         "\n"
         "Пример: admin@example.com"
     )
@@ -409,10 +410,10 @@ async def handle_repo(message: Message, state: FSMContext):
         content.palette_name = data.get('palette_name', 'auto')
 
         html = await asyncio.to_thread(render_site, content, SERVER_URL, repo_name)
-        path = save_site(html, filename="index.html")
+        path = await asyncio.to_thread(save_site, html, "index.html")
 
         register_html = await asyncio.to_thread(render_register_page, content, SERVER_URL, repo_name)
-        register_path = save_site(register_html, filename="register.html")
+        await asyncio.to_thread(save_site, register_html, "register.html")
 
         admin_password = secrets.token_urlsafe(8)
         admin_hash = hashlib.sha256(admin_password.encode()).hexdigest()
@@ -460,11 +461,10 @@ async def handle_repo(message: Message, state: FSMContext):
         return
 
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10) as client:
             await client.post(
                 f"{SERVER_URL}/api/subscribe",
                 json={"user_id": message.from_user.id, "site_id": repo_name},
-                timeout=10,
             )
         logger.info(f"Создатель {message.from_user.id} подписан на {repo_name}")
     except Exception as e:
@@ -484,7 +484,8 @@ async def handle_repo(message: Message, state: FSMContext):
         f"Email: {admin_email}\n"
         f"Пароль: {admin_password}\n"
         "\n"
-        "⚠️ Сохраните этот пароль! Он нужен для входа в личный кабинет.\n"
+        "⚠️ Сохраните пароль и удалите это сообщение — оно содержит данные для входа.\n"
+        "Никому не передавайте его.\n"
         "📬 Уведомления о заявках будут приходить в этот чат."
     )
     await state.clear()
