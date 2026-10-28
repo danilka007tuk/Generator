@@ -37,7 +37,7 @@ ALLOWED_TEMPLATES = [
 DEFAULT_SIDEBAR_ITEMS = [
     {"label": "Услуги", "anchor": "#services", "icon": "💼"},
     {"label": "Галерея", "anchor": "#gallery", "icon": "🖼"},
-    {"label": "Отзывы", "anchor": "#testimonials", "icon": "⭐"},
+    {"label": "Команда", "anchor": "#team", "icon": "👥"},
     {"label": "Контакты", "anchor": "#contacts", "icon": "📞"},
 ]
 
@@ -75,12 +75,18 @@ def generate_image_provod(prompt: str, width: int = 1024, height: int = 1024) ->
         return ""
 
 
+def clean(text: str) -> str:
+    if not isinstance(text, str):
+        return ""
+    return bleach.clean(text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS)
+
+
 def get_sidebar_items(content: SiteContent) -> list[dict]:
     items = content.sidebar_items or []
     result = []
     for item in items:
         d = item.model_dump() if hasattr(item, "model_dump") else dict(item)
-        label = d.get("label", "").strip()
+        label = clean(d.get("label", "").strip())
         anchor = d.get("anchor", "").strip()
         icon = d.get("icon", "").strip()
         if not label or not anchor:
@@ -91,12 +97,6 @@ def get_sidebar_items(content: SiteContent) -> list[dict]:
     if not result:
         result = [dict(x) for x in DEFAULT_SIDEBAR_ITEMS]
     return result
-
-
-def clean(text: str) -> str:
-    if not isinstance(text, str):
-        return ""
-    return bleach.clean(text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS)
 
 
 def clean_color(hex_color: str, default: str) -> str:
@@ -134,12 +134,18 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
         service["name"] = clean(service.get("name", ""))
         service["description"] = clean(service.get("description", ""))
         service["price"] = clean(service.get("price", ""))
+        service["procedure"] = clean(service.get("procedure", ""))
 
     for i, item in enumerate(data.get("gallery", [])):
         item["title"] = clean(item.get("title", ""))
         item["description"] = clean(item.get("description", ""))
-        prompt = item.get("image_prompt", "") or item.get("title", "") or "Beauty salon interior"
-        image_url = generate_image_provod(prompt, width=1024, height=768)
+        # Переиспользуем уже сгенерированную картинку, если файл существует
+        existing_url = item.get("image_url", "")
+        if existing_url and (OUTPUT_DIR / existing_url).exists():
+            image_url = existing_url
+        else:
+            prompt = item.get("image_prompt", "") or item.get("title", "") or "Beauty salon interior"
+            image_url = generate_image_provod(prompt, width=1024, height=768)
         item["image_url"] = image_url
         if i < len(content.gallery):
             content.gallery[i].image_url = image_url
@@ -165,10 +171,14 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
 
     data["sidebar_items"] = get_sidebar_items(content)
 
-    hero_prompt = data.get("hero_image_prompt", "")
-    if not hero_prompt:
-        hero_prompt = f"Beautiful interior for {data.get('company_name', 'business')}, photorealistic"
-    hero_url = generate_image_provod(hero_prompt, width=1024, height=1024)
+    existing_hero = data.get("hero_image_url", "")
+    if existing_hero and (OUTPUT_DIR / existing_hero).exists():
+        hero_url = existing_hero
+    else:
+        hero_prompt = data.get("hero_image_prompt", "")
+        if not hero_prompt:
+            hero_prompt = f"Beautiful interior for {data.get('company_name', 'business')}, photorealistic"
+        hero_url = generate_image_provod(hero_prompt, width=1024, height=1024)
     data["hero_image_url"] = hero_url
     content.hero_image_url = hero_url
 
@@ -184,23 +194,6 @@ def render_site(content: SiteContent, server_url: str = "", site_id: str = "") -
 
     template = env.get_template(template_name)
     html = template.render(**data)
-
-    if "<head>" in html:
-        redirect_script = '''
-        <script>
-            (function() {
-                var params = new URLSearchParams(window.location.search);
-                var skip = params.get('skip_redirect');
-                var verified = window.location.search.indexOf('verified=1') !== -1;
-                var hasEmail = false;
-                try { hasEmail = !!sessionStorage.getItem('user_email'); } catch (e) {}
-                if (!hasEmail && !verified && !skip) {
-                    window.location.replace('register.html');
-                }
-            })();
-        </script>
-        '''
-        html = html.replace("<head>", f"<head>{redirect_script}", 1)
 
     return html
 
@@ -226,9 +219,9 @@ def render_register_page(content: SiteContent, server_url: str = "", site_id: st
     return template.render(**data)
 
 
-def save_site(html: str, filename: str = "index.html", output_dir: str = "output") -> Path:
-    out = Path(output_dir)
-    out.mkdir(exist_ok=True)
+def save_site(html: str, filename: str = "index.html", output_dir: str | None = None) -> Path:
+    out = Path(output_dir) if output_dir else OUTPUT_DIR
+    out.mkdir(parents=True, exist_ok=True)
     index = out / filename
     index.write_text(html, encoding="utf-8")
     return index
