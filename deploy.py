@@ -18,10 +18,16 @@ if not GITHUB_TOKEN:
 if not USER:
     raise RuntimeError("GITHUB_USERNAME не задан в .env")
 
-g = Github(auth=Auth.Token(GITHUB_TOKEN))
+# timeout=30 — чтобы requests не висел бесконечно, если GitHub API не отвечает
+g = Github(auth=Auth.Token(GITHUB_TOKEN), timeout=30)
 
 
-def _wait_for_pages_build(repo, timeout: int = 60, interval: int = 3) -> bool:
+def _wait_for_pages_build(repo, timeout: int = 10, interval: int = 3) -> bool:
+    """
+    Ждёт сборку GitHub Pages.
+    timeout уменьшен с 60 до 10 секунд, чтобы не тормозить сохранение.
+    GitHub Pages всё равно соберётся в фоне.
+    """
     deadline = time.time() + timeout
     last_status = None
     while time.time() < deadline:
@@ -45,7 +51,7 @@ def _wait_for_pages_build(repo, timeout: int = 60, interval: int = 3) -> bool:
             else:
                 logger.warning(f"Ошибка при проверке Pages build: {e}")
         time.sleep(interval)
-    logger.warning(f"Pages build не завершился за {timeout} секунд")
+    logger.warning(f"Pages build не завершился за {timeout} секунд (собирается в фоне)")
     return False
 
 
@@ -63,30 +69,49 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
             raise e
 
     content = html_path.read_text(encoding="utf-8")
-    try:
-        existing = repo.get_contents("index.html")
-        repo.update_file("index.html", "Update site", content, existing.sha)
-    except GithubException as e:
-        if e.status == 404:
-            repo.create_file("index.html", "Initial site", content)
-        else:
-            logger.error(f"Ошибка при заливке index.html: {e}")
-            raise e
+
+    # Ретрай при 409 Conflict (если файл уже обновлён кем-то другим)
+    for attempt in range(3):
+        try:
+            existing = repo.get_contents("index.html")
+            repo.update_file("index.html", "Update site", content, existing.sha)
+            break
+        except GithubException as e:
+            if e.status == 404:
+                repo.create_file("index.html", "Initial site", content)
+                break
+            elif e.status == 409:
+                logger.warning(f"409 Conflict для index.html (попытка {attempt + 1}/3), повтор...")
+                time.sleep(1)
+                continue
+            else:
+                logger.error(f"Ошибка при заливке index.html: {e}")
+                raise e
+    else:
+        raise RuntimeError("Не удалось обновить index.html после 3 попыток (409 Conflict)")
 
     register_path = html_path.parent / "register.html"
     if register_path.exists():
         register_content = register_path.read_text(encoding="utf-8")
-        try:
-            existing = repo.get_contents("register.html")
-            repo.update_file("register.html", "Update register", register_content, existing.sha)
-        except GithubException as e:
-            if e.status == 404:
-                try:
-                    repo.create_file("register.html", "Add register", register_content)
-                except GithubException as ex:
-                    logger.error(f"Не удалось залить register.html: {ex}")
-            else:
-                logger.error(f"Ошибка при получении register.html: {e}")
+        for attempt in range(3):
+            try:
+                existing = repo.get_contents("register.html")
+                repo.update_file("register.html", "Update register", register_content, existing.sha)
+                break
+            except GithubException as e:
+                if e.status == 404:
+                    try:
+                        repo.create_file("register.html", "Add register", register_content)
+                    except GithubException as ex:
+                        logger.error(f"Не удалось залить register.html: {ex}")
+                    break
+                elif e.status == 409:
+                    logger.warning(f"409 Conflict для register.html (попытка {attempt + 1}/3), повтор...")
+                    time.sleep(1)
+                    continue
+                else:
+                    logger.error(f"Ошибка при получении register.html: {e}")
+                    break
     else:
         logger.warning(f"Файл register.html не найден по пути {register_path}")
 
@@ -99,19 +124,27 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
                 continue
             img_bytes = img_file.read_bytes()
             img_path_in_repo = f"images/{img_file.name}"
-            try:
-                existing = repo.get_contents(img_path_in_repo)
-                repo.update_file(img_path_in_repo, f"Update {img_file.name}", img_bytes, existing.sha)
-                logger.info(f"Обновлена картинка: {img_file.name}")
-            except GithubException as e:
-                if e.status == 404:
-                    try:
-                        repo.create_file(img_path_in_repo, f"Add {img_file.name}", img_bytes)
-                        logger.info(f"Загружена новая картинка: {img_file.name}")
-                    except GithubException as ex:
-                        logger.error(f"Не удалось залить {img_file.name}: {ex}")
-                else:
-                    logger.error(f"Ошибка при получении {img_path_in_repo}: {e}")
+            for attempt in range(3):
+                try:
+                    existing = repo.get_contents(img_path_in_repo)
+                    repo.update_file(img_path_in_repo, f"Update {img_file.name}", img_bytes, existing.sha)
+                    logger.info(f"Обновлена картинка: {img_file.name}")
+                    break
+                except GithubException as e:
+                    if e.status == 404:
+                        try:
+                            repo.create_file(img_path_in_repo, f"Add {img_file.name}", img_bytes)
+                            logger.info(f"Загружена новая картинка: {img_file.name}")
+                        except GithubException as ex:
+                            logger.error(f"Не удалось залить {img_file.name}: {ex}")
+                        break
+                    elif e.status == 409:
+                        logger.warning(f"409 Conflict для {img_file.name} (попытка {attempt + 1}/3), повтор...")
+                        time.sleep(1)
+                        continue
+                    else:
+                        logger.error(f"Ошибка при получении {img_path_in_repo}: {e}")
+                        break
     else:
         logger.warning(f"Папка с картинками не найдена: {images_dir}")
 
@@ -129,9 +162,11 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
             logger.error(f"Ошибка при включении GitHub Pages: {e}")
             raise e
 
-    if _wait_for_pages_build(repo, timeout=60):
+    # Ждём сборку максимум 10 секунд (не 60), чтобы не тормозить сохранение
+    if _wait_for_pages_build(repo, timeout=10):
         logger.info(f"Сайт {repo_name} собран и доступен")
     else:
-        logger.warning(f"Сайт {repo_name} задеплоен, но сборка не подтверждена за отведённое время")
+        logger.warning(
+            f"Сайт {repo_name} задеплоен, но сборка не подтверждена за 10 сек (GitHub Pages собирается в фоне)")
 
     return f"https://{USER}.github.io/{repo_name}/"
