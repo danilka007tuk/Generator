@@ -6,7 +6,7 @@ import hashlib
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
-from datetime import date as date_type, datetime, timedelta, timezone
+from datetime import date as date_type
 
 import httpx
 import resend
@@ -30,7 +30,7 @@ logger = logging.getLogger("uvicorn.error")
 templates = Jinja2Templates(directory="templates")
 
 SERVER_URL = os.getenv("SERVER_URL", "")
-IS_LOCAL = SERVER_URL.startswith("http://127.0.0.1") or SERVER_URL.startswith("http://localhost")
+IS_LOCAL = not SERVER_URL.startswith("https://")
 
 
 class SubscriberRequest(BaseModel):
@@ -239,7 +239,10 @@ async def get_master_bookings(email: str = Cookie(None), site_id: str = Cookie(N
 async def get_master_schedule(email: str = Cookie(None), site_id: str = Cookie(None), master_id: int = None, session: AsyncSession = Depends(get_session)):
     if master_id is not None:
         master = await session.get(Master, master_id)
-        if not master: return {"ok": False, "error": "Мастер не найден"}
+        if not master:
+            return {"ok": False, "error": "Мастер не найден"}
+        if site_id and master.site_id != site_id:
+            return {"ok": False, "error": "Мастер не найден"}
     else:
         if not email or not site_id: return {"ok": False, "error": "Не авторизован"}
         email = email.strip().lower()
@@ -266,22 +269,37 @@ async def get_site_content(site_id: str, session: AsyncSession = Depends(get_ses
 @app.post("/api/site-content/{site_id}")
 async def update_site_content(site_id: str, data: dict = Body(...), session: AsyncSession = Depends(get_session)):
     site = await session.get(Site, site_id)
-    if not site: return {"ok": False, "error": "Сайт не найден"}
+    if not site:
+        return {"ok": False, "error": "Сайт не найден"}
+
     try:
         content = SiteContent.model_validate(data)
     except Exception as e:
         return {"ok": False, "error": f"Невалидный контент: {e}"}
-    site.content_json = json.dumps(data, ensure_ascii=False)
-    await session.commit()
-    from render import render_site, save_site
+
+    from render import render_site, save_site, render_register_page
     from deploy import deploy_to_github
+
     try:
-        html = render_site(content, server_url=SERVER_URL, site_id=site_id)
-        path = save_site(html, filename="index.html")
+        # 1. Рендер сайта (генерация картинок) — в отдельном потоке, чтобы не блокировать event loop
+        html = await asyncio.to_thread(render_site, content, SERVER_URL, site_id)
+        path = await asyncio.to_thread(save_site, html, "index.html")
+
+        # 2. Рендер register.html — чтобы он обновлялся вместе с сайтом
+        register_html = await asyncio.to_thread(render_register_page, content, SERVER_URL, site_id)
+        await asyncio.to_thread(save_site, register_html, "register.html")
+
+        # 3. Сохраняем в БД уже обогащённый content (с hero_image_url и gallery[].image_url)
+        site.content_json = content.model_dump_json()
+        await session.commit()
+
+        # 4. Деплой на GitHub Pages
         await asyncio.to_thread(deploy_to_github, site_id, path)
+
         return {"ok": True, "message": "Сохранено и опубликовано"}
     except Exception as e:
         logger.error(f"Ошибка при обновлении: {e}")
+        await session.rollback()
         return {"ok": False, "error": str(e)}
 
 # ============ ПЕРСОНАЛ ============
@@ -308,8 +326,11 @@ async def create_master(site_id: str, data: dict = Body(...), session: AsyncSess
 
 @app.delete("/api/masters/{master_id}")
 async def delete_master(master_id: int, session: AsyncSession = Depends(get_session)):
+    from sqlalchemy import delete as sql_delete
     master = await session.get(Master, master_id)
     if master:
+        # Чистим расписание, чтобы не оставалось «висячих» записей
+        await session.execute(sql_delete(MasterSchedule).where(MasterSchedule.master_id == master_id))
         await session.delete(master)
         await session.commit()
     return {"ok": True}
@@ -357,6 +378,9 @@ async def health(session: AsyncSession = Depends(get_session)):
 # ============ РЕГИСТРАЦИЯ КЛИЕНТОВ ============
 @app.post("/api/register-client/{site_id}")
 async def register_client(site_id: str, data: ClientRegisterRequest, session: AsyncSession = Depends(get_session)):
+    site = await session.get(Site, site_id)
+    if not site:
+        return {"ok": False, "error": "Сайт не найден"}
     email = data.email.strip().lower()
     password = data.password.strip()
     if not email or "@" not in email: return {"ok": False, "error": "Неверный email"}
