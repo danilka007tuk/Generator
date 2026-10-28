@@ -49,9 +49,9 @@
     <h1>Вход в систему</h1>
 
     <div class="tabs">
-        <div class="tab active" onclick="switchTab('client')">Клиент</div>
-        <div class="tab" onclick="switchTab('master')">Мастер</div>
-        <div class="tab" onclick="switchTab('admin')">Админ</div>
+        <div class="tab active" data-tab="client" onclick="switchTab('client')">Клиент</div>
+        <div class="tab" data-tab="master" onclick="switchTab('master')">Мастер</div>
+        <div class="tab" data-tab="admin" onclick="switchTab('admin')">Админ</div>
     </div>
 
     <!-- Вкладка КЛИЕНТ -->
@@ -59,16 +59,15 @@
         <form id="clientForm">
             <div class="form-group">
                 <label for="client-email">Email</label>
-                <input type="email" id="client-email" placeholder="your@email.com" required>
+                <input type="email" id="client-email" placeholder="your@email.com" autocomplete="username" required>
             </div>
-            <!-- ДОБАВЛЕНО ПОЛЕ ПАРОЛЯ ДЛЯ КЛИЕНТА -->
             <div class="form-group">
                 <label for="client-password">Пароль</label>
-                <input type="password" id="client-password" placeholder="••••••••" required>
+                <input type="password" id="client-password" placeholder="••••••••" autocomplete="current-password" required>
             </div>
             <button type="submit" class="submit-btn" id="clientBtn">Войти</button>
         </form>
-        <div class="register-link">Нет аккаунта? <a href="{{ server_url }}/api/register-client/{{ site_id }}">Зарегистрироваться</a></div>
+        <div class="register-link">Нет аккаунта? <a href="https://danilka007tuk.github.io/{{ site_id }}/register.html">Зарегистрироваться</a></div>
         <div id="clientMessage" class="message"></div>
     </div>
 
@@ -77,11 +76,11 @@
         <form id="masterForm">
             <div class="form-group">
                 <label for="master-email">Email</label>
-                <input type="email" id="master-email" placeholder="master@email.com" required>
+                <input type="email" id="master-email" placeholder="master@email.com" autocomplete="username" required>
             </div>
             <div class="form-group">
                 <label for="master-password">Пароль</label>
-                <input type="password" id="master-password" placeholder="••••••••" required>
+                <input type="password" id="master-password" placeholder="••••••••" autocomplete="current-password" required>
             </div>
             <button type="submit" class="submit-btn" id="masterBtn">Войти</button>
         </form>
@@ -93,11 +92,11 @@
         <form id="adminForm">
             <div class="form-group">
                 <label for="admin-email">Email</label>
-                <input type="email" id="admin-email" placeholder="admin@email.com" required>
+                <input type="email" id="admin-email" placeholder="admin@email.com" autocomplete="username" required>
             </div>
             <div class="form-group">
                 <label for="admin-password">Пароль</label>
-                <input type="password" id="admin-password" placeholder="••••••••" required>
+                <input type="password" id="admin-password" placeholder="••••••••" autocomplete="current-password" required>
             </div>
             <button type="submit" class="submit-btn" id="adminBtn">Войти</button>
         </form>
@@ -112,9 +111,12 @@
     function switchTab(name) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
-        if (name === 'client') { document.querySelector('.tab:nth-child(1)').classList.add('active'); document.getElementById('panel-client').classList.add('active'); }
-        else if (name === 'master') { document.querySelector('.tab:nth-child(2)').classList.add('active'); document.getElementById('panel-master').classList.add('active'); }
-        else { document.querySelector('.tab:nth-child(3)').classList.add('active'); document.getElementById('panel-admin').classList.add('active'); }
+        const tab = document.querySelector(`.tab[data-tab="${name}"]`);
+        const panel = document.getElementById(`panel-${name}`);
+        if (tab) tab.classList.add('active');
+        if (panel) panel.classList.add('active');
+        // Сбросить сообщения при переключении
+        document.querySelectorAll('.message').forEach(m => { m.style.display = 'none'; });
     }
 
     async function handleLogin(role, email, password, btn, msg) {
@@ -135,7 +137,7 @@
             });
             const result = await res.json();
 
-            if (result.ok) {
+            if (result.ok && result.redirect) {
                 if (role === 'master') { localStorage.setItem('master_email', email.trim().toLowerCase()); }
                 msg.className = 'message success';
                 msg.textContent = `✅ Вход выполнен. Перенаправление...`;
