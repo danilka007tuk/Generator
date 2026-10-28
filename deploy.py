@@ -10,8 +10,15 @@ from github import Github, GithubException, Auth
 
 logger = logging.getLogger(__name__)
 
-g = Github(auth=Auth.Token(os.getenv("GITHUB_TOKEN")))
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 USER = os.getenv("GITHUB_USERNAME")
+
+if not GITHUB_TOKEN:
+    raise RuntimeError("GITHUB_TOKEN не задан в .env")
+if not USER:
+    raise RuntimeError("GITHUB_USERNAME не задан в .env")
+
+g = Github(auth=Auth.Token(GITHUB_TOKEN))
 
 
 def _wait_for_pages_build(repo, timeout: int = 60, interval: int = 3) -> bool:
@@ -50,7 +57,7 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
     except GithubException as e:
         if e.status == 404:
             repo = user.create_repo(repo_name, auto_init=True)
-            time.sleep(3)
+            time.sleep(5)
         else:
             logger.error(f"Ошибка GitHub при получении репозитория {repo_name}: {e}")
             raise e
@@ -83,7 +90,7 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
     else:
         logger.warning(f"Файл register.html не найден по пути {register_path}")
 
-    # === КРИТИЧЕСКИЙ ФИКС: Заливаем ВСЕ картинки из папки images ===
+    # === Заливаем ВСЕ картинки из папки images ===
     images_dir = html_path.parent / "images"
     if images_dir.exists() and images_dir.is_dir():
         logger.info(f"Найдено картинок для заливки: {len(list(images_dir.iterdir()))}")
@@ -108,11 +115,12 @@ def deploy_to_github(repo_name: str, html_path: Path) -> str:
     else:
         logger.warning(f"Папка с картинками не найдена: {images_dir}")
 
+    default_branch = repo.default_branch or "main"
     try:
         repo.requester.requestJsonAndCheck(
             "POST",
             f"/repos/{USER}/{repo_name}/pages",
-            input={"source": {"branch": "main", "path": "/"}}
+            input={"source": {"branch": default_branch, "path": "/"}}
         )
     except GithubException as e:
         if e.status == 409:
