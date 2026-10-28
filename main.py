@@ -281,7 +281,7 @@ async def update_site_content(site_id: str, data: dict = Body(...), session: Asy
     from deploy import deploy_to_github
 
     try:
-        # 1. Рендер сайта (генерация картинок) — в отдельном потоке, чтобы не блокировать event loop
+        # 1. Рендер сайта (генерация картинок) — в отдельном потоке
         html = await asyncio.to_thread(render_site, content, SERVER_URL, site_id)
         path = await asyncio.to_thread(save_site, html, "index.html")
 
@@ -293,8 +293,15 @@ async def update_site_content(site_id: str, data: dict = Body(...), session: Asy
         site.content_json = content.model_dump_json()
         await session.commit()
 
-        # 4. Деплой на GitHub Pages
-        await asyncio.to_thread(deploy_to_github, site_id, path)
+        # 4. Деплой на GitHub Pages (оборачиваем в жесткий таймаут 90 сек, чтобы PyGithub не повесил uvicorn)
+        try:
+            await asyncio.wait_for(
+                asyncio.to_thread(deploy_to_github, site_id, path),
+                timeout=90.0
+            )
+        except asyncio.TimeoutError:
+            logger.error(f"Таймаут деплоя на GitHub для {site_id} (90 сек)")
+            raise Exception("Превышено время ожидания публикации на GitHub (90 сек). Попробуйте позже.")
 
         return {"ok": True, "message": "Сохранено и опубликовано"}
     except Exception as e:
