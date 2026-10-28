@@ -1,4 +1,29 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+ALLOWED_TEMPLATES = {
+    "template-modern.html",
+    "template-light.html",
+    "template-warm.html",
+    "template-bold.html",
+    "template-strict.html",
+}
+
+DEFAULT_COLOR = "#667eea"
+DEFAULT_TEMPLATE = "template-modern.html"
+
+
+def _is_valid_hex(value: str) -> bool:
+    """Проверяет, что строка — валидный HEX-цвет (#RGB или #RRGGBB)."""
+    if not isinstance(value, str):
+        return False
+    if not value.startswith("#") or len(value) not in (4, 7):
+        return False
+    try:
+        int(value[1:], 16)
+    except ValueError:
+        return False
+    return True
 
 
 class Feature(BaseModel):
@@ -131,3 +156,22 @@ class SiteContent(BaseModel):
 
     # === Footer ===
     footer_text: str = Field(max_length=100)
+
+    # === Валидаторы (только fallback, никогда не падают) ===
+
+    @field_validator(
+        "color_primary", "color_secondary", "color_bg", "color_text", "color_accent",
+        mode="before",
+    )
+    @classmethod
+    def _fix_color(cls, v):
+        """Невалидный HEX заменяется на дефолт, чтобы не ломать рендер."""
+        return v if _is_valid_hex(v) else DEFAULT_COLOR
+
+    @field_validator("template_name", mode="before")
+    @classmethod
+    def _fix_template(cls, v):
+        """Неизвестный шаблон заменяется на template-modern.html."""
+        if isinstance(v, str) and v in ALLOWED_TEMPLATES:
+            return v
+        return DEFAULT_TEMPLATE
