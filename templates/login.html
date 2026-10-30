@@ -3,181 +3,883 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход — {{ site_id }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <meta name="referrer" content="no-referrer">
+
+    <title>Вход — {{ site_id | e }}</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
     <style>
-        :root { --primary: #667eea; --secondary: #764ba2; --bg: #f4f6fa; --text: #2c3e50; --accent: #667eea; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; }
-        body {
-            font-family: 'Inter', Arial, sans-serif;
-            background: linear-gradient(135deg, var(--bg), #ffffff);
-            color: var(--text); display: flex; align-items: center; justify-content: center;
-            min-height: 100vh; padding: 20px; overflow: hidden; position: relative;
+        :root {
+            --primary: #667eea;
+            --primary-dark: #536dce;
+            --secondary: #764ba2;
+            --bg: #f4f6fa;
+            --text: #2c3e50;
+            --muted: #6f7782;
+            --border: rgba(0, 0, 0, 0.1);
+            --danger: #c62828;
+            --success: #2e7d32;
+            --card-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
-        body::before, body::after { content: ""; position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; z-index: 0; }
-        body::before { width: 500px; height: 500px; background: var(--primary); top: -150px; left: -150px; }
-        body::after { width: 600px; height: 600px; background: var(--secondary); bottom: -200px; right: -200px; }
-        .login-card { position: relative; z-index: 1; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 24px; padding: 40px; max-width: 460px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.08); animation: fadeInUp 0.6s ease-out; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .logo { text-align: center; font-size: 0.8em; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: var(--primary); margin-bottom: 24px; }
-        h1 { font-size: 1.5em; font-weight: 300; text-align: center; margin-bottom: 20px; }
-        .tabs { display: flex; gap: 4px; margin-bottom: 28px; background: rgba(0,0,0,0.04); padding: 4px; border-radius: 12px; }
-        .tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 0.8em; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; border-radius: 8px; transition: all 0.3s; color: #888; }
-        .tab.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .form-panel { display: none; }
-        .form-panel.active { display: block; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 0.72em; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: #999; margin-bottom: 8px; }
-        .form-group input { width: 100%; padding: 14px 18px; border: 2px solid rgba(0,0,0,0.08); border-radius: 12px; font-size: 1em; font-family: 'Inter', sans-serif; font-weight: 300; background: rgba(255,255,255,0.7); color: var(--text); transition: all 0.3s; }
-        .form-group input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(0,0,0,0.05); }
-        .submit-btn { width: 100%; padding: 16px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 0.85em; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: all 0.3s; margin-top: 8px; }
-        .submit-btn:hover:not(:disabled) { background: var(--text); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .message { margin-top: 16px; padding: 12px 16px; border-radius: 12px; font-size: 0.85em; text-align: center; line-height: 1.5; display: none; }
-        .message.success { background: rgba(67, 160, 71, 0.1); color: #2e7d32; border: 1px solid rgba(67, 160, 71, 0.3); }
-        .message.error { background: rgba(211, 47, 47, 0.1); color: #c62828; border: 1px solid rgba(211, 47, 47, 0.3); }
-        .register-link { text-align: center; font-size: 0.85em; color: #888; margin-top: 20px; }
-        .register-link a { color: var(--primary); text-decoration: none; font-weight: 500; }
-        @media (max-width: 600px) { .login-card { padding: 32px 24px; } }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+        }
+
+        body {
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+
+            background:
+                radial-gradient(
+                    circle at top left,
+                    rgba(102, 126, 234, 0.18),
+                    transparent 34%
+                ),
+                radial-gradient(
+                    circle at bottom right,
+                    rgba(118, 75, 162, 0.16),
+                    transparent 34%
+                ),
+                linear-gradient(135deg, var(--bg), #ffffff);
+
+            color: var(--text);
+            font-family: "Inter", Arial, sans-serif;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            z-index: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(70px);
+        }
+
+        body::before {
+            top: -180px;
+            left: -180px;
+            width: 420px;
+            height: 420px;
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        body::after {
+            right: -200px;
+            bottom: -200px;
+            width: 500px;
+            height: 500px;
+            background: rgba(118, 75, 162, 0.16);
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.65;
+        }
+
+        :focus-visible {
+            outline: 3px solid rgba(102, 126, 234, 0.45);
+            outline-offset: 3px;
+        }
+
+        .login-card {
+            position: relative;
+            z-index: 1;
+
+            width: 100%;
+            max-width: 460px;
+            padding: 40px;
+
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: var(--card-shadow);
+
+            animation: fadeInUp 0.55s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            margin-bottom: 8px;
+
+            color: var(--primary);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-align: center;
+            text-transform: uppercase;
+            overflow-wrap: anywhere;
+        }
+
+        .page-title {
+            margin-bottom: 8px;
+
+            color: var(--text);
+            font-size: 1.7rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            margin-bottom: 26px;
+
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.55;
+            text-align: center;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+
+            margin-bottom: 24px;
+            padding: 6px;
+
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.045);
+        }
+
+        .tab {
+            flex: 1;
+
+            min-height: 40px;
+            padding: 9px 6px;
+
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--muted);
+
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text);
+        }
+
+        .tab.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .form-panel {
+            display: none;
+        }
+
+        .form-panel.active {
+            display: block;
+            animation: panelFade 0.2s ease-out;
+        }
+
+        @keyframes panelFade {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+
+            color: #5f6873;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .form-group input {
+            width: 100%;
+            min-height: 48px;
+            padding: 12px 14px;
+
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--text);
+            font-size: 0.95rem;
+
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input::placeholder {
+            color: #a3a8ae;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+        }
+
+        .submit-btn {
+            width: 100%;
+            min-height: 50px;
+            padding: 13px 16px;
+
+            border: 0;
+            border-radius: 11px;
+            background: var(--primary);
+            color: #fff;
+
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: var(--primary-dark);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .message {
+            display: none;
+
+            margin-top: 16px;
+            padding: 12px 14px;
+
+            border-radius: 10px;
+
+            font-size: 0.86rem;
+            line-height: 1.45;
+            text-align: center;
+        }
+
+        .message.success {
+            border: 1px solid rgba(46, 125, 82, 0.28);
+            background: rgba(46, 125, 82, 0.1);
+            color: var(--success);
+        }
+
+        .message.error {
+            border: 1px solid rgba(198, 40, 40, 0.28);
+            background: rgba(198, 40, 40, 0.1);
+            color: var(--danger);
+        }
+
+        .register-link {
+            margin-top: 20px;
+
+            color: var(--muted);
+            font-size: 0.84rem;
+            text-align: center;
+        }
+
+        .register-link a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 14px;
+
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 520px) {
+            body {
+                align-items: flex-start;
+                padding: 14px;
+                padding-top: 24px;
+            }
+
+            .login-card {
+                padding: 28px 20px;
+                border-radius: 18px;
+            }
+
+            .page-title {
+                font-size: 1.45rem;
+            }
+
+            .tabs {
+                gap: 4px;
+            }
+
+            .tab {
+                font-size: 0.68rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
+
 <body>
+    <main class="login-card" aria-labelledby="pageTitle">
+        <div class="logo">
+            site: {{ site_id | e }}
+        </div>
 
-<div class="login-card">
-    <div class="logo">{{ site_id }}</div>
-    <h1>Вход в систему</h1>
+        <h1 class="page-title" id="pageTitle">
+            Вход в аккаунт
+        </h1>
 
-    <div class="tabs">
-        <div class="tab active" data-tab="client" onclick="switchTab('client')">Клиент</div>
-        <div class="tab" data-tab="master" onclick="switchTab('master')">Мастер</div>
-        <div class="tab" data-tab="admin" onclick="switchTab('admin')">Админ</div>
-    </div>
+        <p class="page-subtitle">
+            Выберите тип аккаунта и введите данные для входа.
+        </p>
 
-    <!-- Вкладка КЛИЕНТ -->
-    <div class="form-panel active" id="panel-client">
-        <form id="clientForm">
-            <div class="form-group">
-                <label for="client-email">Email</label>
-                <input type="email" id="client-email" placeholder="your@email.com" autocomplete="username" required>
-            </div>
-            <div class="form-group">
-                <label for="client-password">Пароль</label>
-                <input type="password" id="client-password" placeholder="••••••••" autocomplete="current-password" required>
-            </div>
-            <button type="submit" class="submit-btn" id="clientBtn">Войти</button>
-        </form>
-        <div class="register-link">Нет аккаунта? <a href="https://danilka007tuk.github.io/{{ site_id }}/register.html">Зарегистрироваться</a></div>
-        <div id="clientMessage" class="message"></div>
-    </div>
+        <div
+            class="tabs"
+            role="tablist"
+            aria-label="Тип пользователя"
+        >
+            <button
+                class="tab active"
+                id="tab-client"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                aria-controls="panel-client"
+                data-role="client"
+            >
+                Клиент
+            </button>
 
-    <!-- Вкладка МАСТЕР -->
-    <div class="form-panel" id="panel-master">
-        <form id="masterForm">
-            <div class="form-group">
-                <label for="master-email">Email</label>
-                <input type="email" id="master-email" placeholder="master@email.com" autocomplete="username" required>
-            </div>
-            <div class="form-group">
-                <label for="master-password">Пароль</label>
-                <input type="password" id="master-password" placeholder="••••••••" autocomplete="current-password" required>
-            </div>
-            <button type="submit" class="submit-btn" id="masterBtn">Войти</button>
-        </form>
-        <div id="masterMessage" class="message"></div>
-    </div>
+            <button
+                class="tab"
+                id="tab-master"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-master"
+                data-role="master"
+            >
+                Мастер
+            </button>
 
-    <!-- Вкладка АДМИН -->
-    <div class="form-panel" id="panel-admin">
-        <form id="adminForm">
-            <div class="form-group">
-                <label for="admin-email">Email</label>
-                <input type="email" id="admin-email" placeholder="admin@email.com" autocomplete="username" required>
-            </div>
-            <div class="form-group">
-                <label for="admin-password">Пароль</label>
-                <input type="password" id="admin-password" placeholder="••••••••" autocomplete="current-password" required>
-            </div>
-            <button type="submit" class="submit-btn" id="adminBtn">Войти</button>
-        </form>
-        <div id="adminMessage" class="message"></div>
-    </div>
-</div>
+            <button
+                class="tab"
+                id="tab-admin"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-admin"
+                data-role="admin"
+            >
+                Админ
+            </button>
+        </div>
 
-<script>
-    const SITE_ID = "{{ site_id }}";
-    const SERVER_URL = "{{ server_url }}";
+        <!-- Вход клиента -->
 
-    function switchTab(name) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
-        const tab = document.querySelector(`.tab[data-tab="${name}"]`);
-        const panel = document.getElementById(`panel-${name}`);
-        if (tab) tab.classList.add('active');
-        if (panel) panel.classList.add('active');
-        // Сбросить сообщения при переключении
-        document.querySelectorAll('.message').forEach(m => { m.style.display = 'none'; });
-    }
+        <section
+            class="form-panel active"
+            id="panel-client"
+            role="tabpanel"
+            aria-labelledby="tab-client"
+        >
+            <form id="clientForm" novalidate>
+                <div class="form-group">
+                    <label for="client-email">Email</label>
+                    <input
+                        id="client-email"
+                        name="email"
+                        type="email"
+                        placeholder="your@email.com"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
 
-    async function handleLogin(role, email, password, btn, msg) {
-        if (!email) { msg.className = 'message error'; msg.textContent = '❌ Введите email'; msg.style.display = 'block'; return; }
-        if (!password) { msg.className = 'message error'; msg.textContent = '❌ Введите пароль'; msg.style.display = 'block'; return; }
+                <div class="form-group">
+                    <label for="client-password">Пароль</label>
+                    <input
+                        id="client-password"
+                        name="password"
+                        type="password"
+                        placeholder="Пароль"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
 
-        btn.disabled = true;
-        const originalText = btn.textContent;
-        btn.textContent = 'Проверяю...';
-        msg.style.display = 'none';
+                <button
+                    class="submit-btn"
+                    id="clientBtn"
+                    type="submit"
+                >
+                    Войти
+                </button>
+            </form>
+        </section>
 
-        try {
-            const res = await fetch(`${SERVER_URL}/api/login`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'include',
-                body: JSON.stringify({ site_id: SITE_ID, email, password, role }),
-            });
-            const result = await res.json();
+        <!-- Вход мастера -->
 
-            if (result.ok && result.redirect) {
-                if (role === 'master') { localStorage.setItem('master_email', email.trim().toLowerCase()); }
-                msg.className = 'message success';
-                msg.textContent = `✅ Вход выполнен. Перенаправление...`;
-                msg.style.display = 'block';
-                setTimeout(() => { window.location.href = result.redirect; }, 1000);
-            } else {
-                msg.className = 'message error';
-                msg.textContent = `❌ ${result.error || 'Ошибка входа'}`;
-                msg.style.display = 'block';
-            }
-        } catch (err) {
-            msg.className = 'message error';
-            msg.textContent = '❌ Ошибка сервера. Попробуйте позже.';
-            msg.style.display = 'block';
-        } finally {
-            btn.disabled = false;
-            btn.textContent = originalText;
+        <section
+            class="form-panel"
+            id="panel-master"
+            role="tabpanel"
+            aria-labelledby="tab-master"
+            hidden
+        >
+            <form id="masterForm" novalidate>
+                <div class="form-group">
+                    <label for="master-email">Email</label>
+                    <input
+                        id="master-email"
+                        name="email"
+                        type="email"
+                        placeholder="master@email.com"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="master-password">Пароль</label>
+                    <input
+                        id="master-password"
+                        name="password"
+                        type="password"
+                        placeholder="Пароль"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <button
+                    class="submit-btn"
+                    id="masterBtn"
+                    type="submit"
+                >
+                    Войти
+                </button>
+            </form>
+        </section>
+
+        <!-- Вход администратора -->
+
+        <section
+            class="form-panel"
+            id="panel-admin"
+            role="tabpanel"
+            aria-labelledby="tab-admin"
+            hidden
+        >
+            <form id="adminForm" novalidate>
+                <div class="form-group">
+                    <label for="admin-email">Email</label>
+                    <input
+                        id="admin-email"
+                        name="email"
+                        type="email"
+                        placeholder="admin@email.com"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="admin-password">Пароль</label>
+                    <input
+                        id="admin-password"
+                        name="password"
+                        type="password"
+                        placeholder="Пароль"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <button
+                    class="submit-btn"
+                    id="adminBtn"
+                    type="submit"
+                >
+                    Войти
+                </button>
+            </form>
+        </section>
+
+        <div
+            class="message"
+            id="loginMessage"
+            role="status"
+            aria-live="polite"
+        ></div>
+
+        <div class="register-link">
+            Нет аккаунта?
+            <a
+                id="registerLink"
+                href="#"
+            >
+                Зарегистрироваться
+            </a>
+        </div>
+
+        <a
+            class="back-link"
+            id="siteLink"
+            href="#"
+        >
+            Вернуться на сайт
+        </a>
+    </main>
+
+    <script>
+        "use strict";
+
+        const SITE_ID = {{ site_id | default("site") | tojson }};
+        const SERVER_URL = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
+
+        const state = {
+            role: "client",
+            submitting: false
+        };
+
+        const roleRedirects = {
+            client: `${SERVER_URL}/client-dashboard/${encodeURIComponent(SITE_ID)}`,
+            master: `${SERVER_URL}/merchant-dashboard/${encodeURIComponent(SITE_ID)}`,
+            admin: `${SERVER_URL}/admin-dashboard/${encodeURIComponent(SITE_ID)}`
+        };
+
+        function getElement(selector) {
+            return document.querySelector(selector);
         }
-    }
 
-    document.getElementById('clientForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('client-email').value.trim();
-        const password = document.getElementById('client-password').value.trim();
-        handleLogin('client', email, password, document.getElementById('clientBtn'), document.getElementById('clientMessage'));
-    });
+        function showMessage(text, type = "error") {
+            const message = getElement("#loginMessage");
 
-    document.getElementById('masterForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('master-email').value.trim();
-        const password = document.getElementById('master-password').value.trim();
-        handleLogin('master', email, password, document.getElementById('masterBtn'), document.getElementById('masterMessage'));
-    });
+            if (!message) {
+                return;
+            }
 
-    document.getElementById('adminForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('admin-email').value.trim();
-        const password = document.getElementById('admin-password').value.trim();
-        handleLogin('admin', email, password, document.getElementById('adminBtn'), document.getElementById('adminMessage'));
-    });
-</script>
+            message.textContent = text;
+            message.className = `message ${type}`;
+            message.style.display = "block";
+        }
+
+        function hideMessage() {
+            const message = getElement("#loginMessage");
+
+            if (!message) {
+                return;
+            }
+
+            message.textContent = "";
+            message.className = "message";
+            message.style.display = "none";
+        }
+
+        function switchTab(role) {
+            const roles = ["client", "master", "admin"];
+
+            if (!roles.includes(role)) {
+                role = "client";
+            }
+
+            state.role = role;
+            hideMessage();
+
+            document.querySelectorAll(".tab").forEach((tab) => {
+                const active = tab.dataset.role === role;
+
+                tab.classList.toggle("active", active);
+                tab.setAttribute("aria-selected", String(active));
+            });
+
+            roles.forEach((item) => {
+                const panel = getElement(`#panel-${item}`);
+
+                if (!panel) {
+                    return;
+                }
+
+                const active = item === role;
+
+                panel.classList.toggle("active", active);
+                panel.hidden = !active;
+            });
+
+            const emailInput = getElement(`#${role}-email`);
+
+            if (emailInput) {
+                setTimeout(() => emailInput.focus(), 0);
+            }
+        }
+
+        function validateCredentials(email, password) {
+            if (!email) {
+                showMessage("Введите email.");
+                return false;
+            }
+
+            if (!email.includes("@")) {
+                showMessage("Введите корректный email.");
+                return false;
+            }
+
+            if (!password) {
+                showMessage("Введите пароль.");
+                return false;
+            }
+
+            return true;
+        }
+
+        async function parseResponse(response) {
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                const error = new Error(
+                    data.error || `Ошибка сервера: ${response.status}`
+                );
+
+                error.status = response.status;
+                error.data = data;
+
+                throw error;
+            }
+
+            return data;
+        }
+
+        function getFallbackRedirect(role) {
+            return roleRedirects[role] || roleRedirects.client;
+        }
+
+        async function loginSubmit(role, form) {
+            if (state.submitting) {
+                return;
+            }
+
+            const emailInput = form.querySelector('input[type="email"]');
+            const passwordInput = form.querySelector('input[type="password"]');
+            const submitButton = form.querySelector("button[type='submit']");
+
+            const email = emailInput?.value.trim() || "";
+            const password = passwordInput?.value || "";
+
+            hideMessage();
+
+            if (!validateCredentials(email, password)) {
+                return;
+            }
+
+            state.submitting = true;
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = "Проверка...";
+            }
+
+            try {
+                const response = await fetch(
+                    `${SERVER_URL}/api/login`,
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            site_id: SITE_ID,
+                            email,
+                            password,
+                            role
+                        })
+                    }
+                );
+
+                const data = await parseResponse(response);
+
+                if (!data.ok) {
+                    throw new Error(
+                        data.error || "Неверные учетные данные."
+                    );
+                }
+
+                showMessage(
+                    "Вход выполнен. Перенаправление...",
+                    "success"
+                );
+
+                const redirectUrl =
+                    data.redirect || getFallbackRedirect(role);
+
+                setTimeout(() => {
+                    window.location.assign(redirectUrl);
+                }, 500);
+            } catch (error) {
+                console.error("Ошибка входа:", error);
+
+                if (error.status === 401 || error.status === 403) {
+                    showMessage(
+                        "Неверный email или пароль."
+                    );
+                } else {
+                    showMessage(
+                        error.message ||
+                        "Не удалось подключиться к серверу."
+                    );
+                }
+            } finally {
+                state.submitting = false;
+
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Войти";
+                }
+            }
+        }
+
+        function initializeForms() {
+            ["client", "master", "admin"].forEach((role) => {
+                const form = getElement(`#${role}Form`);
+
+                if (!form) {
+                    return;
+                }
+
+                form.addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    loginSubmit(role, form);
+                });
+            });
+        }
+
+        function initializeTabs() {
+            document.querySelectorAll(".tab").forEach((tab) => {
+                tab.addEventListener("click", () => {
+                    switchTab(tab.dataset.role);
+                });
+
+                tab.addEventListener("keydown", (event) => {
+                    if (
+                        event.key === "ArrowRight" ||
+                        event.key === "ArrowDown"
+                    ) {
+                        event.preventDefault();
+
+                        const next = tab.nextElementSibling ||
+                            tab.parentElement.firstElementChild;
+
+                        next?.focus();
+                        switchTab(next?.dataset.role || "client");
+                    }
+
+                    if (
+                        event.key === "ArrowLeft" ||
+                        event.key === "ArrowUp"
+                    ) {
+                        event.preventDefault();
+
+                        const previous = tab.previousElementSibling ||
+                            tab.parentElement.lastElementChild;
+
+                        previous?.focus();
+                        switchTab(previous?.dataset.role || "client");
+                    }
+                });
+            });
+        }
+
+        function initializeLinks() {
+            const registerLink = getElement("#registerLink");
+            const siteLink = getElement("#siteLink");
+
+            if (registerLink) {
+                registerLink.href =
+                    `https://danilka007tuk.github.io/${encodeURIComponent(SITE_ID)}/register.html`;
+            }
+
+            if (siteLink) {
+                siteLink.href =
+                    `https://danilka007tuk.github.io/${encodeURIComponent(SITE_ID)}/?skip_redirect=1`;
+            }
+        }
+
+        initializeForms();
+        initializeTabs();
+        initializeLinks();
+
+        switchTab("client");
+    </script>
 </body>
 </html>

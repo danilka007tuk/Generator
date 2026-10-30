@@ -1,392 +1,2186 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="referrer" content="no-referrer">
-    <title>{{ site_title }}</title>
-    <meta name="description" content="{{ meta_description }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: {{ color_primary }}; --secondary: {{ color_secondary }}; --bg: {{ color_bg }}; --text: {{ color_text }}; --accent: {{ color_accent }}; --sidebar-width: 260px;
-        }
-        * { box-sizing: border-box; } html, body { height: 100%; }
-        body { font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); line-height: 1.7; font-weight: 300; }
-        h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; font-weight: 400; }
-        .sidebar-toggle { display: flex; align-items: center; justify-content: center; position: fixed; top: 16px; left: 16px; z-index: 300; background: var(--primary); color: #fff; border: none; width: 48px; height: 48px; border-radius: 8px; font-size: 1.4em; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh; background: linear-gradient(180deg, var(--primary), var(--secondary)); color: #fff; padding: 32px 24px; overflow-y: auto; display: flex; flex-direction: column; z-index: 400; transition: transform 0.3s; transform: translateX(-100%); }
-        .sidebar.open { transform: translateX(0); } .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 350; } .sidebar-overlay.open { display: block; }
-        .sidebar-logo { font-family: 'Playfair Display', serif; font-size: 1.3em; font-weight: 700; color: #fff; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.3); line-height: 1.3; }
-        .sidebar-nav { display: flex; flex-direction: column; gap: 2px; margin-bottom: 24px; flex-grow: 1; } .sidebar-nav a { color: rgba(255,255,255,0.9); text-decoration: none; padding: 10px 14px; border-radius: 8px; font-size: 0.92em; transition: all 0.2s; } .sidebar-nav a:hover { background: rgba(255,255,255,0.15); color: #fff; }
-        .sidebar-cta { display: block; background: var(--accent); color: #fff; text-align: center; padding: 14px; border-radius: 10px; text-decoration: none; font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1em; margin-bottom: 10px; transition: transform 0.2s; border: none; width: 100%; cursor: pointer; } .sidebar-cta:hover { transform: scale(1.03); }
-        .sidebar-cta.secondary { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); }
-        .sidebar-contacts { font-size: 0.82em; color: rgba(255,255,255,0.75); line-height: 1.7; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 16px; } .sidebar-contacts div { margin-bottom: 6px; }
-        .main-content { margin-left: 0; min-height: 100vh; } .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
-        .hero { position: relative; background: linear-gradient(180deg, var(--primary), var(--secondary)); color: #fff; padding: 100px 32px 80px; text-align: center; overflow: hidden; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .hero::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.2), transparent 70%); }
-        {% if hero_image_url %} .hero { background-image: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35)), url('{{ hero_image_url }}'); background-size: cover; background-position: center; } {% endif %}
-        .hero-inner { position: relative; max-width: 800px; margin: 0 auto; width: 100%; }
-        .hero h1 { position: relative; font-size: 3em; margin: 0 0 16px; line-height: 1.1; text-shadow: 0 4px 30px rgba(0,0,0,0.4); } .hero p { position: relative; font-family: 'Inter', sans-serif; font-size: 1.15em; font-weight: 300; opacity: 0.95; max-width: 600px; margin: 0 auto 24px; text-shadow: 0 2px 15px rgba(0,0,0,0.3); }
-        .hero-about { position: relative; max-width: 600px; margin: 0 auto 32px; font-family: 'Inter', sans-serif; font-size: 0.95em; opacity: 0.9; line-height: 1.8; }
-        .hero-contacts { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; font-size: 0.95em; position: relative; } .hero-contacts div { text-shadow: 0 1px 10px rgba(0,0,0,0.4); }
-        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; position: relative; }
-        .hero-btn { background: var(--accent); color: #fff; border: none; padding: 16px 32px; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; transition: transform 0.2s; font-family: 'Playfair Display', serif; } .hero-btn:hover { transform: scale(1.05); } .hero-btn.secondary { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.5); }
-        .features-grid, .services-grid, .gallery-grid, .pricing-grid, .testimonials-grid, .team-grid { display: grid; gap: 20px; }
-        .features-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } .services-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } .pricing-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); } .testimonials-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } .team-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-        .feature { background: #fff; border-radius: 8px; padding: 32px 28px; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.06); border-top: 4px solid var(--accent); } .feature h3 { color: var(--primary); margin: 0 0 14px; font-size: 1.3em; } .feature p { margin: 0; color: #666; font-family: 'Inter', sans-serif; font-size: 0.92em; }
-        .service-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.05); display: flex; flex-direction: column; } .service-card .service-img { width: 100%; height: 200px; object-fit: cover; display: block; } .service-card .service-body { padding: 24px; flex: 1; display: flex; flex-direction: column; } .service-card h3 { margin: 0 0 8px; font-size: 1.25em; color: var(--text); } .service-card .price { font-family: 'Playfair Display', serif; font-size: 1.3em; font-weight: 700; color: var(--primary); margin-bottom: 12px; } .service-card p { margin: 0 0 14px; color: #666; font-family: 'Inter', sans-serif; font-size: 0.92em; } .service-card .procedure { color: #666; font-size: 0.85em; line-height: 1.6; border-top: 1px solid #eee; padding-top: 12px; margin-top: auto; } .service-card .procedure strong { color: var(--text); display: block; margin-bottom: 6px; }
-        .gallery-item { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.05); } .gallery-item img { width: 100%; height: 240px; object-fit: cover; display: block; } .gallery-item .caption { padding: 20px; } .gallery-item h3 { margin: 0 0 6px; font-size: 1.05em; color: var(--primary); } .gallery-item p { margin: 0; color: #777; font-family: 'Inter', sans-serif; font-size: 0.88em; }
-        .pricing-card { background: #fff; border: 2px solid var(--accent); border-radius: 8px; padding: 36px 28px; text-align: center; } .pricing-card h3 { margin: 0 0 12px; font-size: 1.2em; } .pricing-card .price { font-family: 'Playfair Display', serif; font-size: 1.9em; font-weight: 700; color: var(--primary); margin: 20px 0; } .pricing-card p { color: #777; font-family: 'Inter', sans-serif; font-size: 0.88em; margin: 0; }
-        .testimonial { background: #fff; border-radius: 8px; padding: 28px; box-shadow: 0 4px 24px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); } .testimonial .stars { color: var(--accent); font-size: 1.1em; letter-spacing: 0.15em; margin-bottom: 12px; } .testimonial .text { font-family: 'Playfair Display', serif; font-style: italic; color: #444; margin-bottom: 14px; line-height: 1.7; font-size: 1em; } .testimonial .author { font-family: 'Inter', sans-serif; font-size: 0.85em; color: var(--primary); font-weight: 600; letter-spacing: 0.05em; }
-        .team-member { background: #fff; border-radius: 8px; padding: 28px 24px; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.05); } .team-member .avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 2em; font-weight: 700; overflow: hidden; } .team-member .avatar img { width: 100%; height: 100%; object-fit: cover; } .team-member h3 { margin: 0 0 6px; font-size: 1.15em; } .team-member .role { font-family: 'Inter', sans-serif; color: var(--primary); font-size: 0.8em; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; font-weight: 600; } .team-member p { color: #777; font-family: 'Inter', sans-serif; font-size: 0.88em; margin: 0; }
-        .about { max-width: 800px; margin: 0 auto; text-align: center; } .about p { font-family: 'Inter', sans-serif; font-size: 1.05em; line-height: 1.9; color: #555; font-weight: 300; }
-        .faq-item { background: #fff; border-radius: 8px; padding: 24px 28px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); } .faq-item h3 { margin: 0 0 12px; font-size: 1.1em; color: var(--primary); } .faq-item p { margin: 0; color: #555; font-family: 'Inter', sans-serif; line-height: 1.7; font-size: 0.92em; }
-        .booking { background: #fff; border-radius: 12px; padding: 40px 32px; box-shadow: 0 8px 48px rgba(0,0,0,0.08); }
-        .master-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; } .master-card { background: var(--bg); border: 2px solid transparent; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; } .master-card:hover { border-color: var(--primary); } .master-card.selected { border-color: var(--primary); background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; } .master-card .master-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: 'Playfair Display', serif; font-size: 1.5em; font-weight: 700; } .master-card.selected .master-avatar { background: #fff; color: var(--primary); } .master-card h3 { margin: 0 0 4px; font-size: 1em; } .master-card .role { font-family: 'Inter', sans-serif; font-size: 0.8em; opacity: 0.8; }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; } .calendar-header button { background: var(--bg); border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2em; cursor: pointer; color: var(--primary); transition: all 0.2s; } .calendar-header button:hover { background: var(--primary); color: #fff; } .month-year { font-family: 'Playfair Display', serif; font-size: 1.3em; } .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 8px; } .weekdays div { text-align: center; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.8em; color: #999; padding: 8px 0; } .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; } .day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; background: var(--bg); border: 2px solid transparent; font-family: 'Inter', sans-serif; font-size: 0.92em; } .day:hover:not(.disabled):not(.busy):not(.selected) { border-color: var(--primary); } .day.empty { background: transparent; cursor: default; } .day.disabled { color: #ccc; cursor: not-allowed; background: transparent; } .day.busy { background: #ffe5e5; color: #c0392b; cursor: not-allowed; text-decoration: line-through; } .day.selected { background: var(--primary); color: #fff; } .day.today { font-weight: 700; border-color: var(--accent); }
-        .time-slots-wrapper { display: none; margin: 20px 0; text-align: center; } .time-slots-wrapper h3 { font-size: 1.1em; color: var(--primary); margin-bottom: 16px; } .time-slots { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; } .time-slot { padding: 10px 18px; border: 2px solid var(--primary); border-radius: 8px; cursor: pointer; font-weight: 600; background: #fff; color: var(--text); transition: all 0.2s; } .time-slot:hover:not(.busy) { background: var(--primary); color: #fff; } .time-slot.selected { background: var(--primary); color: #fff; } .time-slot.busy { background: #ffe5e5; color: #c0392b; border-color: #c0392b; cursor: not-allowed; text-decoration: line-through; }
-        .booking-form { display: none; margin-top: 32px; padding-top: 32px; border-top: 1px solid #eee; } .booking-form.active { display: block; } .booking-form h3 { text-align: center; color: var(--primary); margin: 0 0 24px; font-size: 1.3em; } .form-group { margin-bottom: 20px; } .form-group label { display: block; margin-bottom: 6px; font-family: 'Inter', sans-serif; font-size: 0.88em; color: #666; font-weight: 500; } .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 14px; border: 2px solid #e8e0d8; border-radius: 8px; font-size: 0.95em; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); } .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--primary); background: #fff; } .submit-btn { width: 100%; padding: 16px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-family: 'Playfair Display', serif; font-size: 1.1em; font-weight: 700; cursor: pointer; transition: background 0.3s; } .submit-btn:hover { background: var(--secondary); }
-        .contacts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 32px; text-align: center; } .contact-item .label { font-family: 'Inter', sans-serif; font-size: 0.75em; color: #999; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 12px; font-weight: 600; } .contact-item .value { font-family: 'Playfair Display', serif; font-size: 1.1em; }
-        .cta { background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #fff; padding: 60px 32px; text-align: center; border-radius: 12px; } .cta h2 { margin: 0; color: #fff; font-size: 2em; }
-        footer { background: var(--text); color: #aaa; padding: 32px; text-align: center; font-family: 'Inter', sans-serif; font-size: 0.88em; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; padding: 40px 20px; overflow-y: auto; } .modal.open { display: flex; align-items: flex-start; justify-content: center; } .modal-box { background: var(--bg); border-radius: 12px; max-width: 1000px; width: 100%; padding: 40px 32px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease-in; } .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 2px solid var(--primary); } .modal-header h2 { margin: 0; font-size: 2em; color: var(--text); } .modal-close { background: transparent; border: 2px solid var(--text); color: var(--text); width: 48px; height: 48px; border-radius: 50%; font-size: 1.5em; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; } .modal-close:hover { background: var(--text); color: #fff; }
-        .success-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 700; align-items: center; justify-content: center; padding: 20px; } .success-modal.active { display: flex; } .success-modal .modal-content { background: #fff; border-radius: 12px; padding: 40px 32px; max-width: 440px; text-align: center; } .success-modal h3 { color: var(--primary); margin: 0 0 16px; font-size: 1.5em; } .success-modal p { color: #666; font-family: 'Inter', sans-serif; margin: 0 0 24px; } .success-modal button { background: var(--primary); color: #fff; border: none; padding: 12px 32px; border-radius: 8px; font-family: 'Playfair Display', serif; font-size: 1em; cursor: pointer; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 900px) { .hero { padding: 80px 24px 48px; min-height: auto; } .hero h1 { font-size: 2.2em; } .container { padding: 0 20px; } .modal-box { padding: 28px 20px; } .modal-header h2 { font-size: 1.5em; } .modal-close { width: 40px; height: 40px; font-size: 1.2em; } }
-        @media (max-width: 600px) { .services-grid, .gallery-grid, .team-grid { grid-template-columns: 1fr; } }
-    </style>
-</head>
 <body>
+    <button
+        class="sidebar-toggle"
+        id="sidebarToggle"
+        type="button"
+        aria-label="Открыть меню"
+        aria-expanded="false"
+    >
+        ☰
+    </button>
 
-<button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <div
+        class="sidebar-overlay"
+        id="sidebarOverlay"
+        aria-hidden="true"
+    ></div>
 
-{% if sidebar_enabled %}
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">{{ company_name }}</div>
-    {% if sidebar_items %}
-    <nav class="sidebar-nav" id="sidebarNav">{% for item in sidebar_items %}<a href="javascript:void(0)" onclick="openModal('{{ item.anchor[1:] }}')">{{ item.icon }} {{ item.label }}</a>{% endfor %}</nav>
-    {% endif %}
-    <button class="sidebar-cta" onclick="openModal('booking')">{{ sidebar_cta_text or 'Забронировать' }}</button>
-    <button class="sidebar-cta secondary" onclick="openClientAccount()">📅 Мои записи</button>
-    <div class="sidebar-contacts"><div>📞 {{ company_phone }}</div><div>📍 {{ company_address }}</div>{% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}</div>
-</aside>
-{% endif %}
-
-<main class="main-content">
-<section class="hero" id="section-hero">
-    <div class="hero-inner">
-        <h1>{{ hero_heading }}</h1>
-        <p>{{ hero_subheading }}</p>
-        {% if about_short %}<div class="hero-about">{{ about_short }}</div>{% endif %}
-        <div class="hero-contacts"><div>📞 {{ company_phone }}</div><div>📍 {{ company_address }}</div>{% if working_hours %}<div>🕐 {{ working_hours }}</div>{% endif %}</div>
-        <div class="hero-buttons">
-            <button class="hero-btn" onclick="openModal('booking')">{{ sidebar_cta_text or 'Забронировать' }}</button>
-            <button class="hero-btn secondary" onclick="openClientAccount()">📅 Мои записи</button>
-            <button class="hero-btn secondary" onclick="startTour(true)">❓ Помощь</button>
+    {% if sidebar_enabled %}
+    <aside
+        class="sidebar"
+        id="sidebar"
+        aria-label="Основное меню"
+    >
+        <div class="sidebar-logo">
+            {{ company_name | e }}
         </div>
-    </div>
-</section>
-</main>
 
-<footer>{{ footer_text }}</footer>
+        {% if sidebar_items %}
+        <nav class="sidebar-nav" aria-label="Навигация">
+            {% for item in sidebar_items %}
+            <button
+                type="button"
+                class="sidebar-nav-button"
+                data-modal="{{ item.anchor[1:] if item.anchor else '' }}"
+            >
+                {{ item.icon | default('•') | e }}
+                {{ item.label | e }}
+            </button>
+            {% endfor %}
+        </nav>
+        {% endif %}
 
-<div class="modal" id="modal-services" onclick="modalOutsideClick(event, 'services')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Наши услуги</h2><button class="modal-close" onclick="closeModal('services')">×</button></div>
-        {% if services %}
-        <div class="services-grid">
-            {% for s in services %}
-            <div class="service-card">
-                {% if s.image_url %}<img class="service-img" src="https://danilka007tuk.github.io/{{ site_id }}/{{ s.image_url }}" alt="{{ s.name }}" loading="lazy">{% endif %}
-                <div class="service-body">
-                    <h3>{{ s.name }}</h3>
-                    {% if s.price %}<div class="price">{{ s.price }}</div>{% endif %}
-                    {% if s.description %}<p>{{ s.description }}</p>{% endif %}
-                    {% if s.procedure %}<div class="procedure"><strong>Как проходит:</strong>{{ s.procedure }}</div>{% endif %}
+        <button
+            class="sidebar-cta"
+            type="button"
+            data-open-modal="booking"
+        >
+            {{ sidebar_cta_text | default('Забронировать') | e }}
+        </button>
+
+        <button
+            class="sidebar-cta secondary"
+            type="button"
+            id="sidebarAccountButton"
+        >
+            📅 Мои записи
+        </button>
+
+        <div class="sidebar-contacts">
+            {% if company_phone %}
+            <div>📞 {{ company_phone | e }}</div>
+            {% endif %}
+
+            {% if company_address %}
+            <div>📍 {{ company_address | e }}</div>
+            {% endif %}
+
+            {% if working_hours %}
+            <div>🕐 {{ working_hours | e }}</div>
+            {% endif %}
+        </div>
+    </aside>
+    {% endif %}
+
+    <main class="main-content">
+        <section
+            class="hero"
+            id="section-hero"
+            aria-labelledby="heroTitle"
+        >
+            <div class="hero-inner">
+                {% if hero_heading %}
+                <h1 id="heroTitle">
+                    {{ hero_heading | e }}
+                </h1>
+                {% endif %}
+
+                {% if hero_subheading %}
+                <p>
+                    {{ hero_subheading | e }}
+                </p>
+                {% endif %}
+
+                {% if about_short %}
+                <div class="hero-about">
+                    {{ about_short | e }}
+                </div>
+                {% endif %}
+
+                <div class="hero-contacts">
+                    {% if company_phone %}
+                    <div>
+                        📞 {{ company_phone | e }}
+                    </div>
+                    {% endif %}
+
+                    {% if company_address %}
+                    <div>
+                        📍 {{ company_address | e }}
+                    </div>
+                    {% endif %}
+
+                    {% if working_hours %}
+                    <div>
+                        🕐 {{ working_hours | e }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="hero-buttons">
+                    <button
+                        class="hero-btn"
+                        type="button"
+                        data-open-modal="booking"
+                    >
+                        {{ sidebar_cta_text | default('Забронировать') | e }}
+                    </button>
+
+                    <button
+                        class="hero-btn secondary"
+                        type="button"
+                        id="heroAccountButton"
+                    >
+                        📅 Мои записи
+                    </button>
+
+                    <button
+                        class="hero-btn secondary"
+                        type="button"
+                        id="helpButton"
+                    >
+                        ❓ Помощь
+                    </button>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        {% else %}<p style="text-align:center; color:#888;">Пока нет услуг</p>{% endif %}
-    </div>
-</div>
+        </section>
+    </main>
 
-<div class="modal" id="modal-gallery" onclick="modalOutsideClick(event, 'gallery')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Галерея</h2><button class="modal-close" onclick="closeModal('gallery')">×</button></div>
-        {% if gallery %}
-        <div class="gallery-grid">
-            {% for item in gallery %}
-            <div class="gallery-item">
-                {% if item.image_url %}<img src="https://danilka007tuk.github.io/{{ site_id }}/{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">{% endif %}
-                <div class="caption"><h3>{{ item.title }}</h3><p>{{ item.description }}</p></div>
+    <footer>
+        {{ footer_text | default('© ' ~ site_title) | e }}
+    </footer>
+
+    <!-- Услуги -->
+
+    <div
+        class="modal"
+        id="modal-services"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="servicesTitle"
+    >
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="servicesTitle">Наши услуги</h2>
+
+                <button
+                    class="modal-close"
+                    type="button"
+                    data-close-modal="services"
+                    aria-label="Закрыть окно"
+                >
+                    ×
+                </button>
             </div>
-            {% endfor %}
-        </div>
-        {% else %}<p style="text-align:center; color:#888;">Пока нет галереи</p>{% endif %}
-    </div>
-</div>
 
-<div class="modal" id="modal-team" onclick="modalOutsideClick(event, 'team')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Наша команда</h2><button class="modal-close" onclick="closeModal('team')">×</button></div>
-        <div class="team-grid" id="teamGrid">
-            {% for m in team %}
-            <div class="team-member">
-                <div class="avatar">{% if m.image_url %}<img src="https://danilka007tuk.github.io/{{ site_id }}/{{ m.image_url }}" alt="{{ m.name }}">{% else %}{{ m.name[0] }}{% endif %}</div>
-                <h3>{{ m.name }}</h3>
-                <div class="role">{{ m.role }}</div>
-                <p>{{ m.description }}</p>
+            {% if services %}
+            <div class="services-grid">
+                {% for service in services %}
+                <article class="service-card">
+                    {% if service.image_url %}
+                    <img
+                        class="service-img"
+                        src="https://danilka007tuk.github.io/{{ site_id | e }}/{{ service.image_url | e }}"
+                        alt="{{ service.name | e }}"
+                        loading="lazy"
+                    >
+                    {% endif %}
+
+                    <div class="service-body">
+                        <h3>
+                            {{ service.name | e }}
+                        </h3>
+
+                        {% if service.price %}
+                        <div class="price">
+                            {{ service.price | e }}
+                        </div>
+                        {% endif %}
+
+                        {% if service.description %}
+                        <p>
+                            {{ service.description | e }}
+                        </p>
+                        {% endif %}
+
+                        {% if service.procedure %}
+                        <div class="procedure">
+                            <strong>Как проходит:</strong>
+                            {{ service.procedure | e }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
             </div>
-            {% else %}<p style="text-align:center; grid-column:1/-1; color:#888;">Пока нет команды</p>{% endfor %}
+            {% else %}
+            <p class="empty">Пока нет услуг.</p>
+            {% endif %}
         </div>
     </div>
-</div>
 
-<div class="modal" id="modal-contacts" onclick="modalOutsideClick(event, 'contacts')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Контакты</h2><button class="modal-close" onclick="closeModal('contacts')">×</button></div>
-        <div class="contacts-grid">
-            <div class="contact-item"><div class="label">Компания</div><div class="value">{{ company_name }}</div></div>
-            <div class="contact-item"><div class="label">Адрес</div><div class="value">{{ company_address }}</div></div>
-            <div class="contact-item"><div class="label">Телефон</div><div class="value">{{ company_phone }}</div></div>
-            {% if working_hours %}<div class="contact-item"><div class="label">Часы работы</div><div class="value">{{ working_hours }}</div></div>{% endif %}
+    <!-- Галерея -->
+
+    <div
+        class="modal"
+        id="modal-gallery"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="galleryTitle"
+    >
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="galleryTitle">Галерея</h2>
+
+                <button
+                    class="modal-close"
+                    type="button"
+                    data-close-modal="gallery"
+                    aria-label="Закрыть окно"
+                >
+                    ×
+                </button>
+            </div>
+
+            {% if gallery %}
+            <div class="gallery-grid">
+                {% for item in gallery %}
+                <article class="gallery-item">
+                    {% if item.image_url %}
+                    <img
+                        src="https://danilka007tuk.github.io/{{ site_id | e }}/{{ item.image_url | e }}"
+                        alt="{{ item.title | default('Фотография') | e }}"
+                        loading="lazy"
+                    >
+                    {% endif %}
+
+                    <div class="caption">
+                        {% if item.title %}
+                        <h3>{{ item.title | e }}</h3>
+                        {% endif %}
+
+                        {% if item.description %}
+                        <p>{{ item.description | e }}</p>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty">Пока нет фотографий.</p>
+            {% endif %}
         </div>
     </div>
-</div>
 
-<div class="modal" id="modal-booking" onclick="modalOutsideClick(event, 'booking')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Забронировать</h2><button class="modal-close" onclick="closeModal('booking')">×</button></div>
-        <div class="booking">
-            <div id="stepMaster"><h3 style="text-align:center; margin-bottom:16px;">Выберите мастера</h3><div class="master-selection" id="masterSelection"></div></div>
-            <div id="stepCalendar" style="display:none;"><div class="calendar-header"><button id="prevMonth" type="button">‹</button><div class="month-year" id="monthYear">—</div><button id="nextMonth" type="button">›</button></div><div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div><div class="days" id="days"></div></div>
-            <div class="time-slots-wrapper" id="timeSlotsWrapper"><h3>Выберите время</h3><div class="time-slots" id="timeSlots"></div></div>
-            <form class="booking-form" id="bookingForm">
-                <h3>Вы выбрали: <span id="selectedDate"></span> в <span id="selectedTimeText"></span></h3>
-                <div class="form-group"><label for="service">Услуга</label><select id="service" required><option value="">— Выберите услугу —</option></select></div>
-                <div class="form-group"><label for="name">Ваше имя</label><input type="text" id="name" placeholder="Иван Иванов" required></div>
-                <div class="form-group"><label for="phone">Телефон</label><input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required></div>
-                <div class="form-group"><label for="email">Email</label><input type="email" id="email" placeholder="mail@example.com" required></div>
-                <div class="form-group"><label for="comment">Комментарий</label><textarea id="comment" rows="3" placeholder="Пожелания..."></textarea></div>
-                <button type="submit" class="submit-btn">Отправить заявку</button>
+    <!-- Команда -->
+
+    <div
+        class="modal"
+        id="modal-team"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="teamTitle"
+    >
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="teamTitle">Наша команда</h2>
+
+                <button
+                    class="modal-close"
+                    type="button"
+                    data-close-modal="team"
+                    aria-label="Закрыть окно"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="team-grid">
+                {% for master in team | default([]) %}
+                <article class="team-member">
+                    <div class="avatar">
+                        {% if master.image_url %}
+                        <img
+                            src="https://danilka007tuk.github.io/{{ site_id | e }}/{{ master.image_url | e }}"
+                            alt="{{ master.name | e }}"
+                            loading="lazy"
+                        >
+                        {% else %}
+                        {{ master.name[0] | default('?') | e }}
+                        {% endif %}
+                    </div>
+
+                    <h3>
+                        {{ master.name | e }}
+                    </h3>
+
+                    {% if master.role %}
+                    <div class="role">
+                        {{ master.role | e }}
+                    </div>
+                    {% endif %}
+
+                    {% if master.description %}
+                    <p>
+                        {{ master.description | e }}
+                    </p>
+                    {% endif %}
+                </article>
+                {% else %}
+                <p class="empty">
+                    Команда пока не добавлена.
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Контакты -->
+
+    <div
+        class="modal"
+        id="modal-contacts"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contactsTitle"
+    >
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="contactsTitle">Контакты</h2>
+
+                <button
+                    class="modal-close"
+                    type="button"
+                    data-close-modal="contacts"
+                    aria-label="Закрыть окно"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="contacts-grid">
+                <div class="contact-item">
+                    <div class="label">Компания</div>
+                    <div class="value">
+                        {{ company_name | e }}
+                    </div>
+                </div>
+
+                <div class="contact-item">
+                    <div class="label">Адрес</div>
+                    <div class="value">
+                        {{ company_address | e }}
+                    </div>
+                </div>
+
+                <div class="contact-item">
+                    <div class="label">Телефон</div>
+                    <div class="value">
+                        {{ company_phone | e }}
+                    </div>
+                </div>
+
+                {% if working_hours %}
+                <div class="contact-item">
+                    <div class="label">Часы работы</div>
+                    <div class="value">
+                        {{ working_hours | e }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Бронирование -->
+
+    <div
+        class="modal"
+        id="modal-booking"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bookingTitle"
+    >
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="bookingTitle">Забронировать</h2>
+
+                <button
+                    class="modal-close"
+                    type="button"
+                    data-close-modal="booking"
+                    aria-label="Закрыть окно"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="booking">
+                <section id="stepMaster">
+                    <h3>
+                        Выберите мастера
+                    </h3>
+
+                    <div
+                        class="master-selection"
+                        id="masterSelection"
+                        aria-live="polite"
+                    >
+                        <p class="empty">
+                            Загрузка мастеров...
+                        </p>
+                    </div>
+                </section>
+
+                <section
+                    id="stepCalendar"
+                    hidden
+                    aria-label="Выбор даты"
+                >
+                    <div class="calendar-header">
+                        <button
+                            id="prevMonth"
+                            type="button"
+                            aria-label="Предыдущий месяц"
+                        >
+                            ‹
+                        </button>
+
+                        <div
+                            class="month-year"
+                            id="monthYear"
+                        >
+                            —
+                        </div>
+
+                        <button
+                            id="nextMonth"
+                            type="button"
+                            aria-label="Следующий месяц"
+                        >
+                            ›
+                        </button>
+                    </div>
+
+                    <div class="weekdays">
+                        <div>Пн</div>
+                        <div>Вт</div>
+                        <div>Ср</div>
+                        <div>Чт</div>
+                        <div>Пт</div>
+                        <div>Сб</div>
+                        <div>Вс</div>
+                    </div>
+
+                    <div
+                        class="days"
+                        id="days"
+                        aria-live="polite"
+                    ></div>
+                </section>
+
+                <section
+                    class="time-slots-wrapper"
+                    id="timeSlotsWrapper"
+                    aria-label="Выбор времени"
+                >
+                    <h3>Выберите время</h3>
+
+                    <div
+                        class="time-slots"
+                        id="timeSlots"
+                    ></div>
+                </section>
+
+                <form
+                    class="booking-form"
+                    id="bookingForm"
+                    novalidate
+                >
+                    <h3>
+                        Вы выбрали:
+                        <span id="selectedDate">—</span>
+                        в
+                        <span id="selectedTimeText">—</span>
+                    </h3>
+
+                    <div class="form-group">
+                        <label for="service">Услуга</label>
+
+                        <select id="service" required>
+                            <option value="">
+                                — Выберите услугу —
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Ваше имя</label>
+
+                        <input
+                            type="text"
+                            id="name"
+                            autocomplete="name"
+                            maxlength="120"
+                            placeholder="Иван Иванов"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+
+                        <input
+                            type="tel"
+                            id="phone"
+                            autocomplete="tel"
+                            maxlength="40"
+                            placeholder="+7 (___) ___-__-__"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            autocomplete="email"
+                            maxlength="254"
+                            placeholder="mail@example.com"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="comment">Комментарий</label>
+
+                        <textarea
+                            id="comment"
+                            rows="3"
+                            maxlength="1000"
+                            placeholder="Пожелания..."
+                        ></textarea>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="submit-btn"
+                    >
+                        Отправить заявку
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Авторизация -->
+
+    <div
+        class="modal"
+        id="modal-auth"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="authTitle"
+    >
+        <div class="modal-box" style="max-width:460px;">
+            <div class="modal-header">
+                <h2 id="authTitle">Вход / Регистрация</h2>
+
+                <button
+                    class="modal-close"
+                    type="button"
+                    data-close-modal="auth"
+                    aria-label="Закрыть окно"
+                >
+                    ×
+                </button>
+            </div>
+
+            <form id="loginForm" novalidate>
+                <h3>
+                    Войдите, чтобы увидеть записи
+                </h3>
+
+                <div class="form-group">
+                    <label for="auth-email">Email</label>
+
+                    <input
+                        type="email"
+                        id="auth-email"
+                        autocomplete="username"
+                        maxlength="254"
+                        placeholder="your@email.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="auth-password">Пароль</label>
+
+                    <input
+                        type="password"
+                        id="auth-password"
+                        autocomplete="current-password"
+                        placeholder="••••••••"
+                        required
+                    >
+                </div>
+
+                <button
+                    class="submit-btn"
+                    type="submit"
+                    id="loginButton"
+                >
+                    Войти
+                </button>
+
+                <p class="auth-switch">
+                    Нет аккаунта?
+                    <button
+                        type="button"
+                        id="showRegisterButton"
+                    >
+                        Зарегистрироваться
+                    </button>
+                </p>
             </form>
+
+            <form
+                id="registerForm"
+                novalidate
+                hidden
+            >
+                <h3>
+                    Создайте аккаунт
+                </h3>
+
+                <div class="form-group">
+                    <label for="reg-email">Email</label>
+
+                    <input
+                        type="email"
+                        id="reg-email"
+                        autocomplete="email"
+                        maxlength="254"
+                        placeholder="your@email.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="reg-password">Пароль</label>
+
+                    <input
+                        type="password"
+                        id="reg-password"
+                        autocomplete="new-password"
+                        minlength="6"
+                        placeholder="••••••••"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="reg-password-confirm">
+                        Подтвердите пароль
+                    </label>
+
+                    <input
+                        type="password"
+                        id="reg-password-confirm"
+                        autocomplete="new-password"
+                        minlength="6"
+                        placeholder="••••••••"
+                        required
+                    >
+                </div>
+
+                <button
+                    class="submit-btn"
+                    type="submit"
+                    id="registerButton"
+                >
+                    Зарегистрироваться
+                </button>
+
+                <p class="auth-switch">
+                    Уже есть аккаунт?
+                    <button
+                        type="button"
+                        id="showLoginButton"
+                    >
+                        Войти
+                    </button>
+                </p>
+            </form>
+
+            <div
+                id="auth-message"
+                role="status"
+                aria-live="polite"
+            ></div>
         </div>
     </div>
-</div>
 
-<div class="modal" id="modal-auth" onclick="modalOutsideClick(event, 'auth')">
-    <div class="modal-box" style="max-width: 460px;" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Вход / Регистрация</h2><button class="modal-close" onclick="closeModal('auth')">×</button></div>
-        <div id="auth-step-login">
-            <h3 style="text-align:center; margin-bottom:16px;">Войдите, чтобы увидеть записи</h3>
-            <div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="your@email.com"></div>
-            <div class="form-group"><label>Пароль</label><input type="password" id="auth-password" placeholder="••••••••"></div>
-            <button class="submit-btn" onclick="loginUser()">Войти</button>
-            <p style="text-align:center; margin-top:16px; color:#888;">Нет аккаунта? <a href="javascript:void(0)" onclick="showRegisterForm()" style="color:var(--primary);">Зарегистрироваться</a></p>
+    <!-- Записи клиента -->
+
+    <div
+        class="modal"
+        id="modal-account"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="accountTitle"
+    >
+        <div class="modal-box" style="max-width:900px;">
+            <div class="modal-header">
+                <h2 id="accountTitle">Мои записи</h2>
+
+                <button
+                    class="modal-close"
+                    type="button"
+                    data-close-modal="account"
+                    aria-label="Закрыть окно"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div
+                id="account-body"
+                aria-live="polite"
+            >
+                <p class="empty">
+                    Загрузка...
+                </p>
+            </div>
+
+            <button
+                class="submit-btn"
+                id="logoutButton"
+                type="button"
+                style="margin-top:16px;background:#c62828;"
+            >
+                Выйти
+            </button>
         </div>
-        <div id="auth-step-register" style="display:none;">
-            <h3 style="text-align:center; margin-bottom:16px;">Создайте аккаунт</h3>
-            <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="your@email.com"></div>
-            <div class="form-group"><label>Пароль</label><input type="password" id="reg-password" placeholder="••••••••"></div>
-            <div class="form-group"><label>Подтвердите пароль</label><input type="password" id="reg-password-confirm" placeholder="••••••••"></div>
-            <button class="submit-btn" onclick="registerUser()">Зарегистрироваться</button>
-            <p style="text-align:center; margin-top:16px; color:#888;">Уже есть аккаунт? <a href="javascript:void(0)" onclick="showLoginForm()" style="color:var(--primary);">Войти</a></p>
+    </div>
+
+    <!-- Успешная отправка -->
+
+    <div
+        class="success-modal"
+        id="successModal"
+        role="dialog"
+        aria-modal="true"
+        aria-hidden="true"
+    >
+        <div class="modal-content">
+            <h3>✅ Заявка отправлена!</h3>
+
+            <p>
+                {{ booking_confirmation | default('Мы свяжемся с вами для подтверждения записи.') | e }}
+            </p>
+
+            <button
+                id="successCloseButton"
+                type="button"
+            >
+                Хорошо
+            </button>
         </div>
-        <div id="auth-message" style="margin-top:16px; text-align:center; display:none;"></div>
     </div>
-</div>
 
-<div class="modal" id="modal-account" onclick="modalOutsideClick(event, 'account')">
-    <div class="modal-box" style="max-width: 900px;" onclick="event.stopPropagation()">
-        <div class="modal-header"><h2>Мои записи</h2><button class="modal-close" onclick="closeModal('account')">×</button></div>
-        <div id="account-body"><p style="text-align:center; color:#888;">Загрузка...</p></div>
-        <button class="submit-btn" style="margin-top:16px; background:#c62828;" onclick="logoutUser()">Выйти</button>
-    </div>
-</div>
+    <script>
+        "use strict";
 
-<div class="success-modal" id="successModal"><div class="modal-content"><h3>✅ Заявка отправлена!</h3><p>{{ booking_confirmation }}</p><button onclick="closeSuccessModal()">Хорошо</button></div></div>
+        const SERVER_URL = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
+        const SITE_ID = {{ site_id | default("site") | tojson }};
+        const WORKING_HOURS = {{ working_hours | default("09:00-20:00") | tojson }};
+        const STATIC_TEAM = {{ team | default([]) | tojson }};
 
-<script>
-    const SERVER_URL = {{ server_url | default("https://api.generator-beloretsk.ru") | tojson }};
-    const SITE_ID = {{ site_id | default("site") | tojson }};
-    const WORKING_HOURS = {{ working_hours | default("09:00-20:00") | tojson }};
-    const STATIC_TEAM = {{ team | tojson if team else '[]' }};
-    const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const state = {
+            currentMonth: new Date(),
+            selectedMaster: null,
+            selectedDate: null,
+            selectedTime: null,
+            busySlots: [],
+            submittingBooking: false,
+            submittingAuth: false,
+            activeModal: null,
+            tourIndex: 0
+        };
 
-    let currentMonth = new Date(); let selectedMaster = null; let selectedDate = null; let selectedTime = null; let busySlots = [];
-    const monthYearEl = document.getElementById('monthYear'); const daysEl = document.getElementById('days'); const formEl = document.getElementById('bookingForm'); const selectedDateEl = document.getElementById('selectedDate'); const selectedTimeText = document.getElementById('selectedTimeText'); const successModal = document.getElementById('successModal'); const timeSlotsWrapper = document.getElementById('timeSlotsWrapper'); const timeSlotsEl = document.getElementById('timeSlots'); const masterSelectionEl = document.getElementById('masterSelection'); const stepMaster = document.getElementById('stepMaster'); const stepCalendar = document.getElementById('stepCalendar'); const serviceSelect = document.getElementById('service');
+        const $ = (selector) => {
+            return document.querySelector(selector);
+        };
 
-    function toggleSidebar() { const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebarOverlay'); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('open'); }
-    function closeSidebar() { const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebarOverlay'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('open'); }
-    function openModal(name) { const modal = document.getElementById('modal-' + name); if (!modal) return; modal.classList.add('open'); document.body.style.overflow = 'hidden'; closeSidebar(); if (name === 'booking') { resetBooking(); renderMasters(); } }
-    function closeModal(name) { const modal = document.getElementById('modal-' + name); if (!modal) return; modal.classList.remove('open'); document.body.style.overflow = ''; }
-    function modalOutsideClick(event, name) { if (event.target.id === 'modal-' + name) closeModal(name); }
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); document.body.style.overflow = ''; closeSidebar(); } });
+        const $$ = (selector) => {
+            return [...document.querySelectorAll(selector)];
+        };
 
-    async function renderMasters() {
-        if (!masterSelectionEl) return;
-        masterSelectionEl.innerHTML = '<p style="grid-column:1/-1;">Загрузка...</p>';
-        try {
-            const res = await fetch(`${SERVER_URL}/api/masters/${encodeURIComponent(SITE_ID)}`);
-            const data = await res.json();
-            const currentTeam = data.masters && data.masters.length > 0 ? data.masters : STATIC_TEAM;
-            masterSelectionEl.innerHTML = '';
-            if (currentTeam.length === 0) { masterSelectionEl.innerHTML = '<p style="grid-column:1/-1;">Мастера не указаны.</p>'; return; }
-            currentTeam.forEach(master => {
-                const card = document.createElement('div');
-                card.className = 'master-card';
-                card.innerHTML = `<div class="master-avatar">${esc(master.name ? master.name[0] : '?')}</div><h3>${esc(master.name)}</h3><div class="role">${esc(master.role)}</div>`;
-                card.onclick = async () => await selectMaster(master, card);
-                masterSelectionEl.appendChild(card);
-            });
-        } catch (e) {
-            console.error('Ошибка /api/masters:', e);
-            masterSelectionEl.innerHTML = '<p style="grid-column:1/-1;">Не удалось загрузить мастеров. Попробуйте позже.</p>';
-        }
-    }
+        function normalizeBaseUrl(value) {
+            const result = String(value || "").trim();
 
-    async function selectMaster(master, card) { document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); selectedMaster = master; serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>'; (master.services || []).forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = s; serviceSelect.appendChild(opt); }); stepMaster.style.display = 'none'; stepCalendar.style.display = 'block'; timeSlotsWrapper.style.display = 'none'; formEl.classList.remove('active'); await loadBusySlots(); renderCalendar(); }
-
-    async function loadBusySlots() { try { const res = await fetch(`${SERVER_URL}/api/busy/${encodeURIComponent(SITE_ID)}`); const data = await res.json(); busySlots = data.busy || []; } catch (e) { busySlots = []; } }
-    function isSlotBusy(date, time) { if (!selectedMaster) return false; return busySlots.some(b => b.date === date && b.time === time && b.master === selectedMaster.name); }
-    function renderCalendar() { if (!daysEl) return; const year = currentMonth.getFullYear(); const month = currentMonth.getMonth(); const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']; monthYearEl.textContent = monthNames[month] + ' ' + year; const firstDay = new Date(year, month, 1); const totalDays = new Date(year, month + 1, 0).getDate(); let startOffset = firstDay.getDay() - 1; if (startOffset < 0) startOffset = 6; daysEl.innerHTML = ''; for (let i = 0; i < startOffset; i++) { const empty = document.createElement('div'); empty.className = 'day empty'; daysEl.appendChild(empty); } const today = new Date(); today.setHours(0,0,0,0); for (let d = 1; d <= totalDays; d++) { const dateObj = new Date(year, month, d); const iso = formatISO(dateObj); const dayEl = document.createElement('div'); dayEl.className = 'day'; dayEl.textContent = d; if (dateObj < today) dayEl.classList.add('disabled'); else { if (iso === formatISO(today)) dayEl.classList.add('today'); if (iso === selectedDate) dayEl.classList.add('selected'); dayEl.addEventListener('click', () => selectDate(iso, dateObj)); } daysEl.appendChild(dayEl); } }
-    function formatISO(date) { const y = date.getFullYear(); const m = String(date.getMonth() + 1).padStart(2, '0'); const d = String(date.getDate()).padStart(2, '0'); return `${y}-${m}-${d}`; }
-    function selectDate(iso, dateObj) { selectedDate = iso; selectedTime = null; const formatted = dateObj.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' }); if (selectedDateEl) selectedDateEl.textContent = formatted; if (selectedTimeText) selectedTimeText.textContent = '—'; formEl.classList.remove('active'); renderCalendar(); generateTimeSlots(); }
-    function generateTimeSlots() { let start = 9, end = 20; const match = WORKING_HOURS.match(/(\d{1,2}):\d{2}\s*-\s*(\d{1,2}):\d{2}/); if (match) { start = parseInt(match[1]); end = parseInt(match[2]); } timeSlotsEl.innerHTML = ''; timeSlotsWrapper.style.display = 'block'; for (let h = start; h < end; h++) { const timeStr = String(h).padStart(2, '0') + ':00'; const slot = document.createElement('div'); slot.className = 'time-slot'; slot.textContent = timeStr; if (isSlotBusy(selectedDate, timeStr)) slot.classList.add('busy'); else slot.onclick = () => selectTime(slot, timeStr); timeSlotsEl.appendChild(slot); } }
-    function selectTime(slot, timeStr) { document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected')); slot.classList.add('selected'); selectedTime = timeStr; if (selectedTimeText) selectedTimeText.textContent = timeStr; formEl.classList.add('active'); formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-    function resetBooking() { selectedMaster = null; selectedDate = null; selectedTime = null; stepMaster.style.display = 'block'; stepCalendar.style.display = 'none'; timeSlotsWrapper.style.display = 'none'; formEl.classList.remove('active'); serviceSelect.innerHTML = '<option value="">— Выберите услугу —</option>'; if (selectedDateEl) selectedDateEl.textContent = '—'; if (selectedTimeText) selectedTimeText.textContent = '—'; }
-    const prevBtn = document.getElementById('prevMonth'); const nextBtn = document.getElementById('nextMonth'); if (prevBtn) prevBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); }); if (nextBtn) nextBtn.addEventListener('click', () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); });
-
-    if (formEl) {
-        formEl.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const service = serviceSelect.value;
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const comment = document.getElementById('comment').value.trim();
-            if (!selectedMaster || !selectedDate || !selectedTime || !service || !name || !phone) {
-                alert('Выберите мастера, дату, время, услугу и заполните поля'); return;
+            if (!result) {
+                return window.location.origin;
             }
-            if (!email) { alert('Укажите email'); return; }
-            const submitBtn = formEl.querySelector('.submit-btn');
-            submitBtn.disabled = true; submitBtn.textContent = 'Отправляю...';
+
+            return result.replace(/\/+$/, "");
+        }
+
+        const API_BASE = normalizeBaseUrl(SERVER_URL);
+
+        function apiUrl(path) {
+            return `${API_BASE}${path}`;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function setBodyLocked(locked) {
+            document.body.style.overflow = locked ? "hidden" : "";
+        }
+
+        function showAuthMessage(text, success = false) {
+            const message = $("#auth-message");
+
+            if (!message) {
+                return;
+            }
+
+            message.textContent = String(text || "");
+            message.style.display = "block";
+            message.style.color = success
+                ? "#2e7d32"
+                : "#c62828";
+        }
+
+        function clearAuthMessage() {
+            const message = $("#auth-message");
+
+            if (!message) {
+                return;
+            }
+
+            message.textContent = "";
+            message.style.display = "none";
+        }
+
+        async function fetchJson(url, options = {}, timeout = 15000) {
+            const controller = new AbortController();
+
+            const timer = window.setTimeout(() => {
+                controller.abort();
+            }, timeout);
+
             try {
-                const response = await fetch(`${SERVER_URL}/api/book/${encodeURIComponent(SITE_ID)}`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ master: selectedMaster.name, date: selectedDate, time: selectedTime, service, name, phone, email, comment }),
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
                 });
-                const result = await response.json();
-                if (!response.ok || !result.ok) throw new Error(result.error || 'Ошибка сервера');
-                closeModal('booking');
-                successModal.classList.add('active');
+
+                const contentType =
+                    response.headers.get("content-type") || "";
+
+                let data = {};
+
+                if (contentType.includes("application/json")) {
+                    data = await response.json().catch(() => ({}));
+                } else {
+                    const text = await response.text().catch(() => "");
+                    data = text ? { error: text } : {};
+                }
+
+                if (!response.ok) {
+                    const error = new Error(
+                        data.error ||
+                        `Ошибка сервера: ${response.status}`
+                    );
+
+                    error.status = response.status;
+                    error.data = data;
+
+                    throw error;
+                }
+
+                return data;
+            } finally {
+                window.clearTimeout(timer);
+            }
+        }
+
+        function openModal(name) {
+            const modal = document.getElementById(`modal-${name}`);
+
+            if (!modal) {
+                return;
+            }
+
+            closeAllModals(false);
+
+            modal.classList.add("open");
+            modal.setAttribute("aria-hidden", "false");
+            state.activeModal = name;
+            setBodyLocked(true);
+
+            closeSidebar();
+
+            if (name === "booking") {
+                resetBooking();
+                renderMasters();
+            }
+
+            if (name === "auth") {
+                showLoginForm();
+                clearAuthMessage();
+            }
+
+            const firstInput = modal.querySelector(
+                "input, select, textarea, button"
+            );
+
+            firstInput?.focus();
+        }
+
+        function closeModal(name) {
+            const modal = document.getElementById(`modal-${name}`);
+
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.remove("open");
+            modal.setAttribute("aria-hidden", "true");
+
+            if (state.activeModal === name) {
+                state.activeModal = null;
+            }
+
+            if (!document.querySelector(".modal.open")) {
+                setBodyLocked(false);
+            }
+        }
+
+        function closeAllModals(unlockBody = true) {
+            $$(".modal.open").forEach((modal) => {
+                modal.classList.remove("open");
+                modal.setAttribute("aria-hidden", "true");
+            });
+
+            state.activeModal = null;
+
+            if (unlockBody) {
+                setBodyLocked(false);
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = $("#sidebar");
+            const overlay = $("#sidebarOverlay");
+            const button = $("#sidebarToggle");
+
+            if (!sidebar) {
+                return;
+            }
+
+            const opened = sidebar.classList.toggle("open");
+
+            overlay?.classList.toggle("open", opened);
+            overlay?.setAttribute("aria-hidden", String(!opened));
+            button?.setAttribute("aria-expanded", String(opened));
+        }
+
+        function closeSidebar() {
+            $("#sidebar")?.classList.remove("open");
+            $("#sidebarOverlay")?.classList.remove("open");
+            $("#sidebarOverlay")?.setAttribute("aria-hidden", "true");
+            $("#sidebarToggle")?.setAttribute("aria-expanded", "false");
+        }
+
+        function normalizeServices(services) {
+            if (Array.isArray(services)) {
+                return services
+                    .map((service) => {
+                        if (typeof service === "string") {
+                            return service.trim();
+                        }
+
+                        return String(
+                            service?.name ||
+                            service?.title ||
+                            ""
+                        ).trim();
+                    })
+                    .filter(Boolean);
+            }
+
+            if (typeof services === "string") {
+                return services
+                    .split(",")
+                    .map((service) => service.trim())
+                    .filter(Boolean);
+            }
+
+            return [];
+        }
+
+        function normalizeMaster(master) {
+            return {
+                ...master,
+                name: String(master?.name || "Мастер"),
+                role: String(master?.role || ""),
+                image_url: String(master?.image_url || ""),
+                services: normalizeServices(master?.services)
+            };
+        }
+
+        async function renderMasters() {
+            const container = $("#masterSelection");
+
+            if (!container) {
+                return;
+            }
+
+            container.innerHTML =
+                '<p class="empty">Загрузка мастеров...</p>';
+
+            try {
+                const data = await fetchJson(
+                    apiUrl(
+                        `/api/masters/${encodeURIComponent(SITE_ID)}`
+                    )
+                );
+
+                const apiMasters = Array.isArray(data.masters)
+                    ? data.masters
+                    : [];
+
+                const source = apiMasters.length
+                    ? apiMasters
+                    : STATIC_TEAM;
+
+                const masters = Array.isArray(source)
+                    ? source.map(normalizeMaster)
+                    : [];
+
+                if (!masters.length) {
+                    container.innerHTML =
+                        '<p class="empty">Мастера пока не добавлены.</p>';
+                    return;
+                }
+
+                container.replaceChildren();
+
+                masters.forEach((master) => {
+                    const card = document.createElement("button");
+                    card.type = "button";
+                    card.className = "master-card";
+
+                    const avatar = document.createElement("div");
+                    avatar.className = "master-avatar";
+
+                    if (master.image_url) {
+                        const image = document.createElement("img");
+
+                        image.src =
+                            `https://danilka007tuk.github.io/${encodeURIComponent(SITE_ID)}/${master.image_url}`;
+
+                        image.alt = master.name;
+                        image.loading = "lazy";
+
+                        avatar.appendChild(image);
+                    } else {
+                        avatar.textContent =
+                            master.name.charAt(0).toUpperCase();
+                    }
+
+                    const name = document.createElement("h3");
+                    name.textContent = master.name;
+
+                    const role = document.createElement("div");
+                    role.className = "role";
+                    role.textContent = master.role;
+
+                    card.append(avatar, name, role);
+
+                    card.addEventListener("click", () => {
+                        selectMaster(master, card);
+                    });
+
+                    container.appendChild(card);
+                });
             } catch (error) {
-                if (error.message.includes('не подтверждён') || error.message.includes('Зарегистрируйтесь')) {
-                    const regUrl = `https://danilka007tuk.github.io/${SITE_ID}/register.html`;
-                    if (confirm('Email не подтверждён. Зарегистрироваться сейчас?')) {
-                        window.location.href = regUrl;
+                console.error("Ошибка загрузки мастеров:", error);
+
+                container.innerHTML =
+                    '<p class="empty">Не удалось загрузить мастеров.</p>';
+            }
+        }
+
+        async function selectMaster(master, card) {
+            $$(".master-card").forEach((item) => {
+                item.classList.remove("selected");
+            });
+
+            card.classList.add("selected");
+            state.selectedMaster = master;
+            state.selectedDate = null;
+            state.selectedTime = null;
+
+            const serviceSelect = $("#service");
+
+            serviceSelect.innerHTML =
+                '<option value="">— Выберите услугу —</option>';
+
+            master.services.forEach((service) => {
+                const option = document.createElement("option");
+
+                option.value = service;
+                option.textContent = service;
+
+                serviceSelect.appendChild(option);
+            });
+
+            $("#stepMaster").hidden = true;
+            $("#stepCalendar").hidden = false;
+            $("#timeSlotsWrapper").style.display = "none";
+            $("#bookingForm").classList.remove("active");
+
+            await loadBusySlots();
+            renderCalendar();
+        }
+
+        async function loadBusySlots() {
+            try {
+                const data = await fetchJson(
+                    apiUrl(
+                        `/api/busy/${encodeURIComponent(SITE_ID)}`
+                    )
+                );
+
+                state.busySlots = Array.isArray(data.busy)
+                    ? data.busy
+                    : [];
+            } catch (error) {
+                console.warn("Ошибка загрузки занятых слотов:", error);
+                state.busySlots = [];
+            }
+        }
+
+        function formatISO(date) {
+            const year = date.getFullYear();
+            const month = String(
+                date.getMonth() + 1
+            ).padStart(2, "0");
+            const day = String(
+                date.getDate()
+            ).padStart(2, "0");
+
+            return `${year}-${month}-${day}`;
+        }
+
+        function isBusySlot(date, time) {
+            const masterName = state.selectedMaster?.name;
+
+            return state.busySlots.some((slot) => {
+                const sameDate = String(slot.date) === date;
+                const sameTime = String(slot.time) === time;
+
+                if (!sameDate || !sameTime) {
+                    return false;
+                }
+
+                /*
+                 * Если API не передал мастера, считаем слот занятым.
+                 * Это безопаснее, чем случайно разрешить двойное бронирование.
+                 */
+                return !slot.master ||
+                    String(slot.master) === masterName;
+            });
+        }
+
+        function isBusyDay(date) {
+            const masterName = state.selectedMaster?.name;
+
+            return state.busySlots.some((slot) => {
+                if (String(slot.date) !== date) {
+                    return false;
+                }
+
+                return !slot.master ||
+                    String(slot.master) === masterName;
+            });
+        }
+
+        function renderCalendar() {
+            const days = $("#days");
+            const monthYear = $("#monthYear");
+
+            if (!days || !monthYear) {
+                return;
+            }
+
+            const year = state.currentMonth.getFullYear();
+            const month = state.currentMonth.getMonth();
+
+            const monthNames = [
+                "Январь",
+                "Февраль",
+                "Март",
+                "Апрель",
+                "Май",
+                "Июнь",
+                "Июль",
+                "Август",
+                "Сентябрь",
+                "Октябрь",
+                "Ноябрь",
+                "Декабрь"
+            ];
+
+            monthYear.textContent =
+                `${monthNames[month]} ${year}`;
+
+            days.replaceChildren();
+
+            const firstDay = new Date(year, month, 1);
+            const totalDays =
+                new Date(year, month + 1, 0).getDate();
+
+            let offset = firstDay.getDay() - 1;
+
+            if (offset < 0) {
+                offset = 6;
+            }
+
+            for (let index = 0; index < offset; index += 1) {
+                const empty = document.createElement("div");
+                empty.className = "day empty";
+                days.appendChild(empty);
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            for (let day = 1; day <= totalDays; day += 1) {
+                const date = new Date(year, month, day);
+                const iso = formatISO(date);
+
+                const button = document.createElement("button");
+
+                button.type = "button";
+                button.className = "day";
+                button.textContent = String(day);
+                button.setAttribute(
+                    "aria-label",
+                    date.toLocaleDateString("ru-RU")
+                );
+
+                if (date < today) {
+                    button.disabled = true;
+                    button.classList.add("disabled");
+                } else if (isBusyDay(iso)) {
+                    button.disabled = true;
+                    button.classList.add("busy");
+                    button.title = "На этот день нет доступных записей";
+                } else {
+                    if (iso === formatISO(today)) {
+                        button.classList.add("today");
+                    }
+
+                    if (iso === state.selectedDate) {
+                        button.classList.add("selected");
+                    }
+
+                    button.addEventListener("click", () => {
+                        selectDate(iso, date);
+                    });
+                }
+
+                days.appendChild(button);
+            }
+        }
+
+        function selectDate(iso, date) {
+            state.selectedDate = iso;
+            state.selectedTime = null;
+
+            $("#selectedDate").textContent =
+                date.toLocaleDateString("ru-RU", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                });
+
+            $("#selectedTimeText").textContent = "—";
+            $("#bookingForm").classList.remove("active");
+
+            renderCalendar();
+            renderTimeSlots();
+        }
+
+        function getWorkingMinutes() {
+            const match = String(WORKING_HOURS).match(
+                /(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/
+            );
+
+            if (!match) {
+                return {
+                    start: 9 * 60,
+                    end: 20 * 60
+                };
+            }
+
+            return {
+                start: Number(match[1]) * 60 +
+                    Number(match[2]),
+
+                end: Number(match[3]) * 60 +
+                    Number(match[4])
+            };
+        }
+
+        function renderTimeSlots() {
+            const wrapper = $("#timeSlotsWrapper");
+            const container = $("#timeSlots");
+
+            if (!state.selectedDate) {
+                return;
+            }
+
+            const { start, end } = getWorkingMinutes();
+
+            container.replaceChildren();
+            wrapper.style.display = "block";
+
+            let available = false;
+
+            for (
+                let minutes = start;
+                minutes < end;
+                minutes += 60
+            ) {
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+
+                const time =
+                    `${String(hours).padStart(2, "0")}:` +
+                    `${String(mins).padStart(2, "0")}`;
+
+                const button = document.createElement("button");
+
+                button.type = "button";
+                button.className = "time-slot";
+                button.textContent = time;
+
+                if (isBusySlot(state.selectedDate, time)) {
+                    button.classList.add("busy");
+                    button.disabled = true;
+                } else {
+                    available = true;
+
+                    button.addEventListener("click", () => {
+                        selectTime(button, time);
+                    });
+                }
+
+                container.appendChild(button);
+            }
+
+            if (!available) {
+                container.innerHTML =
+                    '<p class="empty">Свободных слотов нет.</p>';
+            }
+        }
+
+        function selectTime(button, time) {
+            $$(".time-slot").forEach((item) => {
+                item.classList.remove("selected");
+            });
+
+            button.classList.add("selected");
+            state.selectedTime = time;
+
+            $("#selectedTimeText").textContent = time;
+            $("#bookingForm").classList.add("active");
+
+            $("#bookingForm").scrollIntoView({
+                behavior: "smooth",
+                block: "nearest"
+            });
+        }
+
+        function resetBooking() {
+            state.currentMonth = new Date();
+            state.selectedMaster = null;
+            state.selectedDate = null;
+            state.selectedTime = null;
+            state.busySlots = [];
+
+            $("#stepMaster").hidden = false;
+            $("#stepCalendar").hidden = true;
+            $("#timeSlotsWrapper").style.display = "none";
+            $("#bookingForm").classList.remove("active");
+
+            $("#selectedDate").textContent = "—";
+            $("#selectedTimeText").textContent = "—";
+            $("#service").innerHTML =
+                '<option value="">— Выберите услугу —</option>';
+
+            $("#bookingForm").reset();
+            renderCalendar();
+        }
+
+        async function submitBooking(event) {
+            event.preventDefault();
+
+            if (state.submittingBooking) {
+                return;
+            }
+
+            const form = $("#bookingForm");
+            const submitButton = form.querySelector(
+                'button[type="submit"]'
+            );
+
+            const service = $("#service").value;
+            const name = $("#name").value.trim();
+            const phone = $("#phone").value.trim();
+            const email = $("#email").value.trim();
+            const comment = $("#comment").value.trim();
+
+            if (
+                !state.selectedMaster ||
+                !state.selectedDate ||
+                !state.selectedTime
+            ) {
+                alert("Выберите мастера, дату и время.");
+                return;
+            }
+
+            if (!service || !name || !phone || !email) {
+                alert("Заполните все обязательные поля.");
+                return;
+            }
+
+            if (!$("#email").checkValidity()) {
+                alert("Введите корректный email.");
+                $("#email").focus();
+                return;
+            }
+
+            state.submittingBooking = true;
+            submitButton.disabled = true;
+            submitButton.textContent = "Отправка...";
+
+            try {
+                const result = await fetchJson(
+                    apiUrl(
+                        `/api/book/${encodeURIComponent(SITE_ID)}`
+                    ),
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            master: state.selectedMaster.name,
+                            date: state.selectedDate,
+                            time: state.selectedTime,
+                            service,
+                            name,
+                            phone,
+                            email,
+                            comment
+                        })
+                    }
+                );
+
+                if (!result.ok) {
+                    throw new Error(
+                        result.error || "Не удалось создать запись."
+                    );
+                }
+
+                closeModal("booking");
+
+                const success = $("#successModal");
+                success.classList.add("active");
+                success.setAttribute("aria-hidden", "false");
+                setBodyLocked(true);
+            } catch (error) {
+                console.error("Ошибка бронирования:", error);
+
+                const message =
+                    String(error.message || "");
+
+                if (
+                    message.includes("не подтверждён") ||
+                    message.includes("Зарегистрируйтесь") ||
+                    message.includes("подтвержден")
+                ) {
+                    const registerUrl =
+                        `https://danilka007tuk.github.io/${encodeURIComponent(SITE_ID)}/register.html`;
+
+                    if (
+                        confirm(
+                            "Email не подтверждён. " +
+                            "Зарегистрироваться сейчас?"
+                        )
+                    ) {
+                        window.location.assign(registerUrl);
                     }
                 } else {
-                    alert('Не удалось отправить: ' + error.message);
+                    alert(
+                        message ||
+                        "Не удалось отправить заявку."
+                    );
                 }
             } finally {
-                submitBtn.disabled = false; submitBtn.textContent = 'Отправить заявку';
+                state.submittingBooking = false;
+                submitButton.disabled = false;
+                submitButton.textContent = "Отправить заявку";
             }
-        });
-    }
-
-    function closeSuccessModal() { successModal.classList.remove('active'); formEl.reset(); resetBooking(); renderCalendar(); }
-
-    async function openClientAccount() {
-        try {
-            const res = await fetch(`${SERVER_URL}/api/my-bookings`, { credentials: 'include' });
-            const data = await res.json();
-            if (data.ok) { openAccountModal(data.bookings); }
-            else { openModal('auth'); }
-        } catch (e) {
-            console.error('Ошибка /api/my-bookings:', e);
-            openModal('auth');
         }
-    }
-    function showRegisterForm() { document.getElementById('auth-step-login').style.display = 'none'; document.getElementById('auth-step-register').style.display = 'block'; }
-    function showLoginForm() { document.getElementById('auth-step-login').style.display = 'block'; document.getElementById('auth-step-register').style.display = 'none'; }
-    async function loginUser() {
-        const email = document.getElementById('auth-email').value.trim();
-        const password = document.getElementById('auth-password').value.trim();
-        const msg = document.getElementById('auth-message');
-        msg.style.display = 'block'; msg.style.color = '#c62828'; msg.textContent = '⏳...';
-        try {
-            const res = await fetch(`${SERVER_URL}/api/login`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include',
-                body: JSON.stringify({ site_id: SITE_ID, email, password, role: 'client' }),
+
+        function showLoginForm() {
+            $("#loginForm").hidden = false;
+            $("#registerForm").hidden = true;
+            clearAuthMessage();
+            $("#auth-email")?.focus();
+        }
+
+        function showRegisterForm() {
+            $("#loginForm").hidden = true;
+            $("#registerForm").hidden = false;
+            clearAuthMessage();
+            $("#reg-email")?.focus();
+        }
+
+        async function loginUser(event) {
+            event?.preventDefault();
+
+            if (state.submittingAuth) {
+                return;
+            }
+
+            const emailInput = $("#auth-email");
+            const passwordInput = $("#auth-password");
+
+            const email = emailInput.value.trim();
+
+            /*
+             * Пароль нельзя обрезать через trim().
+             * Пробелы могут быть частью пароля.
+             */
+            const password = passwordInput.value;
+
+            if (!email || !emailInput.checkValidity()) {
+                showAuthMessage("Введите корректный email.");
+                emailInput.focus();
+                return;
+            }
+
+            if (!password) {
+                showAuthMessage("Введите пароль.");
+                passwordInput.focus();
+                return;
+            }
+
+            state.submittingAuth = true;
+
+            const button = $("#loginButton");
+            button.disabled = true;
+            button.textContent = "Вход...";
+
+            try {
+                const data = await fetchJson(
+                    apiUrl("/api/login"),
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            site_id: SITE_ID,
+                            email,
+                            password,
+                            role: "client"
+                        })
+                    }
+                );
+
+                if (!data.ok) {
+                    throw new Error(
+                        data.error || "Неверные данные."
+                    );
+                }
+
+                closeModal("auth");
+
+                const bookings = await fetchJson(
+                    apiUrl("/api/my-bookings"),
+                    {
+                        method: "GET",
+                        credentials: "include",
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                openAccountModal(bookings.bookings || []);
+            } catch (error) {
+                console.error("Ошибка входа:", error);
+
+                showAuthMessage(
+                    error.message ||
+                    "Не удалось выполнить вход."
+                );
+            } finally {
+                state.submittingAuth = false;
+                button.disabled = false;
+                button.textContent = "Войти";
+            }
+        }
+
+        async function registerUser(event) {
+            event?.preventDefault();
+
+            if (state.submittingAuth) {
+                return;
+            }
+
+            const emailInput = $("#reg-email");
+            const passwordInput = $("#reg-password");
+            const confirmationInput = $(
+                "#reg-password-confirm"
+            );
+
+            const email = emailInput.value.trim();
+
+            /*
+             * Пароли не обрезаем.
+             */
+            const password = passwordInput.value;
+            const confirmation = confirmationInput.value;
+
+            if (!email || !emailInput.checkValidity()) {
+                showAuthMessage("Введите корректный email.");
+                emailInput.focus();
+                return;
+            }
+
+            if (password.length < 6) {
+                showAuthMessage(
+                    "Пароль должен содержать минимум 6 символов."
+                );
+                passwordInput.focus();
+                return;
+            }
+
+            if (password !== confirmation) {
+                showAuthMessage("Пароли не совпадают.");
+                confirmationInput.focus();
+                return;
+            }
+
+            state.submittingAuth = true;
+
+            const button = $("#registerButton");
+            button.disabled = true;
+            button.textContent = "Регистрация...";
+
+            try {
+                const data = await fetchJson(
+                    apiUrl(
+                        `/api/register-client/${encodeURIComponent(SITE_ID)}`
+                    ),
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({
+                            email,
+                            password
+                        })
+                    }
+                );
+
+                if (!data.ok) {
+                    throw new Error(
+                        data.error || "Ошибка регистрации."
+                    );
+                }
+
+                showAuthMessage(
+                    "Регистрация завершена. Теперь выполните вход.",
+                    true
+                );
+
+                window.setTimeout(() => {
+                    showLoginForm();
+                }, 1200);
+            } catch (error) {
+                console.error("Ошибка регистрации:", error);
+
+                showAuthMessage(
+                    error.message ||
+                    "Не удалось зарегистрироваться."
+                );
+            } finally {
+                state.submittingAuth = false;
+                button.disabled = false;
+                button.textContent = "Зарегистрироваться";
+            }
+        }
+
+        async function openClientAccount() {
+            try {
+                const data = await fetchJson(
+                    apiUrl("/api/my-bookings"),
+                    {
+                        method: "GET",
+                        credentials: "include",
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                if (!data.ok) {
+                    openModal("auth");
+                    return;
+                }
+
+                openAccountModal(data.bookings || []);
+            } catch (error) {
+                if (
+                    error.status === 401 ||
+                    error.status === 403
+                ) {
+                    openModal("auth");
+                    return;
+                }
+
+                console.error(
+                    "Ошибка загрузки записей:",
+                    error
+                );
+
+                openModal("auth");
+            }
+        }
+
+        function openAccountModal(bookings) {
+            const body = $("#account-body");
+
+            if (!Array.isArray(bookings) || !bookings.length) {
+                body.innerHTML =
+                    '<p class="empty">У вас пока нет записей.</p>';
+
+                openModal("account");
+                return;
+            }
+
+            const table = document.createElement("table");
+            table.style.width = "100%";
+            table.style.borderCollapse = "collapse";
+
+            const thead = document.createElement("thead");
+            const headerRow = document.createElement("tr");
+
+            [
+                "Дата",
+                "Время",
+                "Мастер",
+                "Услуга",
+                "Статус"
+            ].forEach((title) => {
+                const cell = document.createElement("th");
+
+                cell.textContent = title;
+                cell.style.padding = "12px";
+                cell.style.textAlign = "left";
+                cell.style.borderBottom =
+                    "1px solid #eeeeee";
+
+                headerRow.appendChild(cell);
             });
-            const data = await res.json();
-            if (data.ok) {
-                msg.style.color = '#2e7d32'; msg.textContent = '✅ Вход выполнен';
-                closeModal('auth');
-                const res2 = await fetch(`${SERVER_URL}/api/my-bookings`, { credentials: 'include' });
-                const data2 = await res2.json();
-                if (data2.ok) { openAccountModal(data2.bookings || []); }
-                else { alert('Вход выполнен, но не удалось загрузить записи: ' + (data2.error || 'неизвестная ошибка')); }
-            } else {
-                msg.textContent = `❌ ${data.error}`;
-            }
-        } catch (err) {
-            msg.textContent = '❌ Ошибка сервера';
-        }
-    }
-    async function registerUser() {
-        const email = document.getElementById('reg-email').value.trim();
-        const password = document.getElementById('reg-password').value.trim();
-        const confirm = document.getElementById('reg-password-confirm').value.trim();
-        const msg = document.getElementById('auth-message');
-        msg.style.display = 'block'; msg.style.color = '#c62828';
-        if (password.length < 6) { msg.textContent = '❌ Минимум 6 символов'; return; }
-        if (password !== confirm) { msg.textContent = '❌ Пароли не совпадают'; return; }
-        msg.textContent = '⏳...';
-        try {
-            const res = await fetch(`${SERVER_URL}/api/register-client/${SITE_ID}`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include',
-                body: JSON.stringify({ email, password }),
+
+            thead.appendChild(headerRow);
+
+            const tbody = document.createElement("tbody");
+
+            bookings.forEach((booking) => {
+                const row = document.createElement("tr");
+
+                [
+                    booking.date || "—",
+                    booking.time || "—",
+                    booking.master || "—",
+                    booking.service || "—",
+                    booking.status || "—"
+                ].forEach((value) => {
+                    const cell = document.createElement("td");
+
+                    cell.textContent = String(value);
+                    cell.style.padding = "12px";
+                    cell.style.borderBottom =
+                        "1px solid #eeeeee";
+
+                    row.appendChild(cell);
+                });
+
+                tbody.appendChild(row);
             });
-            const data = await res.json();
-            if (data.ok) {
-                msg.style.color = '#2e7d32'; msg.textContent = '✅ Успешно! Войдите.';
-                setTimeout(() => showLoginForm(), 1500);
-            } else {
-                msg.textContent = `❌ ${data.error}`;
+
+            table.append(thead, tbody);
+
+            body.replaceChildren(table);
+            openModal("account");
+        }
+
+        async function logoutUser() {
+            const button = $("#logoutButton");
+
+            button.disabled = true;
+            button.textContent = "Выход...";
+
+            try {
+                await fetchJson(
+                    apiUrl(
+                        `/logout?site_id=${encodeURIComponent(SITE_ID)}`
+                    ),
+                    {
+                        method: "GET",
+                        credentials: "include"
+                    }
+                );
+            } catch (error) {
+                console.warn("Ошибка выхода:", error);
+            } finally {
+                closeModal("account");
+                window.location.reload();
             }
-        } catch (err) {
-            msg.textContent = '❌ Ошибка сервера';
         }
-    }
-    function openAccountModal(bookings) {
-        const body = document.getElementById('account-body');
-        if (!bookings || bookings.length === 0) {
-            body.innerHTML = '<p style="text-align:center; color:#888;">У вас пока нет записей</p>';
-        } else {
-            body.innerHTML = `<table style="width:100%; border-collapse:collapse;"><thead><tr style="background:#f8f9fa;"><th style="padding:12px; text-align:left;">Дата</th><th style="padding:12px; text-align:left;">Время</th><th style="padding:12px; text-align:left;">Мастер</th><th style="padding:12px; text-align:left;">Услуга</th></tr></thead><tbody>${bookings.map(b => `<tr><td style="padding:12px; border-bottom:1px solid #eee;">${esc(b.date)}</td><td style="padding:12px; border-bottom:1px solid #eee;">${esc(b.time)}</td><td style="padding:12px; border-bottom:1px solid #eee;">${esc(b.master) || '—'}</td><td style="padding:12px; border-bottom:1px solid #eee;">${esc(b.service)}</td></tr>`).join('')}</tbody></table>`;
+
+        function closeSuccessModal() {
+            const success = $("#successModal");
+
+            success.classList.remove("active");
+            success.setAttribute("aria-hidden", "true");
+
+            resetBooking();
+            setBodyLocked(false);
         }
-        openModal('account');
-    }
-    async function logoutUser() { try { await fetch(`${SERVER_URL}/logout`, { credentials: 'include' }); } catch (e) {} closeModal('account'); alert('Вы вышли'); }
 
-    const tourSteps = [
-        { selector: '.hero', title: 'Добро пожаловать!', text: 'Это главная страница. Здесь можно посмотреть услуги, галерею и записаться.' },
-        { selector: '.hero-btn', title: 'Забронировать', text: 'Нажмите, чтобы выбрать мастера, дату и время.' },
-        { selector: '.hero-btn.secondary', title: 'Мои записи', text: 'Войдите или зарегистрируйтесь, чтобы увидеть свои записи.' }
-    ];
-    let currentTourIndex = 0;
-    function startTour(force = false) { const key = 'tour_completed_client_v9_' + SITE_ID; if (!force && localStorage.getItem(key)) return; currentTourIndex = 0; showTourStep(); }
-    function showTourStep() { document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight')); const old = document.querySelector('.tour-tooltip'); if (old) old.remove(); if (currentTourIndex >= tourSteps.length) { endTour(); return; } const step = tourSteps[currentTourIndex]; const el = document.querySelector(step.selector); if (!el) { currentTourIndex++; showTourStep(); return; } el.classList.add('tour-highlight'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); const t = document.createElement('div'); t.className = 'tour-tooltip'; t.style.cssText = 'position:fixed; background:#333; color:#fff; padding:20px; border-radius:8px; max-width:340px; z-index:10000; box-shadow:0 10px 30px rgba(0,0,0,0.5);'; t.innerHTML = `<h3 style="color:#fff;">${step.title}</h3><p style="color:#ddd;">${step.text}</p><button onclick="nextTourStep()" style="background:var(--primary); color:#fff; border:none; padding:8px 16px; margin-top:8px; border-radius:4px; cursor:pointer;">Далее (${currentTourIndex+1}/${tourSteps.length})</button> <button onclick="endTour()" style="background:transparent; color:#ccc; border:none; padding:8px; cursor:pointer;">Пропустить</button>`; const r = el.getBoundingClientRect(); t.style.top = Math.max(16, r.bottom + window.scrollY + 12) + 'px'; t.style.left = Math.max(16, Math.min(r.left, window.innerWidth - 360)) + 'px'; document.body.appendChild(t); }
-    function nextTourStep() { currentTourIndex++; showTourStep(); }
-    function endTour() { document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight')); const old = document.querySelector('.tour-tooltip'); if (old) old.remove(); localStorage.setItem('tour_completed_client_v9_' + SITE_ID, '1'); }
+        const tourSteps = [
+            {
+                selector: ".hero",
+                title: "Добро пожаловать!",
+                text:
+                    "Здесь находится основная информация " +
+                    "о вашей компании."
+            },
+            {
+                selector: '[data-open-modal="booking"]',
+                title: "Бронирование",
+                text:
+                    "Выберите мастера, дату, время " +
+                    "и заполните форму."
+            },
+            {
+                selector: "#heroAccountButton",
+                title: "Мои записи",
+                text:
+                    "Войдите или зарегистрируйтесь, " +
+                    "чтобы увидеть свои записи."
+            }
+        ];
 
-    renderCalendar();
-    setTimeout(() => startTour(false), 1000);
-</script>
+        function startTour(force = false) {
+            const key =
+                `tour_completed_client_${SITE_ID}`;
+
+            if (!force && localStorage.getItem(key)) {
+                return;
+            }
+
+            state.tourIndex = 0;
+            showTourStep();
+        }
+
+        function endTour() {
+            $$(".tour-highlight").forEach((element) => {
+                element.classList.remove("tour-highlight");
+            });
+
+            document
+                .querySelector(".tour-tooltip")
+                ?.remove();
+
+            localStorage.setItem(
+                `tour_completed_client_${SITE_ID}`,
+                "1"
+            );
+        }
+
+        function showTourStep() {
+            endTour();
+
+            const step =
+                tourSteps[state.tourIndex];
+
+            if (!step) {
+                return;
+            }
+
+            const target =
+                document.querySelector(step.selector);
+
+            if (!target) {
+                state.tourIndex += 1;
+                showTourStep();
+                return;
+            }
+
+            target.classList.add("tour-highlight");
+
+            target.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            const tooltip = document.createElement("div");
+
+            tooltip.className = "tour-tooltip";
+            tooltip.innerHTML = `
+                <h3>${escapeHtml(step.title)}</h3>
+                <p>${escapeHtml(step.text)}</p>
+
+                <div class="tour-actions">
+                    <button
+                        type="button"
+                        class="tour-next"
+                    >
+                        Далее
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tour-skip"
+                    >
+                        Пропустить
+                    </button>
+                </div>
+            `;
+
+            tooltip
+                .querySelector(".tour-next")
+                .addEventListener("click", () => {
+                    state.tourIndex += 1;
+
+                    if (state.tourIndex >= tourSteps.length) {
+                        endTour();
+                    } else {
+                        showTourStep();
+                    }
+                });
+
+            tooltip
+                .querySelector(".tour-skip")
+                .addEventListener("click", endTour);
+
+            document.body.appendChild(tooltip);
+
+            const rect = target.getBoundingClientRect();
+            const tooltipWidth = Math.min(
+                340,
+                window.innerWidth - 32
+            );
+
+            tooltip.style.position = "fixed";
+            tooltip.style.zIndex = "10000";
+            tooltip.style.width = `${tooltipWidth}px`;
+            tooltip.style.left = `${Math.max(
+                16,
+                Math.min(
+                    rect.left,
+                    window.innerWidth - tooltipWidth - 16
+                )
+            )}px`;
+            tooltip.style.top = `${Math.max(
+                16,
+                Math.min(
+                    rect.bottom + 12,
+                    window.innerHeight - 180
+                )
+            )}px`;
+        }
+
+        function initializeEvents() {
+            $("#sidebarToggle")?.addEventListener(
+                "click",
+                toggleSidebar
+            );
+
+            $("#sidebarOverlay")?.addEventListener(
+                "click",
+                closeSidebar
+            );
+
+            document
+                .querySelectorAll("[data-open-modal]")
+                .forEach((button) => {
+                    button.addEventListener("click", () => {
+                        openModal(button.dataset.openModal);
+                    });
+                });
+
+            document
+                .querySelectorAll("[data-close-modal]")
+                .forEach((button) => {
+                    button.addEventListener("click", () => {
+                        closeModal(button.dataset.closeModal);
+                    });
+                });
+
+            document
+                .querySelectorAll(".sidebar-nav-button")
+                .forEach((button) => {
+                    button.addEventListener("click", () => {
+                        const modal = button.dataset.modal;
+
+                        if (modal) {
+                            openModal(modal);
+                        }
+                    });
+                });
+
+            $("#heroAccountButton")?.addEventListener(
+                "click",
+                openClientAccount
+            );
+
+            $("#sidebarAccountButton")?.addEventListener(
+                "click",
+                openClientAccount
+            );
+
+            $("#helpButton")?.addEventListener(
+                "click",
+                () => startTour(true)
+            );
+
+            $("#bookingForm")?.addEventListener(
+                "submit",
+                submitBooking
+            );
+
+            $("#loginForm")?.addEventListener(
+                "submit",
+                loginUser
+            );
+
+            $("#registerForm")?.addEventListener(
+                "submit",
+                registerUser
+            );
+
+            $("#showRegisterButton")?.addEventListener(
+                "click",
+                showRegisterForm
+            );
+
+            $("#showLoginButton")?.addEventListener(
+                "click",
+                showLoginForm
+            );
+
+            $("#logoutButton")?.addEventListener(
+                "click",
+                logoutUser
+            );
+
+            $("#successCloseButton")?.addEventListener(
+                "click",
+                closeSuccessModal
+            );
+
+            $("#prevMonth")?.addEventListener(
+                "click",
+                () => {
+                    state.currentMonth.setMonth(
+                        state.currentMonth.getMonth() - 1
+                    );
+
+                    renderCalendar();
+                }
+            );
+
+            $("#nextMonth")?.addEventListener(
+                "click",
+                () => {
+                    state.currentMonth.setMonth(
+                        state.currentMonth.getMonth() + 1
+                    );
+
+                    renderCalendar();
+                }
+            );
+
+            $$(".modal").forEach((modal) => {
+                modal.addEventListener("click", (event) => {
+                    if (event.target !== modal) {
+                        return;
+                    }
+
+                    closeModal(
+                        modal.id.replace("modal-", "")
+                    );
+                });
+            });
+
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape") {
+                    closeAllModals();
+                    closeSidebar();
+                    endTour();
+                }
+            });
+        }
+
+        initializeEvents();
+        renderCalendar();
+
+        window.setTimeout(() => {
+            startTour(false);
+        }, 1000);
+    </script>
 </body>
 </html>
